@@ -6,7 +6,6 @@ package com.osfans.trime.ime.keyboard
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -20,7 +19,6 @@ import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import androidx.core.graphics.createBitmap
 import androidx.core.graphics.withClip
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -123,8 +121,14 @@ class KeyboardView(
     /** The dirty region in the keyboard bitmap */
     private val dirtyRect = Rect()
 
-    /** The keyboard bitmap for faster updates */
-    private var drawingBuffer: Bitmap? = null
+    /** Smart bitmap cache for efficient memory management */
+    private val bitmapCache = SmartBitmapCache()
+
+    /** Render state cache for Paint and Color objects */
+    private val renderStateCache = RenderStateCache()
+
+    /** Memory monitor for pressure detection */
+    private val memoryMonitor = MemoryMonitor()
 
     /** The canvas for the above mutable keyboard bitmap  */
     private val drawingCanvas = Canvas()
@@ -403,41 +407,47 @@ class KeyboardView(
     }
 
     public override fun onDraw(canvas: Canvas) {
+        val startTime = System.nanoTime()
         super.onDraw(canvas)
+
+        // Check memory pressure and clear caches if needed
+        if (memoryMonitor.checkMemoryPressure()) {
+            clearCaches()
+        }
+
         if (canvas.isHardwareAccelerated) {
             onDrawKeyboard(canvas)
+            logPerformance("onDraw (Hardware)", startTime)
+
+            // 結束鍵盤顯示時間測量
+            KeyboardDisplayTimer.endMeasurement(renderInfo = "Hardware加速渲染")
             return
         }
-        val bufferNeedsUpdates = invalidateAllKeys || invalidatedKeys.isNotEmpty()
-        if (bufferNeedsUpdates || drawingBuffer == null) {
-            if (maybeAllocateDrawingBuffer()) {
-                invalidateAllKeys = true
-                drawingCanvas.setBitmap(drawingBuffer)
-            }
-            onDrawKeyboard(drawingCanvas)
-        }
-        canvas.drawBitmap(drawingBuffer!!, 0.0f, 0.0f, null)
-    }
 
-    private fun maybeAllocateDrawingBuffer(): Boolean {
-        if (width == 0 || height == 0) {
-            return false
+        // Use smart bitmap cache instead of direct buffer management
+        val buffer = bitmapCache.getBuffer(width, height)
+
+        val bufferNeedsUpdates = invalidateAllKeys || invalidatedKeys.isNotEmpty() || bitmapCache.isDirty()
+        if (bufferNeedsUpdates) {
+            drawingCanvas.setBitmap(buffer)
+            onDrawKeyboard(drawingCanvas)
+            bitmapCache.markClean()
         }
-        if (drawingBuffer != null && drawingBuffer!!.width == width && drawingBuffer!!.height == height) {
-            return false
-        }
-        freeDrawingBuffer()
-        drawingBuffer = createBitmap(width, height)
-        return true
+
+        canvas.drawBitmap(buffer, 0.0f, 0.0f, null)
+        logPerformance("onDraw (Software)", startTime)
+
+        // 結束鍵盤顯示時間測量
+        KeyboardDisplayTimer.endMeasurement(renderInfo = "Software軟體渲染")
+
+        // Log cache statistics periodically
+        renderStateCache.logCacheStats()
     }
 
     private fun freeDrawingBuffer() {
         drawingCanvas.setBitmap(null)
         drawingCanvas.setMatrix(null)
-        if (drawingBuffer != null) {
-            drawingBuffer!!.recycle()
-            drawingBuffer = null
-        }
+        bitmapCache.clearIfNecessary()
     }
 
     private fun onDrawKeyboard(canvas: Canvas) {
@@ -513,55 +523,59 @@ class KeyboardView(
                 }
             }
         if (keyLabel.isNotEmpty()) {
-            paint.typeface = FontManager.getTypeface("key_font")
-            // For characters, use large font. For labels like "Done", use small font.
-            paint.textSize =
+            val keyFont = FontManager.getTypeface("key_font")
+            val textSize =
                 if (key.keyTextSize > 0) {
                     sp(key.keyTextSize)
                 } else {
                     sp(if (keyLabel.length > 1) labelTextSize else keyTextSize)
                 }
+            val textColor = key.getTextColor()
+
+            // Use cached paint object
+            val textPaint = renderStateCache.getCachedPaint(textSize, textColor, keyFont)
 
             val labelX = centerX + sp(key.keyTextOffsetX)
             val labelBaseline = centerY + sp(key.keyTextOffsetY)
 
-            paint.color = key.getTextColor()
-
             // Draw a drop shadow for the text
             if (mShadowRadius > 0f) {
-                paint.setShadowLayer(mShadowRadius, 0f, 0f, mShadowColor)
+                textPaint.setShadowLayer(mShadowRadius, 0f, 0f, mShadowColor)
             } else {
-                paint.clearShadowLayer()
+                textPaint.clearShadowLayer()
             }
 
-            val adjustmentY = paint.run { textSize - descent() } / 2f
+            val adjustmentY = textPaint.run { textSize - descent() } / 2f
             // Draw the text
-            canvas.drawText(keyLabel, labelX, labelBaseline + adjustmentY, paint)
+            canvas.drawText(keyLabel, labelX, labelBaseline + adjustmentY, textPaint)
             // Turn off drop shadow
-            paint.clearShadowLayer()
+            textPaint.clearShadowLayer()
 
             val showKeySymbol = rime.run { !getRuntimeOption("_hide_key_symbol") }
             val showKeyHint = rime.run { !getRuntimeOption("_hide_key_hint") }
             if (showKeySymbol || showKeyHint) {
-                paint.typeface = FontManager.getTypeface("symbol_font")
-                floatArrayOf(key.symbolTextSize, symbolTextSize)
-                    .firstOrNull { it > 0f }
-                    ?.let { paint.textSize = sp(it) }
-                paint.color = key.getSymbolColor()
+                val symbolFont = FontManager.getTypeface("symbol_font")
+                val symbolSize =
+                    floatArrayOf(key.symbolTextSize, symbolTextSize)
+                        .firstOrNull { it > 0f }
+                        ?.let { sp(it) } ?: sp(symbolTextSize)
+                val symbolColor = key.getSymbolColor()
 
-                val fontMetrics = paint.fontMetrics
+                // Use cached paint for symbols
+                val symbolPaint = renderStateCache.getCachedPaint(symbolSize, symbolColor, symbolFont)
+                val fontMetrics = symbolPaint.fontMetrics
 
                 val symbolLabel = key.symbolLabel
                 if (showKeySymbol && symbolLabel.isNotEmpty()) {
                     val symbolX = centerX + sp(key.keySymbolOffsetX)
                     val symbolBaseline = -fontMetrics.top
-                    canvas.drawText(symbolLabel, symbolX, symbolBaseline + sp(key.keySymbolOffsetY), paint)
+                    canvas.drawText(symbolLabel, symbolX, symbolBaseline + sp(key.keySymbolOffsetY), symbolPaint)
                 }
                 val hintLabel = key.hint
                 if (showKeyHint && hintLabel.isNotEmpty()) {
                     val hintX = centerX + sp(key.keyHintOffsetX)
                     val hintBaseline = -fontMetrics.bottom
-                    canvas.drawText(hintLabel, hintX, hintBaseline + key.height + sp(key.keyHintOffsetY), paint)
+                    canvas.drawText(hintLabel, hintX, hintBaseline + key.height + sp(key.keyHintOffsetY), symbolPaint)
                 }
             }
         }
@@ -710,6 +724,7 @@ class KeyboardView(
         Timber.d("invalidateAllKeys")
         invalidatedKeys.clear()
         invalidateAllKeys = true
+        bitmapCache.markDirty()
         invalidate()
     }
 
@@ -724,6 +739,7 @@ class KeyboardView(
     private fun invalidateKey(key: Key?) {
         if (invalidateAllKeys || key == null) return
         invalidatedKeys.add(key)
+        bitmapCache.markDirty()
         invalidate()
     }
 
@@ -1067,6 +1083,26 @@ class KeyboardView(
         if (keyIndex == NOT_A_KEY) return
         if (eventTime > mLastTapTime + longPressTimeout || keyIndex != mLastSentIndex) {
             resetMultiTap()
+        }
+    }
+
+    private fun clearCaches() {
+        renderStateCache.evictAll()
+        bitmapCache.clearIfNecessary()
+        memoryMonitor.suggestGC()
+        Timber.i("KeyboardView: Caches cleared due to memory pressure")
+    }
+
+    private fun logPerformance(
+        operation: String,
+        startTime: Long,
+    ) {
+        val endTime = System.nanoTime()
+        val durationMs = (endTime - startTime) / 1_000_000.0
+        if (durationMs > 30) {
+            Timber.w("KeyboardView Performance: $operation took ${durationMs}ms (>30ms threshold)")
+        } else if (durationMs > 10) {
+            Timber.d("KeyboardView Performance: $operation took ${durationMs}ms")
         }
     }
 

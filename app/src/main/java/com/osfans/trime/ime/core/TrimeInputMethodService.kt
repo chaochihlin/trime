@@ -54,6 +54,7 @@ import com.osfans.trime.ime.candidates.popup.PopupCandidatesMode
 import com.osfans.trime.ime.candidates.suggestion.InlineSuggestionHelper
 import com.osfans.trime.ime.composition.CandidatesView
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
+import com.osfans.trime.ime.keyboard.KeyboardDisplayTimer
 import com.osfans.trime.ime.keyboard.KeyboardSwitcher
 import com.osfans.trime.receiver.RimeIntentReceiver
 import com.osfans.trime.util.any
@@ -505,6 +506,12 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         restarting: Boolean,
     ) {
         Timber.d("onStartInputView: restarting=$restarting")
+
+        // 開始測量鍵盤顯示時間
+        val sessionId = "${System.currentTimeMillis()}-${attribute.packageName}"
+        val isFirstTime = !restarting && inputView?.isShown != true
+        KeyboardDisplayTimer.startMeasurement(sessionId, isFirstTime)
+
         InputFeedbackManager.startInput()
         postRimeJob {
             updateRimeOption(this)

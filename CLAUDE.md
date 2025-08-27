@@ -113,3 +113,11 @@ make translate
 - 透過 Spotless (Kotlin) 和 clang-format (C++) 強制執行程式碼風格
 - 主題檔案為 YAML 格式，從共享和使用者目錄載入
 - 資料庫操作使用 Room 進行型別安全的 SQL 查詢
+
+## 目標裝置與架構
+
+- **主要目標**: Android Wear OS (手錶裝置)
+- **架構**: armeabi-v7a (32位元 ARM 架構)
+- **建置命令**: 使用 `BUILD_ABI=armeabi-v7a ./gradlew assembleDebug` 針對特定架構建置
+- **部署**: ✅ 已成功部署優化版本至手錶裝置
+- **效能監控**: 使用 `./test_performance.sh` 和 `./test_general_trime.sh` 進行即時監控
