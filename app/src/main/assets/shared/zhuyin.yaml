@@ -1,0 +1,121 @@
+# Rime spelling algebra
+# encoding: utf-8
+
+speller:
+  algebra:
+    # 聲母
+    - xform/^b/ㄅ/
+    - xform/^p/ㄆ/
+    - xform/^m/ㄇ/
+    - xform/^f/ㄈ/
+    - xform/^d/ㄉ/
+    - xform/^t/ㄊ/
+    - xform/^n/ㄋ/
+    - xform/^l/ㄌ/
+    - xform/^g/ㄍ/
+    - xform/^k/ㄎ/
+    - xform/^h/ㄏ/
+    - xform/^j/ㄐ/
+    - xform/^q/ㄑ/
+    - xform/^x/ㄒ/
+    - xform/^zh/ㄓ/
+    - xform/^ch/ㄔ/
+    - xform/^sh/ㄕ/
+    - xform/^r/ㄖ/
+    - xform/^z/ㄗ/
+    - xform/^c/ㄘ/
+    - xform/^s/ㄙ/
+    
+    # 韻母
+    - xform/a$/ㄚ/
+    - xform/o$/ㄛ/
+    - xform/e$/ㄜ/
+    - xform/eh$/ㄝ/
+    - xform/ai$/ㄞ/
+    - xform/ei$/ㄟ/
+    - xform/ao$/ㄠ/
+    - xform/ou$/ㄡ/
+    - xform/an$/ㄢ/
+    - xform/en$/ㄣ/
+    - xform/ang$/ㄤ/
+    - xform/eng$/ㄥ/
+    - xform/er$/ㄦ/
+    
+    # 介音
+    - xform/i/ㄧ/
+    - xform/u/ㄨ/
+    - xform/v/ㄩ/
+    
+pinyin_to_zhuyin:
+  - xform/^m(\d)$/ㄇ$1/  # 呣
+  - xform/^r5$/ㄖ˙/  # 兒
+  - xform/^eh(\d)$/ㄝ$1/  # 誒
+  - xform/^nga(\d)$/ㄫㄚ$1/  # 嗄
+  
+  # 轉換聲母
+  - xform/^b/ㄅ/
+  - xform/^p/ㄆ/
+  - xform/^m/ㄇ/
+  - xform/^f/ㄈ/
+  - xform/^d/ㄉ/
+  - xform/^t/ㄊ/
+  - xform/^n/ㄋ/
+  - xform/^l/ㄌ/
+  - xform/^g/ㄍ/
+  - xform/^k/ㄎ/
+  - xform/^h/ㄏ/
+  - xform/^zh/ㄓ/
+  - xform/^ch/ㄔ/
+  - xform/^sh/ㄕ/
+  - xform/^r/ㄖ/
+  - xform/^z/ㄗ/
+  - xform/^c/ㄘ/
+  - xform/^s/ㄙ/
+  - xform/^j/ㄐ/
+  - xform/^q/ㄑ/
+  - xform/^x/ㄒ/
+  
+  # 轉換韻母
+  - xform/iang/ㄧㄤ/
+  - xform/iong/ㄩㄥ/
+  - xform/uang/ㄨㄤ/
+  - xform/ueng/ㄨㄥ/
+  - xform/ang/ㄤ/
+  - xform/eng/ㄥ/
+  - xform/ian/ㄧㄢ/
+  - xform/iao/ㄧㄠ/
+  - xform/uai/ㄨㄞ/
+  - xform/uan/ㄨㄢ/
+  - xform/van/ㄩㄢ/
+  - xform/vn/ㄩㄣ/
+  - xform/ai/ㄞ/
+  - xform/ao/ㄠ/
+  - xform/an/ㄢ/
+  - xform/ei/ㄟ/
+  - xform/en/ㄣ/
+  - xform/ou/ㄡ/
+  - xform/uo/ㄨㄛ/
+  - xform/ie/ㄧㄝ/
+  - xform/ve/ㄩㄝ/
+  - xform/iu/ㄧㄡ/
+  - xform/ui/ㄨㄟ/
+  - xform/in/ㄧㄣ/
+  - xform/un/ㄨㄣ/
+  - xform/ing/ㄧㄥ/
+  - xform/ong/ㄨㄥ/
+  - xform/er/ㄦ/
+  - xform/i/ㄧ/
+  - xform/u/ㄨ/
+  - xform/v/ㄩ/
+  - xform/a/ㄚ/
+  - xform/o/ㄛ/
+  - xform/e/ㄜ/
+  
+  # 轉換聲調
+  - xform/1/ˉ/
+  - xform/2/ˊ/
+  - xform/3/ˇ/
+  - xform/4/ˋ/
+  - xform/5/˙/
+
+keymap_bopomofo: "bpmfdtnlgkhjqxZCSrziuvaoeIUEOAYWKLJNM"

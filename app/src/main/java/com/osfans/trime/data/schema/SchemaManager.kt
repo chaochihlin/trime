@@ -41,26 +41,40 @@ object SchemaManager {
     }
 
     fun updateSwitchOptions() {
-        if (activeSchema.switches.isEmpty()) return // 無方案
+        if (activeSchema.switches.isEmpty()) {
+            return
+        }
         RimeDaemon
             .getFirstSessionOrNull()
             ?.launchOnReady { api ->
                 for (s in activeSchema.switches) {
                     val labels = s.states
-                    // 剔除没有 states 条目项的值，它们不作为开关使用
-                    if (labels.size <= 1) continue
+                    if (labels.size <= 1) {
+                        continue
+                    }
+
                     if (s.name.isNotEmpty()) {
-                        if (labels.size != 2) continue
+                        if (labels.size != 2) {
+                            continue
+                        }
                         // 只有单 Rime 运行时选项的开关，开关名即选项名，标记其启用状态
-                        s.enabledIndex = api.getRuntimeOption(s.name).compareTo(false)
+                        val optionValue = api.getRuntimeOption(s.name)
+                        s.enabledIndex = optionValue.compareTo(false)
                     } else {
                         // 带有一系列 Rime 运行时选项的开关，找到启用的选项并标记
                         // 将启用状态标记为此选项的索引值，方便切换时直接从选项列表中获取
                         // 注意：有可能每个 option 的状态都为 false（未启用）, 因此 indexOfFirst 可能会返回 -1,
                         // 需要确保其至少为 0
                         val options = s.options
-                        if (options.size != labels.size) continue
-                        s.enabledIndex = max(0, options.indexOfFirst { api.getRuntimeOption(it) })
+                        if (options.size != labels.size) {
+                            Timber.d(
+                                "SchemaManager.updateSwitchOptions: Skipping switch with anonymous name - options/labels size mismatch",
+                            )
+                            continue
+                        }
+
+                        val enabledOptionIndex = options.indexOfFirst { api.getRuntimeOption(it) }
+                        s.enabledIndex = max(0, enabledOptionIndex)
                     }
                 }
             }

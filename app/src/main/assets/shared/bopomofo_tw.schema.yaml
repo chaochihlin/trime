@@ -1,0 +1,131 @@
+# Rime schema
+# encoding: utf-8
+
+schema:
+  schema_id: bopomofo_tw
+  name: 注音·臺灣正體
+  version: "1.8"
+  author:
+    - 佛振 <chen.sst@gmail.com>
+  description: |
+    注音符號輸入，採用「大千式」鍵盤排列，輸出臺灣正體字形。
+    
+    「無模式」設計，以大寫字母或方向鍵與 Enter 上屏。
+    空格鍵輸入第一聲「ˉ」。
+
+  dependencies:
+    - terra_pinyin
+
+trime:
+  import_preset: bopomofo_tw
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中文, 英文 ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+  - name: zh_tw
+    reset: 1
+    states: [ 字形, 臺灣正體 ]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - script_translator
+  filters:
+    - simplifier@zh_tw
+    - uniquifier
+
+speller:
+  alphabet: 'csbpmfdtnlgkhjqxZCSrziuvaoeEIUAOYWMNP1234567890'
+  initials: 'csbpmfdtnlgkhjqxZCSrziuvaoeEIUAOYWMNP'
+  finals: 'csbpmfdtnlgkhjqxZCSrziuvaoeEIUAOYWMNP1234567890'
+  delimiter: " '"
+  algebra:
+    # 移除無效符號
+    - erase/^xx$/
+    # 將聲調數字保持原樣
+    - xform/([bpmfdtnlgkhjqxZCSrziuvaoeEIUAOYWMNP])([1234567890]?)$/$1$2/
+
+translator:
+  dictionary: terra_pinyin
+  spelling_hints: 5
+  preedit_format:
+    # 標準 RIME 注音符號映射 - 聲母
+    - xform/b/ㄅ/
+    - xform/p/ㄆ/
+    - xform/m/ㄇ/
+    - xform/f/ㄈ/
+    - xform/d/ㄉ/
+    - xform/t/ㄊ/
+    - xform/n/ㄋ/
+    - xform/l/ㄌ/
+    - xform/g/ㄍ/
+    - xform/k/ㄎ/
+    - xform/h/ㄏ/
+    - xform/j/ㄐ/
+    - xform/q/ㄑ/
+    - xform/x/ㄒ/
+    - xform/Z/ㄓ/
+    - xform/C/ㄔ/
+    - xform/S/ㄕ/
+    - xform/r/ㄖ/
+    - xform/z/ㄗ/
+    - xform/c/ㄘ/
+    - xform/s/ㄙ/
+    # 韻母
+    - xform/a/ㄚ/
+    - xform/o/ㄛ/
+    - xform/e/ㄜ/
+    - xform/E/ㄝ/
+    - xform/I/ㄞ/
+    - xform/U/ㄟ/
+    - xform/A/ㄠ/
+    - xform/O/ㄡ/
+    - xform/M/ㄢ/
+    - xform/N/ㄣ/
+    - xform/Y/ㄤ/
+    - xform/W/ㄥ/
+    - xform/P/ㄦ/
+    # 介音
+    - xform/i/ㄧ/
+    - xform/u/ㄨ/
+    - xform/v/ㄩ/
+    # 移除聲調數字顯示
+    - xform/([ㄅ-ㄩ])[1234567890]/$1/
+  comment_format:
+    - xform/([bpmf])n/$1ㄣ/
+
+zh_tw:
+  option_name: zh_tw
+  opencc_config: t2tw.json
+
+punctuator:
+  import_preset: symbols
+
+key_binder:
+  import_preset: default
+  bindings:
+    - { when: has_menu, accept: minus, send: minus }
+    - { when: has_menu, accept: equal, send: equal }
+
+recognizer:
+  import_preset: default

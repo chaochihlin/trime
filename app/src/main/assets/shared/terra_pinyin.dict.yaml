@@ -1,0 +1,168 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# 地球拼音詞典 - 精簡版 (適用於 Watch OS)
+
+---
+name: terra_pinyin
+version: "0.1.test"
+sort: by_weight
+use_preset_vocabulary: false
+max_phrase_length: 4
+min_phrase_weight: 0
+
+...
+
+# 基本詞彙 (為了初始測試)
+一	yi
+二	er
+三	san
+四	si
+五	wu
+六	liu
+七	qi
+八	ba
+九	jiu
+十	shi
+百	bai
+千	qian
+萬	wan
+
+中文	zhong wen
+輸入	shu ru
+法	fa
+注音	zhu yin
+方案	fang an
+鍵盤	jian pan
+手錶	shou biao
+
+你	ni
+我	wo
+他	ta
+她	ta
+它	ta
+我們	wo men
+你們	ni men
+他們	ta men
+
+是	shi
+有	you
+不	bu
+沒	mei
+在	zai
+了	le
+的	de
+和	he
+
+好	hao
+對	dui
+錯	cuo
+大	da
+小	xiao
+多	duo
+少	shao
+
+今天	jin tian
+明天	ming tian
+昨天	zuo tian
+時間	shi jian
+現在	xian zai
+
+謝謝	xie xie
+請	qing
+問	wen
+答	da
+說	shuo
+聽	ting
+看	kan
+寫	xie
+
+手機	shou ji
+電腦	dian nao
+網路	wang lu
+應用	ying yong
+程式	cheng shi
+
+# 注音聲母對應字典條目
+八	b
+白	b
+不	b
+百	bai
+爬	p
+跑	p
+拍	pai
+媽	m
+馬	m
+麻	ma
+發	f
+飛	f
+法	fa
+大	d
+的	d
+打	da
+他	t
+她	t
+太	tai
+你	n
+那	n
+拿	na
+來	l
+了	l
+拉	la
+高	g
+狗	g
+公	g
+給	gei
+可	k
+看	k
+開	kai
+好	h
+和	h
+黑	hei
+就	j
+家	j
+叫	jiao
+去	q
+起	q
+錢	qian
+小	x
+想	x
+謝	xie
+這	Z
+知	Z
+中	zhong
+吃	C
+車	C
+長	chang
+是	S
+說	S
+誰	shui
+人	r
+讓	r
+認	ren
+在	z
+做	z
+走	zou
+從	c
+菜	c
+猜	cai
+三	s
+說	s
+誰	shui
+
+# 韻母和介音對應字典條目
+啊	a
+哦	o
+愛	I
+奧	A
+額	E
+嗯	N
+英	Y
+翁	W
+兒	P
+烏	u
+魚	v
+嗚	U
+噢	O
+嗯	M
+一	i

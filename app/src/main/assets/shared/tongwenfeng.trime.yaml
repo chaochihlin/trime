@@ -1050,6 +1050,72 @@ preset_keyboards:
       - {click: '/', long_click: liquid_keyboard_switch , key_text_size: "18", key_back_color: bh4, key_text_color: th4}
       - {click: Return, composing: Return1, swipe_up: Escape, width: 15, key_back_color: benter, key_text_color: tenter}
 
+
+  bopomofo_tw:
+    author: "Trime 注音支援"
+    name: 台灣注音鍵盤
+    width: 10
+    ascii_mode: 0
+    keys:
+      # 第一行：數字和聲調
+      - {click: '1', label: '1', hint: 'ˉ', key_back_color: bh1, key_text_color: th1}
+      - {click: '2', label: '2', hint: 'ˊ', key_back_color: bh1, key_text_color: th1}  
+      - {click: '3', label: '3', hint: 'ˇ', key_back_color: bh1, key_text_color: th1}
+      - {click: '4', label: '4', hint: 'ˋ', key_back_color: bh1, key_text_color: th1}
+      - {click: '5', label: '5', hint: '˙', key_back_color: bh1, key_text_color: th1}
+      - {click: '6', label: '6', key_back_color: bh1, key_text_color: th1}
+      - {click: '7', label: '7', key_back_color: bh1, key_text_color: th1}
+      - {click: '8', label: '8', key_back_color: bh1, key_text_color: th1}
+      - {click: '9', label: '9', key_back_color: bh1, key_text_color: th1}
+      - {click: '0', label: '0', key_back_color: bh1, key_text_color: th1}
+      # 第二行：注音聲母 (標準 RIME 映射)
+      - {click: 'b', label: 'ㄅ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'p', label: 'ㄆ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'm', label: 'ㄇ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'f', label: 'ㄈ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'd', label: 'ㄉ', key_back_color: bh1, key_text_color: th1}
+      - {click: 't', label: 'ㄊ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'n', label: 'ㄋ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'l', label: 'ㄌ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'g', label: 'ㄍ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'k', label: 'ㄎ', key_back_color: bh1, key_text_color: th1}
+      # 第三行：注音聲母和介音
+      - {width: 5, key_back_color: bh2, key_text_color: th2}
+      - {click: 'h', label: 'ㄏ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'j', label: 'ㄐ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'q', label: 'ㄑ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'x', label: 'ㄒ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'Z', label: 'ㄓ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'C', label: 'ㄔ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'S', label: 'ㄕ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'r', label: 'ㄖ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'z', label: 'ㄗ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'c', label: 'ㄘ', key_back_color: bh1, key_text_color: th1}
+      # 第四行：ㄙ 和韻母
+      - {click: Shift_L, width: 12.5, key_back_color: bgn, key_text_color: tgn}
+      - {click: 's', label: 'ㄙ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'a', label: 'ㄚ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'o', label: 'ㄛ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'e', label: 'ㄜ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'E', label: 'ㄝ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'I', label: 'ㄞ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'U', label: 'ㄟ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'A', label: 'ㄠ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'O', label: 'ㄡ', key_back_color: bh1, key_text_color: th1}
+      - {click: 'M', label: 'ㄢ', key_back_color: bh1, key_text_color: th1}
+      # 第五行：功能鍵和剩餘韻母
+      - {click: Mode_switch, long_click: Menu, width: 12.5, key_back_color: bgn, key_text_color: tgn}
+      - {click: Keyboard_number, width: 12.5, key_back_color: bgn, key_text_color: tgn}
+      - {click: 'i', label: 'ㄧ', key_back_color: bh4, key_text_color: th4}
+      - {click: space, label: '空格', long_click: Mode_switch, width: 20, key_back_color: bkg, key_text_color: tkg}
+      - {click: 'N', label: 'ㄣ', key_back_color: bh4, key_text_color: th4}
+      - {click: 'Y', label: 'ㄤ', key_back_color: bh4, key_text_color: th4}
+      - {click: 'W', label: 'ㄥ', key_back_color: bh4, key_text_color: th4}
+      - {click: 'P', label: 'ㄦ', key_back_color: bh4, key_text_color: th4}
+      - {click: 'u', label: 'ㄨ', key_back_color: bh4, key_text_color: th4}
+      - {click: 'v', label: 'ㄩ', key_back_color: bh4, key_text_color: th4}
+      - {click: BackSpace, width: 13, key_back_color: benter, key_text_color: tenter}
+
   letter:
     author: "暖暖"
     name: 26键默认布局2
@@ -3929,11 +3995,11 @@ preset_keys:
   Right: {label: '→', send: Right, repeatable: true, functional: false}
   select_all: {label: 全选, functional: false, send: Control+a}
   cut: {label: 剪切, functional: false, send: Control+x}
-  copy: {label: 复制, functional: false, send: Control+c}
+  copy: {label: 复制, functional: false, send: Control+c}  # 修復：恢復 copy 定義以支持鍵盤正常功能
   paste: {label: 粘贴, functional: false, send: Control+v}
   paste_clip: {label: 粘贴, send: function, command: clipboard}
   paste_text: {label: 貼上文本, send: Control+Shift+Alt+v} #>=Android 6.0
-  share_text: {label: 分享文本, send: Control+Alt+s} #>=Android 6.0
+  # share_text: {label: 分享文本, send: Control+Alt+s} #>=Android 6.0 # 移除：Watch OS 不需要
   redo: {label: 重做, functional: false, send: Control+Shift+z} #>=Android 6.0
   undo: {label: 撤銷, functional: false, send: Control+z} #>=Android 6.0
   delimiter: {label: 分词, text: ''''}

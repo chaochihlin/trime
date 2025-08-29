@@ -68,7 +68,18 @@ class Rime :
                     lifecycleImpl.emitState(RimeLifecycle.State.READY)
 
                     requireResponse()
-                    SchemaManager.init(getCurrentRimeSchema())
+
+                    // 檢查初始化後的方案狀態
+                    val currentSchema = getCurrentRimeSchema()
+                    val availableSchemas = getAvailableRimeSchemaList()
+                    val selectedSchemas = getSelectedRimeSchemaList()
+
+                    Timber.i("Rime startup complete:")
+                    Timber.i("  Current schema: $currentSchema")
+                    Timber.i("  Available schemas: ${availableSchemas.map { "${it.id}:${it.name}" }}")
+                    Timber.i("  Selected schemas: ${selectedSchemas.map { "${it.id}:${it.name}" }}")
+
+                    SchemaManager.init(currentSchema)
                 }
 
                 override fun nativeFinalize() {
@@ -84,7 +95,31 @@ class Rime :
 
     override suspend fun isEmpty(): Boolean =
         withRimeContext {
-            getCurrentRimeSchema() == ".default" // 無方案
+            val currentSchema = getCurrentRimeSchema()
+            val selectedSchemas = getRimeSchemaList()
+            val availableSchemas = getAvailableRimeSchemaList()
+            val enabledSchemas = getSelectedRimeSchemaList()
+
+            Timber.d("Rime.isEmpty: Current schema: $currentSchema")
+            Timber.d("Rime.isEmpty: Selected schemas count: ${selectedSchemas.size}")
+            Timber.d("Rime.isEmpty: Available schemas count: ${availableSchemas.size}")
+            Timber.d("Rime.isEmpty: Enabled schemas count: ${enabledSchemas.size}")
+
+            selectedSchemas.forEach { schema ->
+                Timber.d("Rime.isEmpty: Selected schema - ID: ${schema.id}, Name: ${schema.name}")
+            }
+
+            availableSchemas.forEach { schema ->
+                Timber.d("Rime.isEmpty: Available schema - ID: ${schema.id}, Name: ${schema.name}")
+            }
+
+            enabledSchemas.forEach { schema ->
+                Timber.d("Rime.isEmpty: Enabled schema - ID: ${schema.id}, Name: ${schema.name}")
+            }
+
+            val isEmpty = currentSchema == ".default" || selectedSchemas.isEmpty()
+            Timber.d("Rime.isEmpty: Result: $isEmpty")
+            isEmpty
         }
 
     override suspend fun syncUserData(): Boolean =
@@ -161,7 +196,15 @@ class Rime :
 
     override suspend fun selectedSchemaId(): String = withRimeContext { getCurrentRimeSchema() }
 
-    override suspend fun selectSchema(schemaId: String) = withRimeContext { selectRimeSchema(schemaId) }
+    override suspend fun selectSchema(schemaId: String) =
+        withRimeContext {
+            val result = selectRimeSchema(schemaId)
+            if (result) {
+                requireResponse()
+                SchemaManager.init(schemaId)
+            }
+            result
+        }
 
     override suspend fun commitComposition(): Boolean = withRimeContext { commitRimeComposition().also { if (it) requireResponse() } }
 
