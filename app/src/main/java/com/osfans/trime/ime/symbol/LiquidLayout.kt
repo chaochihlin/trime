@@ -148,7 +148,6 @@ class LiquidLayout(
     val boardView =
         recyclerView {
             val space = dp(3)
-            addItemDecoration(SpacesItemDecoration(space))
             setPadding(space)
         }
 

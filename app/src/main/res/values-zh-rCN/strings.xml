@@ -135,7 +135,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <string name="scroll_to_bottom">跳到最后</string>
     <string name="clear">清除画面</string>
     <string name="crash_logs">崩溃日志</string>
-    <string name="real_time_logs">实时日志</string>
     <string name="real_time_logs_clear">清除所有日志</string>
     <string name="real_time_logs_confirm">要清除有日志吗？(此动作不能复原)</string>
     <string name="app_crash">应用程序崩溃了</string>
@@ -213,7 +212,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <string name="top_right">右上</string>
     <string name="candidates_window_position">候选词窗口位置</string>
     <string name="deploy_failure">部署失败</string>
-    <string name="view_deploy_failure_log">部署失败。点此查看错误日志。</string>
     <string name="hide_quick_bar">隐藏快捷栏</string>
     <string name="navbar_bkg_none">无背景</string>
     <string name="navbar_bkg_color_only">跟随键盘背景色</string>

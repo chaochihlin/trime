@@ -11,7 +11,6 @@ import androidx.preference.Preference
 import com.osfans.trime.R
 import com.osfans.trime.ui.components.PaddingPreferenceFragment
 import com.osfans.trime.ui.main.MainViewModel
-import com.osfans.trime.ui.main.settings.SoundEffectPickerDialog
 import kotlinx.coroutines.launch
 
 class KeyboardFragment : PaddingPreferenceFragment() {
@@ -22,12 +21,6 @@ class KeyboardFragment : PaddingPreferenceFragment() {
         rootKey: String?,
     ) {
         addPreferencesFromResource(R.xml.keyboard_preference)
-        findPreference<Preference>("custom_sound_effect_name")?.apply {
-            setOnPreferenceClickListener {
-                lifecycleScope.launch { SoundEffectPickerDialog.build(lifecycleScope, requireContext()).show() }
-                true
-            }
-        }
     }
 
     override fun onResume() {

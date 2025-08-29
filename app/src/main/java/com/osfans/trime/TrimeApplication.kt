@@ -5,7 +5,6 @@
 package com.osfans.trime
 
 import android.app.Application
-import android.content.Intent
 import android.content.IntentFilter
 import android.os.Process
 import android.util.Log
@@ -17,7 +16,6 @@ import com.osfans.trime.data.db.CollectionHelper
 import com.osfans.trime.data.db.DraftHelper
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.receiver.RimeIntentReceiver
-import com.osfans.trime.ui.main.LogActivity
 import com.osfans.trime.worker.BackgroundSyncWork
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
@@ -68,22 +66,7 @@ class TrimeApplication : Application() {
                     // continuous crashes within 10 seconds, maybe in a crash loop. just bail
                     exitProcess(10)
                 }
-                startActivity(
-                    Intent(applicationContext, LogActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra(LogActivity.FROM_CRASH, true)
-                        // avoid transaction overflow
-                        val truncated =
-                            e.stackTraceToString().let {
-                                if (it.length > MAX_STACKTRACE_SIZE) {
-                                    it.take(MAX_STACKTRACE_SIZE) + "<truncated>"
-                                } else {
-                                    it
-                                }
-                            }
-                        putExtra(LogActivity.CRASH_STACK_TRACE, truncated)
-                    },
-                )
+                // Crash log activity removed for watch optimization
                 exitProcess(10)
             }
         }

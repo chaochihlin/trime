@@ -4,8 +4,6 @@
 
 package com.osfans.trime.daemon
 
-import android.app.PendingIntent
-import android.content.Intent
 import android.graphics.Color
 import androidx.core.app.NotificationCompat
 import com.osfans.trime.R
@@ -16,10 +14,8 @@ import com.osfans.trime.core.RimeLifecycle
 import com.osfans.trime.core.RimeMessage
 import com.osfans.trime.core.lifecycleScope
 import com.osfans.trime.core.whenReady
-import com.osfans.trime.ui.main.LogActivity
 import com.osfans.trime.util.appContext
 import com.osfans.trime.util.createNotificationChannel
-import com.osfans.trime.util.readText
 import com.osfans.trime.util.subprocess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -192,28 +188,11 @@ object RimeDaemon {
                     }
                 }
                 RimeMessage.DeployMessage.State.Failure -> {
-                    val intent =
-                        Intent(appContext, LogActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            val log =
-                                subprocess("logcat", "-v", "brief", "-s", "rime.trime:W", "-d")
-                                    .readText()
-                            putExtra(LogActivity.FROM_DEPLOY, true)
-                            putExtra(LogActivity.DEPLOY_FAILURE_TRACE, log)
-                        }
+                    // Simplified failure notification for watch optimization
                     sendNotification(MESSAGE_ID + 2) {
                         setSmallIcon(R.drawable.ic_baseline_warning_24)
                         setColor(Color.YELLOW)
-                        setContentText(appContext.getString(R.string.view_deploy_failure_log))
-                        setContentIntent(
-                            PendingIntent.getActivity(
-                                appContext,
-                                0,
-                                intent,
-                                PendingIntent.FLAG_ONE_SHOT or
-                                    PendingIntent.FLAG_IMMUTABLE,
-                            ),
-                        )
+                        setContentText(appContext.getString(R.string.deploy_failure))
                         setOngoing(false)
                         setAutoCancel(true)
                         setPriority(NotificationCompat.PRIORITY_HIGH)

@@ -31,9 +31,6 @@ import com.osfans.trime.ime.symbol.LiquidKeyboard
 import com.osfans.trime.ime.symbol.SymbolBoardType
 import com.osfans.trime.ime.symbol.TabManager
 import com.osfans.trime.ime.window.BoardWindowManager
-import com.osfans.trime.ui.main.settings.ColorPickerDialog
-import com.osfans.trime.ui.main.settings.SoundEffectPickerDialog
-import com.osfans.trime.ui.main.settings.ThemePickerDialog
 import com.osfans.trime.util.AppUtils
 import com.osfans.trime.util.buildIntentFromAction
 import com.osfans.trime.util.buildIntentFromArgument
@@ -80,25 +77,6 @@ class CommonKeyboardActionListener(
     }
 
     private fun showThemePicker() {
-        showDialog { api ->
-            ThemePickerDialog.build(service.lifecycleScope, context) {
-                api.commitComposition()
-            }
-        }
-    }
-
-    private fun showColorPicker() {
-        showDialog { api ->
-            ColorPickerDialog.build(service.lifecycleScope, context) {
-                api.commitComposition()
-            }
-        }
-    }
-
-    private fun showSoundEffectPicker() {
-        showDialog {
-            SoundEffectPickerDialog.build(service.lifecycleScope, context)
-        }
     }
 
     private fun showEnabledSchemaPicker() {
@@ -232,13 +210,10 @@ class CommonKeyboardActionListener(
                     KeyEvent.KEYCODE_SETTINGS -> { // Settings
                         when (action.option) {
                             "theme" -> showThemePicker()
-                            "color" -> showColorPicker()
                             "schema" -> AppUtils.launchMainToSchemaList(context)
-                            "sound" -> showSoundEffectPicker()
                             else -> AppUtils.launchMainActivity(service)
                         }
                     }
-                    KeyEvent.KEYCODE_PROG_RED -> showColorPicker()
                     KeyEvent.KEYCODE_MENU -> showEnabledSchemaPicker()
                     else -> {
                         if (action.modifier == 0 && KeyboardSwitcher.currentKeyboard.isOnlyShiftOn) {

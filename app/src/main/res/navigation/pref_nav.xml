@@ -37,27 +37,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
         <action
-            android:id="@+id/action_prefFragment_to_toolkitFragment"
-            app:destination="@id/toolkitFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
-        <action
-            android:id="@+id/action_prefFragment_to_aboutFragment"
-            app:destination="@id/aboutFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
-        <action
-            android:id="@+id/action_prefFragment_to_clipboardFragment"
-            app:destination="@id/clipboardFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
-        <action
             android:id="@+id/action_prefFragment_to_candidatesSettingsFragment"
             app:destination="@id/candidatesSettingsFragment"
             app:enterAnim="@anim/nav_default_enter_anim"
@@ -98,30 +77,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
         android:id="@+id/otherFragment"
         android:name="com.osfans.trime.ui.fragments.OtherFragment"
         android:label="@string/others" />
-    <fragment
-        android:id="@+id/toolkitFragment"
-        android:name="com.osfans.trime.ui.fragments.ToolkitFragment"
-        android:label="@string/toolkit" />
-    <fragment
-        android:id="@+id/aboutFragment"
-        android:name="com.osfans.trime.ui.fragments.AboutFragment"
-        android:label="@string/about" >
-        <action
-            android:id="@+id/action_aboutFragment_to_licenseFragment"
-            app:destination="@id/licenseFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
-    </fragment>
-    <fragment
-        android:id="@+id/licenseFragment"
-        android:name="com.osfans.trime.ui.fragments.LicenseFragment"
-        android:label="@string/license" />
-    <fragment
-        android:id="@+id/clipboardFragment"
-        android:name="com.osfans.trime.ui.fragments.ClipboardFragment"
-        android:label="@string/clipboard" />
     <fragment
         android:id="@+id/candidatesSettingsFragment"
         android:name="com.osfans.trime.ui.main.settings.CandidatesSettingsFragment"

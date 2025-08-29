@@ -137,7 +137,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <string name="app_crash_message">抱歉，但我們為您帶來了一些紀錄檔以供調查。</string>
     <string name="app_crash">應用程式當機</string>
     <string name="crash_logs">當機紀錄檔</string>
-    <string name="real_time_logs">即時紀錄檔</string>
     <string name="real_time_logs_clear">清除所有紀錄檔</string>
     <string name="real_time_logs_confirm">要清除有紀錄檔嗎？(此動作不能復原)</string>
     <string name="clear">清除畫面</string>
@@ -214,7 +213,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <string name="top_right">右上</string>
     <string name="candidates_window_position">候選詞視窗位置</string>
     <string name="deploy_failure">部署失敗</string>
-    <string name="view_deploy_failure_log">部署失敗。點此檢視錯誤日誌。</string>
     <string name="hide_quick_bar">隱藏快捷欄</string>
     <string name="navbar_bkg_none">無背景</string>
     <string name="navbar_bkg_color_only">跟隨鍵盤背景色</string>

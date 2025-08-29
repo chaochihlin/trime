@@ -65,7 +65,6 @@ class DbAdapter(
     }
 
     override fun onEdit(bean: DatabaseBean) {
-        bean.text?.let { AppUtils.launchLiquidKeyboardEdit(ctx, type, bean.id, it) }
     }
 
     override fun onCollect(bean: DatabaseBean) {

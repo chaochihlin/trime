@@ -13,8 +13,6 @@ import androidx.annotation.IdRes
 import androidx.navigation.NavDeepLinkBuilder
 import com.osfans.trime.R
 import com.osfans.trime.ime.symbol.SymbolBoardType
-import com.osfans.trime.ui.main.LiquidKeyboardEditActivity
-import com.osfans.trime.ui.main.LogActivity
 import com.osfans.trime.ui.main.PrefMainActivity
 import timber.log.Timber
 
@@ -77,21 +75,4 @@ object AppUtils {
 
     fun launchMainToSchemaList(context: Context) = launchMainToDest(context, R.id.schemaListFragment)
 
-    fun launchLogActivity(context: Context) {
-        context.startActivity<LogActivity>()
-    }
-
-    fun launchLiquidKeyboardEdit(
-        context: Context,
-        type: SymbolBoardType,
-        id: Int,
-        text: String,
-    ) {
-        context.startActivity<LiquidKeyboardEditActivity> {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra(LiquidKeyboardEditActivity.DB_BEAN_ID, id)
-            putExtra(LiquidKeyboardEditActivity.DB_BEAN_TEXT, text)
-            putExtra(LiquidKeyboardEditActivity.LIQUID_KEYBOARD_TYPE, type.name)
-        }
-    }
 }
