@@ -51,7 +51,6 @@ engine:
     - punct_translator
     - script_translator
   filters:
-    - simplifier@zh_tw
     - uniquifier
 
 speller:
@@ -114,9 +113,9 @@ translator:
   comment_format:
     - xform/([bpmf])n/$1ㄣ/
 
-zh_tw:
-  option_name: zh_tw
-  opencc_config: t2tw.json
+# zh_tw:
+#   option_name: zh_tw
+#   opencc_config: t2tw.json
 
 punctuator:
   import_preset: symbols

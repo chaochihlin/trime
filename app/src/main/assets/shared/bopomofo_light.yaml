@@ -1,0 +1,114 @@
+# SPDX-FileCopyrightText: 2015 - 2024 Rime community
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# 注音專用極簡主題
+# encoding: utf-8
+
+config_version: "3.0"
+name: 注音極簡
+author: Gemini 優化
+
+style:
+  auto_caps: false
+  candidate_font: han.ttf
+  candidate_padding: 5
+  candidate_spacing: 0.5
+  candidate_text_size: 22
+  candidate_use_cursor: true
+  candidate_view_height: 28
+  comment_font: comment.ttf
+  comment_height: 12
+  comment_on_top: true
+  comment_text_size: 12
+  hanb_font: hanb.ttf
+  horizontal: true
+  horizontal_gap: 4
+  key_font: symbol.ttf
+  key_height: 48
+  key_text_size: 24
+  label_text_size: 22
+  label_font: label.ttf
+  latin_font: latin.ttf
+  keyboard_height: 250
+  keyboard_height_land: 200
+  preview_font: latin.ttf
+  preview_height: 60
+  preview_offset: -12
+  preview_text_size: 40
+  round_corner: 12
+  shadow_radius: 0.0
+  symbol_font: symbol.ttf
+  symbol_text_size: 10
+  text_font: latin.ttf
+  text_size: 14
+  vertical_gap: 8
+
+preset_color_schemes:
+  default:
+    name: "極簡配色"
+    author: "Gemini 優化"
+    text_color: 0xff000000 # 編碼文字顏色
+    back_color: 0xffffffff
+    candidate_text_color: 0xff000000
+    comment_text_color: 0xffe1e3e7
+    hilited_candidate_back_color: 0xffe1e3e7
+    hilited_candidate_text_color: 0xff3266a0
+    hilited_text_color: 0xff000000
+    key_back_color: 0xffffffff
+    key_text_color: 0xff000000
+    keyboard_back_color: 0xffe1e3e7
+    label_color: 0xff3266a0
+
+preset_keyboards:
+  bopomofo_tw:
+    author: "Trime 注音支援"
+    name: 台灣注音鍵盤
+    width: 10
+    ascii_mode: 0
+    keys:
+      # 第一行
+      - {click: 'b', label: 'ㄅ', label_symbol: '1'}
+      - {click: 'd', label: 'ㄉ', label_symbol: '2'}
+      - {click: 'ˇ', label: 'ˇ', label_symbol: '3'}
+      - {click: 'ˋ', label: 'ˋ', label_symbol: '4'}
+      - {click: 'Z', label: 'ㄓ', label_symbol: '5'}
+      - {click: 'ˊ', label: 'ˊ', label_symbol: '6'}
+      - {click: '˙', label: '˙', label_symbol: '7'}
+      - {click: 'a', label: 'ㄚ', label_symbol: '8'}
+      - {click: 'I', label: 'ㄞ', label_symbol: '9'}
+      - {click: 'M', label: 'ㄢ', label_symbol: '0'}
+      # 第二行
+      - {click: 'p', label: 'ㄆ', label_symbol: 'q'}
+      - {click: 't', label: 'ㄊ', label_symbol: 'w'}
+      - {click: 'g', label: 'ㄍ', label_symbol: 'e'}
+      - {click: 'j', label: 'ㄐ', label_symbol: 'r'}
+      - {click: 'C', label: 'ㄔ', label_symbol: 't'}
+      - {click: 'z', label: 'ㄗ', label_symbol: 'y'}
+      - {click: 'i', label: 'ㄧ', label_symbol: 'u'}
+      - {click: 'o', label: 'ㄛ', label_symbol: 'i'}
+      - {click: 'U', label: 'ㄟ', label_symbol: 'o'}
+      - {click: 'N', label: 'ㄣ', label_symbol: 'p'}
+      # 第三行
+      - {click: 'm', label: 'ㄇ', label_symbol: 'a'}
+      - {click: 'n', label: 'ㄋ', label_symbol: 's'}
+      - {click: 'k', label: 'ㄎ', label_symbol: 'd'}
+      - {click: 'q', label: 'ㄑ', label_symbol: 'f'}
+      - {click: 'S', label: 'ㄕ', label_symbol: 'g'}
+      - {click: 'c', label: 'ㄘ', label_symbol: 'h'}
+      - {click: 'u', label: 'ㄨ', label_symbol: 'j'}
+      - {click: 'e', label: 'ㄜ', label_symbol: 'k'}
+      - {click: 'A', label: 'ㄠ', label_symbol: 'l'}
+      - {click: 'Y', label: 'ㄤ', label_symbol: ';'}
+      # 第四行
+      - {click: 'f', label: 'ㄈ', label_symbol: 'z'}
+      - {click: 'l', label: 'ㄌ', label_symbol: 'x'}
+      - {click: 'h', label: 'ㄏ', label_symbol: 'c'}
+      - {click: 'x', label: 'ㄒ', label_symbol: 'v'}
+      - {click: 'r', label: 'ㄖ', label_symbol: 'b'}
+      - {click: 's', label: 'ㄙ', label_symbol: 'n'}
+      - {click: 'v', label: 'ㄩ', label_symbol: 'm'}
+      - {click: 'E', label: 'ㄝ', label_symbol: ','}
+      - {click: 'O', label: 'ㄡ', label_symbol: '!'}
+      - {click: 'W', label: 'ㄥ', label_symbol: '?'}
+      - {click: BackSpace, width: 15}
