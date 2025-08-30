@@ -1068,41 +1068,39 @@ preset_keyboards:
       - {click: 'I', label: 'ㄞ', label_symbol: '9', key_back_color: bh1, key_text_color: th1}
       - {click: 'M', label: 'ㄢ', label_symbol: '0', key_back_color: bh1, key_text_color: th1}
       # 第二行：注音聲母和介音
-      - {width: 5, key_back_color: bh2, key_text_color: th2}
-      - {click: 'h', label: 'ㄏ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'j', label: 'ㄐ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'q', label: 'ㄑ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'x', label: 'ㄒ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'Z', label: 'ㄓ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'C', label: 'ㄔ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'S', label: 'ㄕ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'r', label: 'ㄖ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'z', label: 'ㄗ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'c', label: 'ㄘ', key_back_color: bh1, key_text_color: th1}
-      # 第三行：ㄙ 和韻母
-      - {click: Shift_L, width: 12.5, key_back_color: bgn, key_text_color: tgn}
-      - {click: 's', label: 'ㄙ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'a', label: 'ㄚ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'o', label: 'ㄛ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'e', label: 'ㄜ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'E', label: 'ㄝ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'I', label: 'ㄞ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'U', label: 'ㄟ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'A', label: 'ㄠ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'O', label: 'ㄡ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'M', label: 'ㄢ', key_back_color: bh1, key_text_color: th1}
-      # 第四行：功能鍵和剩餘韻母
-      - {click: Mode_switch, long_click: Menu, width: 12.5, key_back_color: bgn, key_text_color: tgn}
-      - {click: Keyboard_number, width: 12.5, key_back_color: bgn, key_text_color: tgn}
-      - {click: 'i', label: 'ㄧ', key_back_color: bh4, key_text_color: th4}
-      - {click: space, label: '空格', long_click: Mode_switch, width: 20, key_back_color: bkg, key_text_color: tkg}
-      - {click: 'N', label: 'ㄣ', key_back_color: bh4, key_text_color: th4}
-      - {click: 'Y', label: 'ㄤ', key_back_color: bh4, key_text_color: th4}
-      - {click: 'W', label: 'ㄥ', key_back_color: bh4, key_text_color: th4}
-      - {click: 'P', label: 'ㄦ', key_back_color: bh4, key_text_color: th4}
-      - {click: 'u', label: 'ㄨ', key_back_color: bh4, key_text_color: th4}
-      - {click: 'v', label: 'ㄩ', key_back_color: bh4, key_text_color: th4}
-      - {click: BackSpace, width: 13, key_back_color: benter, key_text_color: tenter}
+      - {click: 'p', label: 'ㄆ', label_symbol: 'q', key_back_color: bh1, key_text_color: th1}
+      - {click: 't', label: 'ㄊ', label_symbol: 'w', key_back_color: bh1, key_text_color: th1}
+      - {click: 'g', label: 'ㄍ', label_symbol: 'e', key_back_color: bh1, key_text_color: th1}
+      - {click: 'j', label: 'ㄐ', label_symbol: 'r', key_back_color: bh1, key_text_color: th1}
+      - {click: 'C', label: 'ㄔ', label_symbol: 't', key_back_color: bh1, key_text_color: th1}
+      - {click: 'z', label: 'ㄗ', label_symbol: 'y', key_back_color: bh1, key_text_color: th1}
+      - {click: 'i', label: 'ㄧ', label_symbol: 'u', key_back_color: bh1, key_text_color: th1}
+      - {click: 'o', label: 'ㄛ', label_symbol: 'i', key_back_color: bh1, key_text_color: th1}
+      - {click: 'U', label: 'ㄟ', label_symbol: 'o', key_back_color: bh1, key_text_color: th1}
+      - {click: 'N', label: 'ㄣ', label_symbol: 'p', key_back_color: bh1, key_text_color: th1}
+      # 第三行：asdf 排列
+      - {click: 'm', label: 'ㄇ', label_symbol: 'a', key_back_color: bh1, key_text_color: th1}
+      - {click: 'n', label: 'ㄋ', label_symbol: 's', key_back_color: bh1, key_text_color: th1}
+      - {click: 'k', label: 'ㄎ', label_symbol: 'd', key_back_color: bh1, key_text_color: th1}
+      - {click: 'q', label: 'ㄑ', label_symbol: 'f', key_back_color: bh1, key_text_color: th1}
+      - {click: 'S', label: 'ㄕ', label_symbol: 'g', key_back_color: bh1, key_text_color: th1}
+      - {click: 'c', label: 'ㄘ', label_symbol: 'h', key_back_color: bh1, key_text_color: th1}
+      - {click: 'u', label: 'ㄨ', label_symbol: 'j', key_back_color: bh1, key_text_color: th1}
+      - {click: 'e', label: 'ㄜ', label_symbol: 'k', key_back_color: bh1, key_text_color: th1}
+      - {click: 'A', label: 'ㄠ', label_symbol: 'l', key_back_color: bh1, key_text_color: th1}
+      - {click: 'Y', label: 'ㄤ', label_symbol: ';', key_back_color: bh1, key_text_color: th1}
+      # 第四行：zxcv 排列
+      - {click: 'f', label: 'ㄈ', label_symbol: 'z', key_back_color: bh3, key_text_color: th3}
+      - {click: 'l', label: 'ㄌ', label_symbol: 'x', key_back_color: bh3, key_text_color: th3}
+      - {click: 'h', label: 'ㄏ', label_symbol: 'c', key_back_color: bh3, key_text_color: th3}
+      - {click: 'x', label: 'ㄒ', label_symbol: 'v', key_back_color: bh3, key_text_color: th3}
+      - {click: 'r', label: 'ㄖ', label_symbol: 'b', key_back_color: bh3, key_text_color: th3}
+      - {click: 's', label: 'ㄙ', label_symbol: 'n', key_back_color: bh3, key_text_color: th3}
+      - {click: 'v', label: 'ㄩ', label_symbol: 'm', key_back_color: bh3, key_text_color: th3}
+      - {click: 'E', label: 'ㄝ', label_symbol: ',', key_back_color: bh3, key_text_color: th3}
+      - {click: 'O', label: 'ㄡ', label_symbol: '!', key_back_color: bh3, key_text_color: th3}
+      - {click: 'W', label: 'ㄥ', label_symbol: '?', key_back_color: bh3, key_text_color: th3}
+      - {click: BackSpace, width: 15, key_back_color: benter, key_text_color: tenter}
 
   letter:
     author: "暖暖"
