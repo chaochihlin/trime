@@ -6,12 +6,9 @@ package com.osfans.trime.ui.fragments
 
 import android.os.Bundle
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.preference.Preference
 import com.osfans.trime.R
 import com.osfans.trime.ui.components.PaddingPreferenceFragment
 import com.osfans.trime.ui.main.MainViewModel
-import kotlinx.coroutines.launch
 
 class KeyboardFragment : PaddingPreferenceFragment() {
     private val viewModel: MainViewModel by activityViewModels()

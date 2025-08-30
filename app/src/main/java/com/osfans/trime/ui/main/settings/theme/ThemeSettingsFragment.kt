@@ -6,11 +6,8 @@
 package com.osfans.trime.ui.main.settings.theme
 
 import android.os.Bundle
-import androidx.lifecycle.lifecycleScope
-import androidx.preference.Preference
 import com.osfans.trime.data.prefs.PreferenceDelegateFragment
 import com.osfans.trime.data.theme.ThemeManager
-import kotlinx.coroutines.launch
 
 class ThemeSettingsFragment : PreferenceDelegateFragment(ThemeManager.prefs) {
     override fun onCreatePreferences(

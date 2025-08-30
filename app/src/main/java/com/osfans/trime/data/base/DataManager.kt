@@ -51,7 +51,12 @@ object DataManager {
     val sharedDataDir = File(appContext.getExternalFilesDir(null), "shared").also { it.mkdirs() }
 
     val userDataDir
-        get() = File(prefs.profile.userDataDir.getValue().takeIf { it.isNotEmpty() } ?: defaultDataDir.absolutePath).also { it.mkdirs() }
+        get() =
+            File(
+                prefs.profile.userDataDir
+                    .getValue()
+                    .takeIf { it.isNotEmpty() } ?: defaultDataDir.absolutePath,
+            ).also { it.mkdirs() }
 
     val prebuiltDataDir = sharedDataDir
     val stagingDir get() = File(userDataDir, "build")

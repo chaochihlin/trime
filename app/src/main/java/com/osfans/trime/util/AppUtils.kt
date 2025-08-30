@@ -12,7 +12,6 @@ import android.view.KeyEvent
 import androidx.annotation.IdRes
 import androidx.navigation.NavDeepLinkBuilder
 import com.osfans.trime.R
-import com.osfans.trime.ime.symbol.SymbolBoardType
 import com.osfans.trime.ui.main.PrefMainActivity
 import timber.log.Timber
 
@@ -74,5 +73,4 @@ object AppUtils {
     }
 
     fun launchMainToSchemaList(context: Context) = launchMainToDest(context, R.id.schemaListFragment)
-
 }

@@ -50,8 +50,8 @@ target_compile_options(
 
 set(LIBMARISA marisa)
 option(USE_SYSTEM_MARISA "" ON)
-add_subdirectory(OpenCC)
-include(OpenccWorkarounds)
+# add_subdirectory(OpenCC)
+# include(OpenccWorkarounds)
 
 set(X11Keysym "${CMAKE_SOURCE_DIR}/librime/include")
 include_directories("${X11Keysym}")

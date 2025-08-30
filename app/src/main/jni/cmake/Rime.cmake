@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # if you want to add some new plugins, add them to librime_jni/rime_jni.cc too
-set(RIME_PLUGINS librime-lua librime-octagram librime-predict)
+set(RIME_PLUGINS "")
 
 # symlink plugins
 foreach(plugin ${RIME_PLUGINS})
@@ -49,8 +49,8 @@ add_dependencies(rime-static apply_git_patch)
 target_compile_options(
   rime-static PRIVATE "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=." "-Wno-error=deprecated-declarations")
 
-target_compile_options(
-  rime-lua-objs PRIVATE "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.")
+# target_compile_options(
+#   rime-lua-objs PRIVATE "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.")
 
-target_compile_options(
-  rime-octagram-objs PRIVATE "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.")
+# target_compile_options(
+#   rime-octagram-objs PRIVATE "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}=.")
