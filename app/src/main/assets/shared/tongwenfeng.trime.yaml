@@ -1057,29 +1057,18 @@ preset_keyboards:
     width: 10
     ascii_mode: 0
     keys:
-      # 第一行：數字和聲調
-      - {click: '1', label: '1', hint: 'ˉ', key_back_color: bh1, key_text_color: th1}
-      - {click: '2', label: '2', hint: 'ˊ', key_back_color: bh1, key_text_color: th1}  
-      - {click: '3', label: '3', hint: 'ˇ', key_back_color: bh1, key_text_color: th1}
-      - {click: '4', label: '4', hint: 'ˋ', key_back_color: bh1, key_text_color: th1}
-      - {click: '5', label: '5', hint: '˙', key_back_color: bh1, key_text_color: th1}
-      - {click: '6', label: '6', key_back_color: bh1, key_text_color: th1}
-      - {click: '7', label: '7', key_back_color: bh1, key_text_color: th1}
-      - {click: '8', label: '8', key_back_color: bh1, key_text_color: th1}
-      - {click: '9', label: '9', key_back_color: bh1, key_text_color: th1}
-      - {click: '0', label: '0', key_back_color: bh1, key_text_color: th1}
-      # 第二行：注音聲母 (標準 RIME 映射)
-      - {click: 'b', label: 'ㄅ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'p', label: 'ㄆ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'm', label: 'ㄇ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'f', label: 'ㄈ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'd', label: 'ㄉ', key_back_color: bh1, key_text_color: th1}
-      - {click: 't', label: 'ㄊ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'n', label: 'ㄋ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'l', label: 'ㄌ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'g', label: 'ㄍ', key_back_color: bh1, key_text_color: th1}
-      - {click: 'k', label: 'ㄎ', key_back_color: bh1, key_text_color: th1}
-      # 第三行：注音聲母和介音
+      # 第一行：優化注音排列 (ㄅ ㄉ ˇ ˋ ㄓ ˊ ˙ ㄚ ㄞ ㄢ)
+      - {click: 'b', label: 'ㄅ', label_symbol: '1', key_back_color: bh1, key_text_color: th1}
+      - {click: 'd', label: 'ㄉ', label_symbol: '2', key_back_color: bh1, key_text_color: th1}
+      - {click: 'ˇ', label: 'ˇ', label_symbol: '3', key_back_color: bh1, key_text_color: th1}
+      - {click: 'ˋ', label: 'ˋ', label_symbol: '4', key_back_color: bh1, key_text_color: th1}
+      - {click: 'Z', label: 'ㄓ', label_symbol: '5', key_back_color: bh1, key_text_color: th1}
+      - {click: 'ˊ', label: 'ˊ', label_symbol: '6', key_back_color: bh1, key_text_color: th1}
+      - {click: '˙', label: '˙', label_symbol: '7', key_back_color: bh1, key_text_color: th1}
+      - {click: 'a', label: 'ㄚ', label_symbol: '8', key_back_color: bh1, key_text_color: th1}
+      - {click: 'I', label: 'ㄞ', label_symbol: '9', key_back_color: bh1, key_text_color: th1}
+      - {click: 'M', label: 'ㄢ', label_symbol: '0', key_back_color: bh1, key_text_color: th1}
+      # 第二行：注音聲母和介音
       - {width: 5, key_back_color: bh2, key_text_color: th2}
       - {click: 'h', label: 'ㄏ', key_back_color: bh1, key_text_color: th1}
       - {click: 'j', label: 'ㄐ', key_back_color: bh1, key_text_color: th1}
@@ -1091,7 +1080,7 @@ preset_keyboards:
       - {click: 'r', label: 'ㄖ', key_back_color: bh1, key_text_color: th1}
       - {click: 'z', label: 'ㄗ', key_back_color: bh1, key_text_color: th1}
       - {click: 'c', label: 'ㄘ', key_back_color: bh1, key_text_color: th1}
-      # 第四行：ㄙ 和韻母
+      # 第三行：ㄙ 和韻母
       - {click: Shift_L, width: 12.5, key_back_color: bgn, key_text_color: tgn}
       - {click: 's', label: 'ㄙ', key_back_color: bh1, key_text_color: th1}
       - {click: 'a', label: 'ㄚ', key_back_color: bh1, key_text_color: th1}
@@ -1103,7 +1092,7 @@ preset_keyboards:
       - {click: 'A', label: 'ㄠ', key_back_color: bh1, key_text_color: th1}
       - {click: 'O', label: 'ㄡ', key_back_color: bh1, key_text_color: th1}
       - {click: 'M', label: 'ㄢ', key_back_color: bh1, key_text_color: th1}
-      # 第五行：功能鍵和剩餘韻母
+      # 第四行：功能鍵和剩餘韻母
       - {click: Mode_switch, long_click: Menu, width: 12.5, key_back_color: bgn, key_text_color: tgn}
       - {click: Keyboard_number, width: 12.5, key_back_color: bgn, key_text_color: tgn}
       - {click: 'i', label: 'ㄧ', key_back_color: bh4, key_text_color: th4}
