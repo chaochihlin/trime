@@ -18,8 +18,25 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 object DraftHelper : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default) {
-    private lateinit var dftDb: Database
-    private lateinit var dftDao: DatabaseDao
+    private lateinit var applicationContext: Context // Store application context
+
+    // Synchronization lock for database initialization
+    private val lock = Any()
+
+    // Lazy initialization of the database and DAO
+    private val dftDb: Database by lazy {
+        synchronized(lock) {
+            Timber.d("Building Room database for DraftHelper...")
+            Room
+                .databaseBuilder(applicationContext, Database::class.java, "draft.db")
+                .addMigrations(Database.MIGRATION_3_4)
+                .build()
+        }
+    }
+
+    private val dftDao: DatabaseDao by lazy {
+        dftDb.databaseDao()
+    }
 
     private val mutex = Mutex()
 
@@ -34,20 +51,17 @@ object DraftHelper : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatch
     private val output by lazy {
         val rules by AppPrefs.defaultInstance().clipboard.draftOutputRules
         rules
-            .split('\n')
+            .split('\n') // Use double backslash for literal backslash in string
             .map { Regex(it) }
             .toHashSet()
     }
 
     var lastBean: DatabaseBean? = null
 
+    // This init function will now just store the context, not build the DB
     fun init(context: Context) {
-        dftDb =
-            Room
-                .databaseBuilder(context, Database::class.java, "draft.db")
-                .addMigrations(Database.MIGRATION_3_4)
-                .build()
-        dftDao = dftDb.databaseDao()
+        this.applicationContext = context.applicationContext
+        Timber.d("DraftHelper initialized (context stored)")
         launch { updateItemCount() }
     }
 
@@ -86,7 +100,7 @@ object DraftHelper : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatch
     }
 
     fun onExtractedTextChanged(inputConnection: InputConnection) {
-        if (!(limit != 0 && this::dftDao.isInitialized)) return
+        if (!(limit != 0 && this::applicationContext.isInitialized)) return
 
         inputConnection
             .let { DatabaseBean.fromInputConnection(it) }

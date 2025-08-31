@@ -455,6 +455,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     override fun onCreateInputView(): View? {
         Timber.d("onCreateInputView")
         replaceInputViews(ThemeManager.activeTheme)
+        inputView?.keyboardWindow?.initializeDrawingState()
         // We will call `setInputView` by ourselves. This is fine.
         return null
     }

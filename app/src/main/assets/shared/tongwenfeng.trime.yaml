@@ -54,7 +54,7 @@ style:
     spacing: 1 #螢幕上下邊緣或預編輯上下邊緣和懸浮窗之間的距離
     round_corner: *round2 #候選窗口圓角
     alpha: 0xff #透明度(0-255)
-    background: background.png #顏色或者backgrounds目錄下的圖片文檔名
+    background: 0xFFFFFFFF #顏色或者backgrounds目錄下的圖片文檔名
   key_font: symbol.ttf #鍵盤字體
   key_height: *jpgd4 #鍵高
   key_long_text_size: 16 #長標籤字號

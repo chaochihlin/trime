@@ -25,10 +25,8 @@ import androidx.lifecycle.lifecycleScope
 import com.osfans.trime.daemon.RimeDaemon
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.theme.ColorManager
-import com.osfans.trime.data.theme.FontManager
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.preview.KeyPreviewChoreographer
-import com.osfans.trime.util.sp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -118,6 +116,9 @@ class KeyboardView(
     /** The keys that should be drawn  */
     private val invalidatedKeys = hashSetOf<Key>()
 
+    /** Batch invalidation job to reduce frequent invalidation calls */
+    private var batchInvalidationJob: Job? = null
+
     /** The dirty region in the keyboard bitmap */
     private val dirtyRect = Rect()
 
@@ -126,6 +127,8 @@ class KeyboardView(
 
     /** Render state cache for Paint and Color objects */
     private val renderStateCache = RenderStateCache()
+
+    private val keyRenderInfoMap = mutableMapOf<Key, KeyRenderInfo>()
 
     /** Memory monitor for pressure detection */
     private val memoryMonitor = MemoryMonitor()
@@ -138,6 +141,19 @@ class KeyboardView(
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
         }
+
+    private var showKeySymbol: Boolean = true
+    private var showKeyHint: Boolean = true
+
+    fun initializeDrawingState() {
+        lifecycleScope.launch {
+            showKeySymbol = !rime.run { getRuntimeOption("_hide_key_symbol") }
+            showKeyHint = !rime.run { getRuntimeOption("_hide_key_hint") }
+            // 正確的預計算時機：在 RIME 選項讀取之後
+            precomputeKeyRenderInfo()
+            invalidateAllKeysWithBatch()
+        }
+    }
 
     private var labelEnter: String = theme.generalStyle.enterLabel.default
 
@@ -500,85 +516,48 @@ class KeyboardView(
         val keyDrawY = (key.y + paddingTop).toFloat()
         canvas.translate(keyDrawX, keyDrawY)
 
-        val keyBackground = key.getBackgroundDrawable()
-        if (keyBackground != null) {
-            if (keyBackground is GradientDrawable) {
+        val renderInfo =
+            keyRenderInfoMap[key] ?: run {
+                // 備用方案：如果沒有預計算的渲染信息，則即時計算
+                Timber.w("KeyboardView: Missing render info for key, computing on-the-fly")
+                precomputeKeyRenderInfo(key)
+                keyRenderInfoMap[key] ?: return
+            }
+
+        // Draw background
+        renderInfo.background?.let { backgroundDrawable ->
+            if (backgroundDrawable is GradientDrawable) {
                 floatArrayOf(key.roundCorner, keyboard.roundCorner)
                     .firstOrNull { it > 0f }
-                    ?.let { keyBackground.cornerRadius = dp(it) }
+                    ?.let { backgroundDrawable.cornerRadius = dp(it) }
             }
-            onDrawKeyBackground(key, canvas, keyBackground)
+            onDrawKeyBackground(key, canvas, backgroundDrawable, keyDrawX, keyDrawY)
         }
 
-        // Switch the character to uppercase if shift is pressed
-
-        val centerX = key.width * 0.5f
-        val centerY = key.height * 0.5f
-        val keyLabel =
-            key.getLabel().let {
-                if (it == "enter_labels") {
-                    labelEnter
-                } else {
-                    it
-                }
-            }
-        if (keyLabel.isNotEmpty()) {
-            val keyFont = FontManager.getTypeface("key_font")
-            val textSize =
-                if (key.keyTextSize > 0) {
-                    sp(key.keyTextSize)
-                } else {
-                    sp(if (keyLabel.length > 1) labelTextSize else keyTextSize)
-                }
-            val textColor = key.getTextColor()
-
-            // Use cached paint object
-            val textPaint = renderStateCache.getCachedPaint(textSize, textColor, keyFont)
-
-            val labelX = centerX + sp(key.keyTextOffsetX)
-            val labelBaseline = centerY + sp(key.keyTextOffsetY)
-
-            // Draw a drop shadow for the text
+        // Draw label text
+        if (renderInfo.labelText.isNotEmpty()) {
+            val textPaint = renderInfo.labelPaint
             if (mShadowRadius > 0f) {
                 textPaint.setShadowLayer(mShadowRadius, 0f, 0f, mShadowColor)
             } else {
                 textPaint.clearShadowLayer()
             }
-
-            val adjustmentY = textPaint.run { textSize - descent() } / 2f
-            // Draw the text
-            canvas.drawText(keyLabel, labelX, labelBaseline + adjustmentY, textPaint)
-            // Turn off drop shadow
+            canvas.drawText(renderInfo.labelText, renderInfo.labelX, renderInfo.labelBaseline, textPaint)
             textPaint.clearShadowLayer()
-
-            val showKeySymbol = rime.run { !getRuntimeOption("_hide_key_symbol") }
-            val showKeyHint = rime.run { !getRuntimeOption("_hide_key_hint") }
-            if (showKeySymbol || showKeyHint) {
-                val symbolFont = FontManager.getTypeface("symbol_font")
-                val symbolSize =
-                    floatArrayOf(key.symbolTextSize, symbolTextSize)
-                        .firstOrNull { it > 0f }
-                        ?.let { sp(it) } ?: sp(symbolTextSize)
-                val symbolColor = key.getSymbolColor()
-
-                // Use cached paint for symbols
-                val symbolPaint = renderStateCache.getCachedPaint(symbolSize, symbolColor, symbolFont)
-                val fontMetrics = symbolPaint.fontMetrics
-
-                val symbolLabel = key.symbolLabel
-                if (showKeySymbol && symbolLabel.isNotEmpty()) {
-                    val symbolX = centerX + sp(key.keySymbolOffsetX)
-                    val symbolBaseline = -fontMetrics.top
-                    canvas.drawText(symbolLabel, symbolX, symbolBaseline + sp(key.keySymbolOffsetY), symbolPaint)
-                }
-                val hintLabel = key.hint
-                if (showKeyHint && hintLabel.isNotEmpty()) {
-                    val hintX = centerX + sp(key.keyHintOffsetX)
-                    val hintBaseline = -fontMetrics.bottom
-                    canvas.drawText(hintLabel, hintX, hintBaseline + key.height + sp(key.keyHintOffsetY), symbolPaint)
-                }
-            }
         }
+
+        // Draw symbol text
+        if (renderInfo.symbolText != null && renderInfo.symbolText.isNotEmpty()) {
+            val symbolPaint = renderInfo.symbolPaint!!
+            canvas.drawText(renderInfo.symbolText, renderInfo.symbolX!!, renderInfo.symbolBaseline!!, symbolPaint)
+        }
+
+        // Draw hint text
+        if (renderInfo.hintText != null && renderInfo.hintText.isNotEmpty()) {
+            val hintPaint = renderInfo.hintPaint!!
+            canvas.drawText(renderInfo.hintText, renderInfo.hintX!!, renderInfo.hintBaseline!!, hintPaint)
+        }
+
         canvas.translate(-keyDrawX, -keyDrawY)
     }
 
@@ -586,16 +565,16 @@ class KeyboardView(
         key: Key,
         canvas: Canvas,
         background: Drawable,
+        keyDrawX: Float,
+        keyDrawY: Float,
     ) {
         val padding = Rect().also { background.getPadding(it) }
-        val bgWidth = key.width + padding.left + padding.right
-        val bgHeight = key.height + padding.top + padding.bottom
-        val bgX = -padding.left.toFloat()
-        val bgY = -padding.top.toFloat()
-        background.setBounds(0, 0, bgWidth, bgHeight)
-        canvas.translate(bgX, bgY)
+        val bgLeft = (keyDrawX - padding.left)
+        val bgTop = (keyDrawY - padding.top)
+        val bgRight = (keyDrawX + key.width + padding.right)
+        val bgBottom = (keyDrawY + key.height + padding.bottom)
+        background.setBounds(bgLeft.toInt(), bgTop.toInt(), bgRight.toInt(), bgBottom.toInt())
         background.draw(canvas)
-        canvas.translate(-bgX, -bgY)
     }
 
     private fun getKeyIndices(
@@ -663,11 +642,14 @@ class KeyboardView(
         eventTime: Long,
         behavior: KeyBehavior = KeyBehavior.CLICK,
     ) {
-        Timber.d("detectAndSendKey: index=$index, x=$x, y=$y, type=$behavior, mKeys.size=${mKeys.size}")
+        if (index == NOT_A_KEY) {
+            Timber.d("detectAndSendKey: index=$index, x=$x, y=$y, type=$behavior, mKeys.size=${mKeys.size}")
+            return
+        }
+
         if (index in mKeys.indices) {
             val key = mKeys[index]
             if (key.isModifierKey && !key.sendBindings(behavior)) {
-                Timber.d("detectAndSendKey: ModifierKey, key.getEvent, keyLabel=${key.getLabel()}")
                 setModifier(key, behavior)
             } else {
                 if (key.click!!.isRepeatable) {
@@ -677,11 +659,9 @@ class KeyboardView(
                 val code = key.getCode(behavior)
                 // TextEntryState.keyPressedAt(key, x, y);
                 // getKeyIndices(x, y, codes); // 这里实际上并没有生效
-                Timber.d("detectAndSendKey: onEvent, code=$code, key.getEvent")
                 // 可以在这里把 mKeyboard.getModifer() 获取的修饰键状态写入event里
                 key.getAction(behavior)?.let { keyboardActionListener?.onAction(it) }
                 releaseKey(code)
-                Timber.d("detectAndSendKey: refreshModifier")
                 if (!isHookShiftArrow(code)) {
                     refreshModifier()
                 }
@@ -725,7 +705,22 @@ class KeyboardView(
         invalidatedKeys.clear()
         invalidateAllKeys = true
         bitmapCache.markDirty()
+        // precomputeKeyRenderInfo() // 預計算所有按鍵的渲染信息
         invalidate()
+    }
+
+    /**
+     * 批次 invalidation，延遲合併多個 invalidation 請求以提升效能
+     */
+    private fun invalidateAllKeysWithBatch() {
+        batchInvalidationJob?.cancel()
+        batchInvalidationJob =
+            findViewTreeLifecycleOwner()?.lifecycleScope?.launch {
+                delay(16) // 約一個 frame 的時間
+                if (isActive) {
+                    invalidateAllKeys()
+                }
+            }
     }
 
     /**
@@ -740,6 +735,8 @@ class KeyboardView(
         if (invalidateAllKeys || key == null) return
         invalidatedKeys.add(key)
         bitmapCache.markDirty()
+        // 重新計算單個按鍵的渲染信息
+        precomputeKeyRenderInfo(key)
         invalidate()
     }
 
@@ -832,9 +829,7 @@ class KeyboardView(
             ev.recycle()
             Timber.d("\t<TrimeInput>\tonModifiedTouchEvent()\tactionDown done")
         } else {
-            Timber.d("\t<TrimeInput>\tonModifiedTouchEvent()\tonModifiedTouchEvent")
             result = onModifiedTouchEvent(me)
-            Timber.d("\t<TrimeInput>\tonModifiedTouchEvent()\tnot actionDown done")
         }
         if (action != MotionEvent.ACTION_MOVE) mOldPointerCount = pointerCount
         performClick()
@@ -857,17 +852,6 @@ class KeyboardView(
         // Track the last few movements to look for spurious swipes.
         if (action == MotionEvent.ACTION_DOWN) customSwipeTracker.clear()
         customSwipeTracker.addMovement(me)
-        when (action) {
-            MotionEvent.ACTION_CANCEL -> {
-                Timber.d("swipeDebug.onModifiedTouchEvent before gesture, action = cancel")
-            }
-            MotionEvent.ACTION_UP -> {
-                Timber.d("swipeDebug.onModifiedTouchEvent before gesture, action = UP")
-            }
-            else -> {
-                Timber.d("swipeDebug.onModifiedTouchEvent before gesture, action != UP")
-            }
-        }
 
         // Ignore all motion events until a DOWN.
         if (mAbortKey && action != MotionEvent.ACTION_DOWN && action != MotionEvent.ACTION_CANCEL) {
@@ -939,13 +923,10 @@ class KeyboardView(
                 val absX = abs(dx)
                 val absY = abs(dy)
                 if (max(absY, absX) > swipeTravel && touchOnePoint) {
-                    Timber.d("\t<TrimeInput>\tonModifiedTouchEvent()\ttouch")
                     val keyBehavior =
                         if (absX < absY) {
-                            Timber.d("swipeDebug.ext y, dX=$dx, dY=$dy")
                             if (dy > swipeTravel) KeyBehavior.SWIPE_DOWN else KeyBehavior.SWIPE_UP
                         } else {
-                            Timber.d("swipeDebug.ext x, dX=$dx, dY=$dy")
                             if (dx > swipeTravel) KeyBehavior.SWIPE_RIGHT else KeyBehavior.SWIPE_LEFT
                         }
                     showPreview(NOT_A_KEY)
@@ -955,8 +936,6 @@ class KeyboardView(
                     longPressJob = null
                     detectAndSendKey(mDownKey, mStartX, mStartY, me.eventTime, keyBehavior)
                     return true
-                } else {
-                    Timber.d("swipeDebug.ext fail, dX=$dx, dY=$dy")
                 }
             }
             if (mCurrentKeyTime < mLastKeyTime && mCurrentKeyTime < DEBOUNCE_TIME && mLastKey != NOT_A_KEY) {
@@ -968,7 +947,6 @@ class KeyboardView(
             Arrays.fill(mKeyIndices, NOT_A_KEY)
             if (mRepeatKeyIndex != NOT_A_KEY && !mAbortKey) repeatKey()
             if (mRepeatKeyIndex == NOT_A_KEY && !mAbortKey) {
-                Timber.d("onModifiedTouchEvent: detectAndSendKey")
                 detectAndSendKey(
                     mCurrentKey,
                     touchX,
@@ -1099,10 +1077,85 @@ class KeyboardView(
     ) {
         val endTime = System.nanoTime()
         val durationMs = (endTime - startTime) / 1_000_000.0
-        if (durationMs > 30) {
-            Timber.w("KeyboardView Performance: $operation took ${durationMs}ms (>30ms threshold)")
-        } else if (durationMs > 10) {
-            Timber.d("KeyboardView Performance: $operation took ${durationMs}ms")
+        // Wear OS 需要更嚴格的效能門檻值
+        when {
+            durationMs > 30 -> Timber.w("KeyboardView Performance: $operation took ${durationMs}ms 🔴 需改善")
+            durationMs > 20 -> Timber.i("KeyboardView Performance: $operation took ${durationMs}ms 🟠 普通")
+            durationMs > 10 -> Timber.d("KeyboardView Performance: $operation took ${durationMs}ms")
+            else -> { /* 優秀效能，不記錄 */ }
+        }
+    }
+
+    /**
+     * 預計算按鍵渲染信息以提升繪製效能
+     */
+    private fun precomputeKeyRenderInfo(specificKey: Key? = null) {
+        val keysToProcess = if (specificKey != null) listOf(specificKey) else mKeys
+
+        for (key in keysToProcess) {
+            val labelText = key.getLabel()
+            val symbolText = if (showKeySymbol) key.symbolLabel else ""
+            val hintText = if (showKeyHint) key.hint else ""
+
+            // 計算標籤文字屬性
+            val labelPaint =
+                renderStateCache.getCachedPaint(
+                    textSize = if (labelText.length > 1) labelTextSize else keyTextSize,
+                    color = key.getTextColor(),
+                )
+            val labelX = key.width / 2f
+            val labelBaseline = (key.height + labelPaint.textSize) / 2f - labelPaint.descent()
+
+            // 計算符號文字屬性
+            var symbolPaint: Paint? = null
+            var symbolX: Float? = null
+            var symbolBaseline: Float? = null
+            if (symbolText.isNotEmpty()) {
+                symbolPaint =
+                    renderStateCache.getCachedPaint(
+                        textSize = symbolTextSize,
+                        color = key.getSymbolColor(),
+                    )
+                symbolX = key.width * 0.8f
+                symbolBaseline = key.height * 0.3f
+            }
+
+            // 計算提示文字屬性
+            var hintPaint: Paint? = null
+            var hintX: Float? = null
+            var hintBaseline: Float? = null
+            if (hintText.isNotEmpty()) {
+                hintPaint =
+                    renderStateCache.getCachedPaint(
+                        textSize = symbolTextSize * 0.8f,
+                        color = key.getSymbolColor(),
+                    )
+                hintX = key.width * 0.2f
+                hintBaseline = key.height * 0.2f
+            }
+
+            // 背景drawable
+            val background = key.getBackgroundDrawable()
+
+            // 建立渲染信息
+            val renderInfo =
+                KeyRenderInfo(
+                    background = background,
+                    labelText = labelText,
+                    labelPaint = labelPaint,
+                    labelX = labelX,
+                    labelBaseline = labelBaseline,
+                    symbolText = symbolText,
+                    symbolPaint = symbolPaint,
+                    symbolX = symbolX,
+                    symbolBaseline = symbolBaseline,
+                    hintText = hintText,
+                    hintPaint = hintPaint,
+                    hintX = hintX,
+                    hintBaseline = hintBaseline,
+                )
+
+            keyRenderInfoMap[key] = renderInfo
         }
     }
 
@@ -1111,5 +1164,21 @@ class KeyboardView(
         private const val DELAY_AFTER_PREVIEW = 100L
         private const val DEBOUNCE_TIME = 70
         private const val MAX_NEARBY_KEYS = 12
+
+        private data class KeyRenderInfo(
+            val background: Drawable?,
+            val labelText: String,
+            val labelPaint: Paint,
+            val labelX: Float,
+            val labelBaseline: Float,
+            val symbolText: String?,
+            val symbolPaint: Paint?,
+            val symbolX: Float?,
+            val symbolBaseline: Float?,
+            val hintText: String?,
+            val hintPaint: Paint?,
+            val hintX: Float?,
+            val hintBaseline: Float?,
+        )
     }
 }

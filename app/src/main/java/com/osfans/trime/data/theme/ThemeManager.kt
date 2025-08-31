@@ -9,6 +9,11 @@ import com.osfans.trime.data.base.DataManager
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.ime.symbol.TabManager
 import com.osfans.trime.util.WeakHashSet
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 object ThemeManager {
     fun interface OnThemeChangeListener {
@@ -54,6 +59,22 @@ object ThemeManager {
         ColorManager.switchTheme(newTheme)
         TabManager.resetCache(newTheme)
         return newTheme
+    }
+
+    private val preloadScope = CoroutineScope(SupervisorJob() + Dispatchers.IO) // New scope for preloading
+
+    fun preloadDrawables(drawableKeys: List<String>) {
+        preloadScope.launch {
+            Timber.d("Preloading drawables: $drawableKeys")
+            drawableKeys.forEach { key ->
+                runCatching {
+                    ColorManager.getDrawable(key) // This will load and cache the drawable
+                }.onFailure { e ->
+                    Timber.e(e, "Failed to preload drawable: $key")
+                }
+            }
+            Timber.d("Finished preloading drawables.")
+        }
     }
 
     fun init(configuration: Configuration) {

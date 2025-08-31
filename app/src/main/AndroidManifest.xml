@@ -27,7 +27,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
             android:name=".ime.core.TrimeInputMethodService"
             android:exported="true"
             android:label="@string/trime_app_name"
-            android:permission="android.permission.BIND_INPUT_METHOD">
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:configChanges="orientation|screenSize|keyboardHidden|locale|fontScale|density|layoutDirection|uiMode">
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
@@ -67,6 +68,12 @@ SPDX-License-Identifier: GPL-3.0-or-later
             android:name=".ui.setup.SetupActivity"
             android:exported="false" />
 
+        <!-- Input test activity -->
+        <activity
+            android:name=".ui.test.InputTestActivity"
+            android:exported="true"
+            android:launchMode="singleTask" />
+
 
 
         <!-- Using an activity alias to disable/enable the app icon in the launcher -->
@@ -75,7 +82,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
             android:exported="true"
             android:label="@string/trime_app_name"
             android:launchMode="singleTask"
-            android:targetActivity=".ui.main.PrefMainActivity">
+            android:targetActivity=".ui.test.InputTestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

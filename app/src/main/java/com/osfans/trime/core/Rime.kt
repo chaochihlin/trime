@@ -6,7 +6,6 @@ package com.osfans.trime.core
 
 import com.osfans.trime.BuildConfig
 import com.osfans.trime.data.base.DataManager
-import com.osfans.trime.data.opencc.OpenCCDictManager
 import com.osfans.trime.data.schema.SchemaManager
 import com.osfans.trime.util.appContext
 import com.osfans.trime.util.isAsciiPrintable
@@ -244,11 +243,6 @@ class Rime :
             is RimeMessage.OptionMessage -> {
                 getRimeStatus()?.let { statusCached = it }
                 SchemaManager.updateSwitchOptions()
-            }
-            is RimeMessage.DeployMessage -> {
-                if (it.data == RimeMessage.DeployMessage.State.Start) {
-                    OpenCCDictManager.buildOpenCCDict()
-                }
             }
             is RimeMessage.ResponseMessage ->
                 it.data.let event@{ data ->

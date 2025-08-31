@@ -100,8 +100,8 @@ object ColorManager {
             "long_text_back_color" to "key_back_color",
         )
 
-    private val colorCache = LruCache<String, Int>(10)
-    private val drawableCache = LruCache<String, Drawable>(10)
+    private val colorCache = LruCache<String, Int>(100)
+    private val drawableCache = LruCache<String, Drawable>(100)
 
     fun interface OnColorChangeListener {
         fun onColorChange(theme: Theme)
@@ -206,7 +206,6 @@ object ColorManager {
         while (true) {
             val target = activeColorScheme.colors[currentKey]
             if (!target.isNullOrEmpty()) {
-                Timber.d("current: $currentKey, origin: $key, target: $target")
                 return parser(target)
             }
             val fallback = theme.fallbackColors[currentKey]
@@ -252,12 +251,31 @@ object ColorManager {
     }
 
     private fun resolveImageFilePath(value: String): String {
-        val default = DataManager.userDataDir.resolve("backgrounds/$backgroundFolder/$value")
-        if (!default.exists()) {
-            val fallback = DataManager.userDataDir.resolve("backgrounds/$value")
-            if (fallback.exists()) return fallback.absolutePath
+        // First, check in sharedDataDir (where assets are copied)
+        val sharedPath = DataManager.sharedDataDir.resolve(value)
+        Timber.d("Checking sharedPath: ${sharedPath.absolutePath}")
+        if (sharedPath.exists()) {
+            Timber.d("Found image at sharedPath: ${sharedPath.absolutePath}")
+            return sharedPath.absolutePath
         }
-        return default.absolutePath
+
+        // Then, check in userDataDir (for user-provided backgrounds)
+        val userPathWithFolder = DataManager.userDataDir.resolve("backgrounds/$backgroundFolder/$value")
+        Timber.d("Checking userPathWithFolder: ${userPathWithFolder.absolutePath}")
+        if (userPathWithFolder.exists()) {
+            Timber.d("Found image at userPathWithFolder: ${userPathWithFolder.absolutePath}")
+            return userPathWithFolder.absolutePath
+        }
+        val userPathFallback = DataManager.userDataDir.resolve("backgrounds/$value")
+        Timber.d("Checking userPathFallback: ${userPathFallback.absolutePath}")
+        if (userPathFallback.exists()) {
+            Timber.d("Found image at userPathFallback: ${userPathFallback.absolutePath}")
+            return userPathFallback.absolutePath
+        }
+
+        // Fallback to the original default path (will likely not exist)
+        Timber.d("Image not found, returning default path: ${userPathWithFolder.absolutePath}")
+        return userPathWithFolder.absolutePath
     }
 
     @ColorInt

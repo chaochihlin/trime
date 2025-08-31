@@ -93,7 +93,7 @@ class InputView(
     private val windowManager = inputComponent.windowManager
     private val quickBar: QuickBar = inputComponent.quickBar
     private val preedit: PreeditModule = inputComponent.preedit
-    private val keyboardWindow: KeyboardWindow = inputComponent.keyboardWindow
+    public val keyboardWindow: KeyboardWindow = inputComponent.keyboardWindow
     private val liquidKeyboard: LiquidKeyboard = inputComponent.liquidKeyboard
     private val compactCandidate: CompactCandidateModule = inputComponent.candidate.compactCandidateModule
     private val suggestionCandidate: SuggestionCandidateModule = inputComponent.candidate.suggestionCandidateModule

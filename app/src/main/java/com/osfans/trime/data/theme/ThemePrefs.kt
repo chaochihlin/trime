@@ -19,7 +19,7 @@ class ThemePrefs(
         string(
             R.string.selected_theme,
             SELECTED_THEME,
-            "bopomofo_light",
+            "tongwenfeng.trime",
             R.string.selected_theme_summary,
         )
 

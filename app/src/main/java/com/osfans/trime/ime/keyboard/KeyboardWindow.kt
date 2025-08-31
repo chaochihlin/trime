@@ -311,4 +311,8 @@ class KeyboardWindow(
             it.keyboardActionListener = null
         }
     }
+
+    fun initializeDrawingState() {
+        currentKeyboardView?.initializeDrawingState()
+    }
 }
