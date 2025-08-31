@@ -14,10 +14,10 @@ height:
   1: &jpgd1 30 #表情鍵盤
   2: &jpgd2 24 #顏文字鍵盤1
   3: &jpgd3 24 #顏文字鍵盤2
-  4: &jpgd4 48 #主鍵盤
+  4: &jpgd4 56 #主鍵盤 - 增加高度以適應手錶
   5: &jpgd5 39.5 #符號鍵盤
-  6: &hgap 4 #鍵盤橫縫大小
-  7: &sgap 8 #鍵盤豎縫大小
+  6: &hgap 2 #鍵盤橫縫大小 - 減少間距以增加按鍵面積
+  7: &sgap 4 #鍵盤豎縫大小 - 減少間距以增加按鍵面積
 
 #鍵盤高度
 round_corner:
@@ -47,8 +47,8 @@ style:
     max_height: 300 #最大高度
     min_width: 0 #最小寬度
     min_height: 50 #最小高度
-    margin_x: 5 #水平邊距 NOTE: margin_{x, y, bottom} 實際為 padding
-    margin_y: 5 #竖直邊距
+    margin_x: 0 #水平邊距 NOTE: margin_{x, y, bottom} 實際為 padding - 設為0實現滿版顯示
+    margin_y: 0 #竖直邊距 - 設為0實現滿版顯示
     line_spacing: 0 #候選詞的行間距(px)
     line_spacing_multiplier: 1.2 #候選詞的行間距(倍數)
     spacing: 1 #螢幕上下邊緣或預編輯上下邊緣和懸浮窗之間的距離
@@ -58,13 +58,13 @@ style:
   key_font: symbol.ttf #鍵盤字體
   key_height: *jpgd4 #鍵高
   key_long_text_size: 16 #長標籤字號
-  key_text_size: 24 #鍵字號
+  key_text_size: 28 #鍵字號 - 增加字體大小以適應手錶
   key_width: 10.0 #鍵寬，佔螢幕寬的百分比
   label_text_size: 22 #標籤字號
   label_font: label.ttf #編標籤字體
   latin_font: latin.ttf #西文本體
-  keyboard_height: 250 #鎖定鍵盤高度，避免切換時鍵盤高度變化而造成閣爍
-  keyboard_height_land: 200 #鎖定橫屏下鍵盤高度，避免切換時鍵盤高度變化而造成閣爍
+  keyboard_height: 300 #鎖定鍵盤高度，避免切換時鍵盤高度變化而造成閣爍 - 增加以適應大按鍵
+  keyboard_height_land: 300 #鎖定橫屏下鍵盤高度，避免切換時鍵盤高度變化而造成閣爍 - 增加以適應大按鍵
   preview_font: latin.ttf #按鍵提示字體
   preview_height: 56 #按鍵提示高度
   preview_offset: -32 #按鍵提示縱向偏移
@@ -861,7 +861,7 @@ liquid_keyboard:
   key_height_land: 40 #橫屏模式按鍵高度
   single_width: 60    #single類型的按鍵寬度
   vertical_gap: 8     #縱向按鍵間隙
-  margin_x: 2       #左右按鍵間隙的1/2
+  margin_x: 0       #左右按鍵間隙的1/2 - 設為0實現滿版顯示
   fixed_key_bar: # 固定按鍵條
     position: bottom  # 擺放位置（在捲動區域的……） top|bottom|left|right
     keys: # 按鍵（顯示名稱為對應的label，不能放太多）

@@ -207,6 +207,9 @@ class KeyboardView(
     init {
         computeProximityThreshold(keyboard)
         invalidateAllKeys()
+
+        // 除錯用：設置特殊背景色來識別KeyboardView區域（已移除）
+        // setBackgroundColor(0xFF00FF00.toInt()) // 明亮的綠色背景
     }
 
     private val swipeEnabled by AppPrefs.defaultInstance().keyboard.swipeEnabled
@@ -531,7 +534,7 @@ class KeyboardView(
                     .firstOrNull { it > 0f }
                     ?.let { backgroundDrawable.cornerRadius = dp(it) }
             }
-            onDrawKeyBackground(key, canvas, backgroundDrawable, keyDrawX, keyDrawY)
+            onDrawKeyBackground(key, canvas, backgroundDrawable)
         }
 
         // Draw label text
@@ -565,16 +568,16 @@ class KeyboardView(
         key: Key,
         canvas: Canvas,
         background: Drawable,
-        keyDrawX: Float,
-        keyDrawY: Float,
     ) {
         val padding = Rect().also { background.getPadding(it) }
-        val bgLeft = (keyDrawX - padding.left)
-        val bgTop = (keyDrawY - padding.top)
-        val bgRight = (keyDrawX + key.width + padding.right)
-        val bgBottom = (keyDrawY + key.height + padding.bottom)
-        background.setBounds(bgLeft.toInt(), bgTop.toInt(), bgRight.toInt(), bgBottom.toInt())
+        val bgWidth = key.width + padding.left + padding.right
+        val bgHeight = key.height + padding.top + padding.bottom
+        val bgX = -padding.left.toFloat()
+        val bgY = -padding.top.toFloat()
+        background.setBounds(0, 0, bgWidth, bgHeight)
+        canvas.translate(bgX, bgY)
         background.draw(canvas)
+        canvas.translate(-bgX, -bgY)
     }
 
     private fun getKeyIndices(

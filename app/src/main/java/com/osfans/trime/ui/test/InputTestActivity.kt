@@ -9,13 +9,13 @@ import com.osfans.trime.R
 
 class InputTestActivity : AppCompatActivity() {
     private lateinit var inputEditText: EditText
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_input_test)
-        
+
         inputEditText = findViewById(R.id.input_edit_text)
-        
+
         // 自動 focus 到輸入框並顯示鍵盤
         inputEditText.requestFocus()
         inputEditText.postDelayed({
