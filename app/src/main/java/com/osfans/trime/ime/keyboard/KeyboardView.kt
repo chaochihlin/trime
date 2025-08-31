@@ -58,7 +58,7 @@ class KeyboardView(
     private val mShadowRadius = theme.generalStyle.shadowRadius
     private val mShadowColor = ColorManager.getColor("shadow_color")
 
-    // Working variable
+    // 工作變數
     private val originCoords = intArrayOf(0, 0)
     private val mKeys get() = keyboard.keys
 
@@ -67,10 +67,10 @@ class KeyboardView(
     private var mProximityThreshold = 0
 
     /**
-     * Enables or disables the key feedback popup. This is a popup that shows a magnified version of
-     * the depressed key. By default the preview is enabled.
+     * 啟用或停用按鍵回饋彈窗。這是一個顯示放大版本
+     * 按鍵的彈窗。預設啟用預覽功能。
      */
-    private val showPreview by AppPrefs.defaultInstance().keyboard.popupKeyPressEnabled
+    private val showPreview = true
     private var mLastX = 0
     private var mLastY = 0
     private var mStartX = 0
@@ -80,8 +80,8 @@ class KeyboardView(
     private var touchOnePoint = false
 
     /**
-     * 是否允許距離校正 When enabled, calls to [KeyboardActionListener.onKey] will include key codes for
-     * adjacent keys. When disabled, only the primary key code will be reported.
+     * 是否允許距離校正 - 啟用時，對 [KeyboardActionListener.onKey] 的呼叫將包含
+     * 相鄰按鍵的按鍵代碼。停用時，僅回報主要按鍵代碼。
      */
     private val enableProximityCorrection = theme.generalStyle.proximityCorrection
     private var mDownTime: Long = 0
@@ -99,41 +99,41 @@ class KeyboardView(
     private var mAbortKey = true
     private val mDisambiguateSwipe = false
 
-    // Variables for dealing with multiple pointers
+    // 處理多點觸控的變數
     private var mOldPointerCount = 1
     private val mComboCodes = IntArray(10)
     private var mComboCount = 0
     private var mComboMode = false
     private val mDistances = IntArray(MAX_NEARBY_KEYS)
 
-    // For multi-tap
+    // 多次點擊
     private var mLastSentIndex = -1
     private var mLastTapTime: Long = -1
 
-    /** True if all keys should be drawn */
+    /** 是否應繪製所有按鍵 */
     private var invalidateAllKeys = false
 
-    /** The keys that should be drawn  */
+    /** 應該被繪製的按鍵  */
     private val invalidatedKeys = hashSetOf<Key>()
 
-    /** Batch invalidation job to reduce frequent invalidation calls */
+    /** 批次無效化工作以減少頻繁的無效化呼叫 */
     private var batchInvalidationJob: Job? = null
 
-    /** The dirty region in the keyboard bitmap */
+    /** 鍵盤位圖中的髒區域 */
     private val dirtyRect = Rect()
 
-    /** Smart bitmap cache for efficient memory management */
+    /** 智慧位圖快取，用於高效記憶體管理 */
     private val bitmapCache = SmartBitmapCache()
 
-    /** Render state cache for Paint and Color objects */
+    /** Paint 和 Color 物件的渲染狀態快取 */
     private val renderStateCache = RenderStateCache()
 
     private val keyRenderInfoMap = mutableMapOf<Key, KeyRenderInfo>()
 
-    /** Memory monitor for pressure detection */
+    /** 記憶體壓力偵測監控器 */
     private val memoryMonitor = MemoryMonitor()
 
-    /** The canvas for the above mutable keyboard bitmap  */
+    /** 上述可變鍵盤位圖的畫布  */
     private val drawingCanvas = Canvas()
 
     private val basePaint =
@@ -207,9 +207,6 @@ class KeyboardView(
     init {
         computeProximityThreshold(keyboard)
         invalidateAllKeys()
-
-        // 除錯用：設置特殊背景色來識別KeyboardView區域（已移除）
-        // setBackgroundColor(0xFF00FF00.toInt()) // 明亮的綠色背景
     }
 
     private val swipeEnabled by AppPrefs.defaultInstance().keyboard.swipeEnabled
@@ -242,11 +239,11 @@ class KeyboardView(
                     val endingVelocityY: Float = customSwipeTracker.yVelocity
                     var sendDownKey = false
                     var behavior = KeyBehavior.CLICK
-                    //  In my tests velocity always smaller than 400
-                    //  so I don't really why we need to compare velocity here,
-                    //  as default value of getSwipeVelocity() is 800
-                    //  and default value of getSwipeVelocityHi() is 25000,
-                    //  so for most of the users that judgment is always true
+                    //  在我的測試中，速度總是小於 400
+                    //  所以我不太明白為什麼要在這裡比較速度，
+                    //  因為 getSwipeVelocity() 的預設值是 800
+                    //  而 getSwipeVelocityHi() 的預設值是 25000，
+                    //  所以對大部分使用者來說，這個判斷總是為真
                     if ((deltaX > swipeTravel || velocityX > swipeVelocity) &&
                         (
                             absY < absX ||
@@ -261,11 +258,11 @@ class KeyboardView(
                         ) &&
                         mKeys[mDownKey].keyActions[KeyBehavior.SWIPE_RIGHT] != null
                     ) {
-                        // I should have implement mDisambiguateSwipe as a config option, but the logic
-                        // here is really weird, and I don't really know
-                        // when it is enabled what should be the behavior, so I just left it always false.
-                        // endingVelocityX and endingVelocityY seems always > 0 but velocityX and
-                        // velocityY can be negative.
+                        // 我應該將 mDisambiguateSwipe 實作為配置選項，但這裡的邏輯
+                        // 真的很奇怪，我不太清楚
+                        // 啟用時應該有什麼行為，所以我將其設為永遠 false。
+                        // endingVelocityX 和 endingVelocityY 似乎總是 > 0，但 velocityX 和
+                        // velocityY 可以是負數。
                         if (mDisambiguateSwipe && endingVelocityX > velocityX / 4) {
                             return true
                         } else {
@@ -333,10 +330,10 @@ class KeyboardView(
                             behavior = KeyBehavior.SWIPE_DOWN
                         }
                     } else {
-                        Timber.d("swipeDebug.onFling fail , dY=$deltaY, vY=$velocityY, eVY=$endingVelocityY, travel=$swipeTravel")
+                        Timber.d("滑動除錯.onFling 失敗 , dY=$deltaY, vY=$velocityY, eVY=$endingVelocityY, travel=$swipeTravel")
                     }
                     if (sendDownKey) {
-                        Timber.d("initGestureDetector: sendDownKey")
+                        Timber.d("初始化手勢檢測器: 傳送按下按鍵")
                         showPreview(mDownKey, behavior)
                         detectAndSendKey(mDownKey, mStartX, mStartY, me1.eventTime, behavior)
                         return true
@@ -368,10 +365,10 @@ class KeyboardView(
     }
 
     /**
-     * 设置键盘修饰键的状态
+     * 設定鍵盤修飾鍵的狀態
      *
-     * @param key 按下的修饰键(非组合键）
-     * @param behavior 按键行为(单击、长按等)
+     * @param key 按下的修飾鍵（非組合鍵）
+     * @param behavior 按鍵行為（單擊、長按等）
      * @return
      */
     private fun setModifier(
@@ -382,7 +379,7 @@ class KeyboardView(
     private fun setModifier(
         on: Boolean,
         code: Int,
-    ): Boolean = keyboard.clikModifierKey(on, code).also { if (it) invalidateAllKeys() }
+    ): Boolean = keyboard.clickModifierKey(on, code).also { if (it) invalidateAllKeys() }
 
     // 重置全部修饰键的状态(如果有锁定则不重置）
     private fun refreshModifier() {
@@ -401,7 +398,7 @@ class KeyboardView(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int,
     ) {
-        // Round up a little
+        // 稍微向上取整
         val fullWidth = keyboard.minWidth + paddingLeft + paddingRight
         val fullHeight = keyboard.height + paddingTop + paddingBottom
         val measuredWidth =
@@ -414,7 +411,7 @@ class KeyboardView(
     }
 
     /**
-     * 計算水平和豎直方向的相鄰按鍵中心的平均距離的平方，這樣不需要做開方運算
+     * 計算水平和垂直方向的相鄰按鍵中心的平均距離的平方，這樣不需要做開方運算
      *
      * @param keyboard 鍵盤
      */
@@ -429,7 +426,7 @@ class KeyboardView(
         val startTime = System.nanoTime()
         super.onDraw(canvas)
 
-        // Check memory pressure and clear caches if needed
+        // 檢查記憶體壓力，如有需要則清空快取
         if (memoryMonitor.checkMemoryPressure()) {
             clearCaches()
         }
@@ -443,7 +440,7 @@ class KeyboardView(
             return
         }
 
-        // Use smart bitmap cache instead of direct buffer management
+        // 使用智慧位圖快取代替直接緩衝管理
         val buffer = bitmapCache.getBuffer(width, height)
 
         val bufferNeedsUpdates = invalidateAllKeys || invalidatedKeys.isNotEmpty() || bitmapCache.isDirty()
@@ -459,7 +456,7 @@ class KeyboardView(
         // 結束鍵盤顯示時間測量
         KeyboardDisplayTimer.endMeasurement(renderInfo = "Software軟體渲染")
 
-        // Log cache statistics periodically
+        // 定期記錄快取統計資料
         renderStateCache.logCacheStats()
     }
 
@@ -497,7 +494,7 @@ class KeyboardView(
             }
         }
 
-        // debug: show touch points
+        // 除錯：顯示觸控點
 //        paint.alpha = 128
 //        paint.color = -0x10000
 //        canvas.drawCircle(mStartX.toFloat(), mStartY.toFloat(), 3f, paint)
@@ -522,12 +519,12 @@ class KeyboardView(
         val renderInfo =
             keyRenderInfoMap[key] ?: run {
                 // 備用方案：如果沒有預計算的渲染信息，則即時計算
-                Timber.w("KeyboardView: Missing render info for key, computing on-the-fly")
+                Timber.w("鍵盤視窗: 缺少按鍵渲染資訊，即時計算中")
                 precomputeKeyRenderInfo(key)
                 keyRenderInfoMap[key] ?: return
             }
 
-        // Draw background
+        // 繪製背景
         renderInfo.background?.let { backgroundDrawable ->
             if (backgroundDrawable is GradientDrawable) {
                 floatArrayOf(key.roundCorner, keyboard.roundCorner)
@@ -537,7 +534,7 @@ class KeyboardView(
             onDrawKeyBackground(key, canvas, backgroundDrawable)
         }
 
-        // Draw label text
+        // 繪製標籤文字
         if (renderInfo.labelText.isNotEmpty()) {
             val textPaint = renderInfo.labelPaint
             if (mShadowRadius > 0f) {
@@ -549,13 +546,13 @@ class KeyboardView(
             textPaint.clearShadowLayer()
         }
 
-        // Draw symbol text
+        // 繪製符號文字
         if (renderInfo.symbolText != null && renderInfo.symbolText.isNotEmpty()) {
             val symbolPaint = renderInfo.symbolPaint!!
             canvas.drawText(renderInfo.symbolText, renderInfo.symbolX!!, renderInfo.symbolBaseline!!, symbolPaint)
         }
 
-        // Draw hint text
+        // 繪製提示文字
         if (renderInfo.hintText != null && renderInfo.hintText.isNotEmpty()) {
             val hintPaint = renderInfo.hintPaint!!
             canvas.drawText(renderInfo.hintText, renderInfo.hintX!!, renderInfo.hintBaseline!!, hintPaint)
@@ -597,7 +594,7 @@ class KeyboardView(
             }
             val dist = key.squaredDistanceFrom(x, y)
             if (enableProximityCorrection && dist < mProximityThreshold || isInside) {
-                // Find insertion point
+                // 尋找插入點
                 if (dist < closestKeyDist) {
                     closestKeyDist = dist
                     closestKey = nearestKeyIndex
@@ -611,7 +608,7 @@ class KeyboardView(
     }
 
     private fun releaseKey(code: Int) {
-        Timber.d("releaseKey: keyCode=$code, comboMode=$mComboMode, comboCount=$mComboCount")
+        Timber.d("釋放按鍵: 按鍵代碼=$code, 組合模式=$mComboMode, 組合計數=$mComboCount")
         if (mComboMode) {
             if (mComboCount > 9) mComboCount = 9
             mComboCodes[mComboCount++] = code
@@ -646,7 +643,7 @@ class KeyboardView(
         behavior: KeyBehavior = KeyBehavior.CLICK,
     ) {
         if (index == NOT_A_KEY) {
-            Timber.d("detectAndSendKey: index=$index, x=$x, y=$y, type=$behavior, mKeys.size=${mKeys.size}")
+            Timber.d("檢測並發送按鍵: 索引=$index, x=$x, y=$y, 類型=$behavior, 按鍵總數=${mKeys.size}")
             return
         }
 
@@ -661,8 +658,8 @@ class KeyboardView(
                 }
                 val code = key.getCode(behavior)
                 // TextEntryState.keyPressedAt(key, x, y);
-                // getKeyIndices(x, y, codes); // 这里实际上并没有生效
-                // 可以在这里把 mKeyboard.getModifer() 获取的修饰键状态写入event里
+                // getKeyIndices(x, y, codes); // 這裡實際上並沒有生效
+                // 可以在這裡把 mKeyboard.getModifier() 獲取的修飾鍵狀態寫入event裡
                 key.getAction(behavior)?.let { keyboardActionListener?.onAction(it) }
                 releaseKey(code)
                 if (!isHookShiftArrow(code)) {
@@ -680,7 +677,7 @@ class KeyboardView(
     ) {
         val oldKeyIndex = mCurrentKeyIndex
         mCurrentKeyIndex = keyIndex
-        // Release the old key and press the new key
+        // 釋放舊按鍵並按下新按鍵
         val keys = mKeys
         if (oldKeyIndex != mCurrentKeyIndex) {
             keys.getOrNull(oldKeyIndex)?.let { oldKey ->
@@ -697,14 +694,14 @@ class KeyboardView(
     }
 
     /**
-     * Requests a redraw of the entire keyboard. Calling [invalidate] is not sufficient because
-     * the keyboard renders the keys to an off-screen buffer and an invalidate() only draws the cached
-     * buffer.
+     * 請求重新繪製整個鍵盤。呼叫 [invalidate] 是不夠的，因為
+     * 鍵盤將按鍵渲染到離屏緩衝區，而 invalidate() 只繪製快取的
+     * 緩衝區。
      *
      * @see invalidateKey
      */
     fun invalidateAllKeys() {
-        Timber.d("invalidateAllKeys")
+        Timber.d("使所有按鍵無效")
         invalidatedKeys.clear()
         invalidateAllKeys = true
         bitmapCache.markDirty()
@@ -713,7 +710,7 @@ class KeyboardView(
     }
 
     /**
-     * 批次 invalidation，延遲合併多個 invalidation 請求以提升效能
+     * 批次無效化，延遲合併多個無效化請求以提升效能
      */
     private fun invalidateAllKeysWithBatch() {
         batchInvalidationJob?.cancel()
@@ -727,11 +724,11 @@ class KeyboardView(
     }
 
     /**
-     * Invalidates a key so that it will be redrawn on the next repaint. Use this method if only one
-     * key is changing it's content. Any changes that affect the position or size of the key may not
-     * be honored.
+     * 使按鍵無效，以便在下次重繪時重新繪製。如果只有一個
+     * 按鍵正在改變其內容，請使用此方法。任何影響按鍵位置或大小的變更可能不會
+     * 被接受。
      *
-     * @param key the key in the attached [Keyboard].
+     * @param key 附加的 [Keyboard] 中的按鍵。
      * @see invalidateAllKeys
      */
     private fun invalidateKey(key: Key?) {
@@ -744,7 +741,7 @@ class KeyboardView(
     }
 
     private fun openPopupIfRequired(): Boolean {
-        // Check if we have a popup layout specified first.
+        // 首先檢查是否指定了彈出視窗配置。
         if (mCurrentKey !in mKeys.indices) {
             return false
         }
@@ -759,12 +756,12 @@ class KeyboardView(
     }
 
     /**
-     * Called when a key is long pressed. By default this will open any popup keyboard associated with
-     * this key through the attributes popupLayout and popupCharacters.
+     * 當按鍵被長按時呼叫。預設情況下，這會透過 popupLayout 和 popupCharacters
+     * 屬性開啟與此按鍵相關聯的任何彈出鍵盤。
      *
-     * @param popupKey the key that was long pressed
-     * @return true if the long press is handled, false otherwise. Subclasses should call the method
-     * on the base class if the subclass doesn't wish to handle the call.
+     * @param popupKey 被長按的按鍵
+     * @return 如果長按被處理則回傳 true，否則回傳 false。如果子類不希望處理該呼叫，
+     * 子類應該呼叫基類上的方法。
      */
     private fun onLongPress(popupKey: Key): Boolean {
         popupKey.longClick?.let {
@@ -786,8 +783,8 @@ class KeyboardView(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(me: MotionEvent): Boolean {
-        // Convert multi-pointer up/down events to single up/down events to
-        // deal with the typical multi-pointer behavior of two-thumb typing
+        // 將多點觸控的 up/down 事件轉換為單一 up/down 事件，以
+        // 處理雙拇指打字的典型多點觸控行為
         val index = me.actionIndex
         val pointerCount = me.pointerCount
         val action = me.actionMasked
@@ -800,7 +797,7 @@ class KeyboardView(
             mComboMode = true
         }
         if (action == MotionEvent.ACTION_UP) {
-            Timber.d("swipeDebug.onTouchEvent ?, action = ACTION_UP")
+            Timber.d("滑動除錯.onTouchEvent ? action = ACTION_UP")
         }
         if (action == MotionEvent.ACTION_POINTER_UP || mOldPointerCount > 1 && action == MotionEvent.ACTION_UP) {
             // 並擊鬆開前的虛擬按鍵事件
@@ -815,7 +812,7 @@ class KeyboardView(
                 )
             result = onModifiedTouchEvent(ev)
             ev.recycle()
-            Timber.d("\t<TrimeInput>\tonTouchEvent()\tactionUp done")
+            Timber.d("\t<TrimeInput>\tonTouchEvent()\tactionUp 完成")
         }
         if (action == MotionEvent.ACTION_POINTER_DOWN) {
             // 並擊中的按鍵事件，需要按鍵提示
@@ -830,7 +827,7 @@ class KeyboardView(
                 )
             result = onModifiedTouchEvent(ev)
             ev.recycle()
-            Timber.d("\t<TrimeInput>\tonModifiedTouchEvent()\tactionDown done")
+            Timber.d("\t<TrimeInput>\tonModifiedTouchEvent()\tactionDown 完成")
         } else {
             result = onModifiedTouchEvent(me)
         }
@@ -852,16 +849,16 @@ class KeyboardView(
         val eventTime = me.eventTime
         val keyIndex = getKeyIndices(touchX, touchY)
 
-        // Track the last few movements to look for spurious swipes.
+        // 追蹤最後幾個移動以尋找錯誤的滑動。
         if (action == MotionEvent.ACTION_DOWN) customSwipeTracker.clear()
         customSwipeTracker.addMovement(me)
 
-        // Ignore all motion events until a DOWN.
+        // 忽略所有動作事件直到 DOWN。
         if (mAbortKey && action != MotionEvent.ACTION_DOWN && action != MotionEvent.ACTION_CANCEL) {
             return true
         }
 
-        // 优先判定是否触发了滑动手势
+        // 優先判定是否觸發了滑動手势
         if (swipeEnabled) {
             if (customGestureDetector.onTouchEvent(me)) {
                 showPreview(NOT_A_KEY)
@@ -893,7 +890,7 @@ class KeyboardView(
             if (mCurrentKey >= 0 && mKeys[mCurrentKey].click!!.isRepeatable) {
                 mRepeatKeyIndex = mCurrentKey
                 handleRepeatJob()
-                // Delivering the key could have caused an abort
+                // 發送按鍵可能導致中止
                 if (mAbortKey) {
                     mRepeatKeyIndex = NOT_A_KEY
                     return
@@ -906,7 +903,7 @@ class KeyboardView(
         }
 
         /**
-         * @return 跳出外层函数
+         * @return 跳出外層函式
          */
         fun modifiedPointerUp(): Boolean {
             cancelAllJobs()
@@ -996,7 +993,7 @@ class KeyboardView(
                     }
                 }
                 if (!mComboMode && !continueLongPress) {
-                    // Start new long press if key has changed
+                    // 如果按鍵已改變，開始新的長按
                     if (keyIndex != NOT_A_KEY) {
                         handleLongPressJob()
                     }
@@ -1025,7 +1022,7 @@ class KeyboardView(
     }
 
     private fun repeatKey(): Boolean {
-        Timber.d("repeatKey")
+        Timber.d("重複按鍵")
         val key = mKeys[mRepeatKeyIndex]
         detectAndSendKey(mCurrentKey, key.x, key.y, mLastTapTime)
         return true
@@ -1071,7 +1068,7 @@ class KeyboardView(
         renderStateCache.evictAll()
         bitmapCache.clearIfNecessary()
         memoryMonitor.suggestGC()
-        Timber.i("KeyboardView: Caches cleared due to memory pressure")
+        Timber.i("鍵盤視窗: 因記憶體壓力已清空快取")
     }
 
     private fun logPerformance(
@@ -1082,9 +1079,9 @@ class KeyboardView(
         val durationMs = (endTime - startTime) / 1_000_000.0
         // Wear OS 需要更嚴格的效能門檻值
         when {
-            durationMs > 30 -> Timber.w("KeyboardView Performance: $operation took ${durationMs}ms 🔴 需改善")
-            durationMs > 20 -> Timber.i("KeyboardView Performance: $operation took ${durationMs}ms 🟠 普通")
-            durationMs > 10 -> Timber.d("KeyboardView Performance: $operation took ${durationMs}ms")
+            durationMs > 30 -> Timber.w("鍵盤視窗效能: $operation 耗費 ${durationMs}ms 🔴 需改善")
+            durationMs > 20 -> Timber.i("鍵盤視窗效能: $operation 耗費 ${durationMs}ms 🟠 普通")
+            durationMs > 10 -> Timber.d("鍵盤視窗效能: $operation 耗費 ${durationMs}ms")
             else -> { /* 優秀效能，不記錄 */ }
         }
     }

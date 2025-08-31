@@ -14,6 +14,7 @@ import android.view.inputmethod.InlineSuggestionsResponse
 import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
@@ -27,7 +28,6 @@ import com.osfans.trime.ime.candidates.suggestion.SuggestionCandidateModule
 import com.osfans.trime.ime.composition.PreeditModule
 import com.osfans.trime.ime.dependency.InputComponent
 import com.osfans.trime.ime.dependency.create
-import com.osfans.trime.ime.keyboard.KeyboardPrefs.isLandscapeMode
 import com.osfans.trime.ime.keyboard.KeyboardWindow
 import com.osfans.trime.ime.preview.KeyPreviewChoreographer
 import com.osfans.trime.ime.symbol.LiquidKeyboard
@@ -109,28 +109,25 @@ class InputView(
     }
 
     private val keyboardSidePadding = theme.generalStyle.keyboardPadding
-    private val keyboardSidePaddingLandscape = theme.generalStyle.keyboardPaddingLand
     private val keyboardBottomPadding = theme.generalStyle.keyboardPaddingBottom
-    private val keyboardBottomPaddingLandscape = theme.generalStyle.keyboardPaddingLandBottom
 
     private val keyboardSidePaddingPx: Int
         get() {
-            val value =
-                if (context.isLandscapeMode()) keyboardSidePaddingLandscape else keyboardSidePadding
-            return dp(value)
+            return dp(keyboardSidePadding)
         }
 
     private val keyboardBottomPaddingPx: Int
         get() {
-            val value =
-                if (context.isLandscapeMode()) keyboardBottomPaddingLandscape else keyboardBottomPadding
-            return dp(value)
+            return dp(keyboardBottomPadding)
         }
 
     val keyboardView: View
 
     init {
         addBroadcastReceivers()
+
+        // 除錯：設定明顯的背景色來確認 InputView 顯示
+        setBackgroundColor("#FF00FF".toColorInt()) // 洋紅色背景
 
         windowManager.cacheResidentWindow(keyboardWindow, createView = true)
         windowManager.cacheResidentWindow(liquidKeyboard)
@@ -149,7 +146,10 @@ class InputView(
                     },
                 )
                 add(
-                    quickBar.view,
+                    quickBar.view.apply {
+                        // 除錯：設定 quickBar 背景色
+                        setBackgroundColor("#00FF00".toColorInt()) // 綠色背景
+                    },
                     lParams(matchParent, dp(quickBar.themedHeight)) {
                         topOfParent()
                         centerHorizontally()
@@ -172,7 +172,10 @@ class InputView(
                     },
                 )
                 add(
-                    windowManager.view,
+                    windowManager.view.apply {
+                        // 除錯：設定 windowManager 背景色
+                        setBackgroundColor("#0000FF".toColorInt()) // 藍色背景
+                    },
                     lParams {
                         below(quickBar.view)
                         above(bottomPaddingSpace)
@@ -200,7 +203,10 @@ class InputView(
         updateKeyboardSize()
 
         add(
-            preedit.ui.root,
+            preedit.ui.root.apply {
+                // 除錯：設定 preedit 區域背景色
+                setBackgroundColor(android.graphics.Color.parseColor("#FFFF00")) // 黃色背景
+            },
             lParams(matchParent, wrapContent) {
                 above(keyboardView)
                 centerHorizontally()

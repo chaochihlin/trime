@@ -38,6 +38,19 @@ import splitties.dimensions.dp
 import splitties.views.dsl.recyclerview.recyclerView
 import kotlin.math.max
 
+/**
+ * 簡潔型候選字模組
+ *
+ * 此模組提供緊湊的候選字顯示界面，使用 RecyclerView 和 FlexboxLayoutManager
+ * 實現彈性的候選字佈局。支援候選字的點擊選擇、長按顯示操作選單，
+ * 以及與展開狀態的候選字列表進行整合。
+ *
+ * @param context Android 應用程式上下文
+ * @param service Trime 輸入法服務實例
+ * @param rime RIME 輸入引擎會話物件
+ * @param theme 主題配置物件，控制視覺樣式和佈局參數
+ * @param bar 快速工具列元件，用於狀態管理
+ */
 class CompactCandidateModule(
     val context: Context,
     val service: TrimeInputMethodService,

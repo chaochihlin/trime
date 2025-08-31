@@ -131,10 +131,28 @@ class Rime :
         modifiers: UInt,
     ): Boolean =
         withRimeContext {
+            Timber.d(
+                "【除錯】processKey: value=0x${value.toString(
+                    16,
+                )} ('${if (value in 32..126) Char(value) else "非ASCII"}'), modifiers=$modifiers",
+            )
+
+            // 詳細診斷 RIME 引擎狀態
+            val preStatus = getRimeStatus()
+            val preContext = getRimeContext()
+            Timber.d("【除錯】processKey前: composing=${preStatus?.isComposing}, input='${preContext?.input}'")
+
             processRimeKey(value, modifiers.toInt()).also {
+                Timber.d("【除錯】processRimeKey結果: $it")
                 if (it) {
+                    Timber.d("【除錯】呼叫 requireResponse()")
                     requireResponse()
                 } else {
+                    val status = getRimeStatus()
+                    Timber.d(
+                        "【除錯】按鍵被拒絕時的RIME狀態: schema='${status?.schemaId}', disabled=${status?.isDisabled}, ascii_mode=${status?.isAsciiMode}",
+                    )
+                    Timber.d("【除錯】呼叫 requireKeyMessage()")
                     requireKeyMessage(value, modifiers.toInt())
                 }
             }
@@ -145,10 +163,18 @@ class Rime :
         modifiers: KeyModifiers,
     ): Boolean =
         withRimeContext {
+            Timber.d("【除錯】processKey(KeyValue): value=${value.value} (0x${value.value.toString(16)}), modifiers=$modifiers")
             processRimeKey(value.value, modifiers.toInt()).also {
+                Timber.d("【除錯】processRimeKey結果: $it")
                 if (it) {
+                    Timber.d("【除錯】呼叫 requireResponse()")
                     requireResponse()
                 } else {
+                    val status = getRimeStatus()
+                    Timber.d(
+                        "【除錯】按鍵被拒絕時的RIME狀態: schema='${status?.schemaId}', disabled=${status?.isDisabled}, ascii_mode=${status?.isAsciiMode}",
+                    )
+                    Timber.d("【除錯】呼叫 requireKeyMessage()")
                     requireKeyMessage(value.value, modifiers.toInt())
                 }
             }
@@ -299,17 +325,74 @@ class Rime :
         @JvmStatic
         fun simulateKeySequence(sequence: CharSequence): Boolean {
             if (!sequence.first().isAsciiPrintable()) return false
-            Timber.d("simulateKeySequence: $sequence")
+            Timber.d("【除錯】simulateKeySequence: '$sequence'")
+
+            // 詳細診斷 RIME 引擎狀態
+            val preStatus = getRimeStatus()
+            val preContext = getRimeContext()
+            Timber.d(
+                "【除錯】simulateKeySequence前: schema='${preStatus?.schemaId}', disabled=${preStatus?.isDisabled}, ascii_mode=${preStatus?.isAsciiMode}",
+            )
+            Timber.d("【除錯】simulateKeySequence前: composing=${preStatus?.isComposing}, input='${preContext?.input}'")
+
+            // 簡單的 RIME 健康檢查: 測試單個ASCII字符
+            if (sequence.length == 1 && sequence.first().isLetter()) {
+                Timber.d("【除錯】執行RIME健康檢查: 測試字符'a'")
+                val healthTestResult = simulateRimeKeySequence("a")
+                val healthContext = getRimeContext()
+                clearRimeComposition() // 清除測試輸入
+                Timber.d(
+                    "【除錯】RIME健康檢查結果: $healthTestResult, input='${healthContext?.input}', preedit='${healthContext?.composition?.preedit}'",
+                )
+
+                if (!healthTestResult && healthContext?.input.isNullOrEmpty()) {
+                    Timber.e("【除錯】RIME引擎健康檢查失敗! 引擎可能無法接受任何輸入")
+                }
+            }
 
             val simulateResult =
                 simulateRimeKeySequence(
                     sequence.toString().replace("{}", "{braceleft}{braceright}"),
                 )
+            Timber.d("【除錯】simulateRimeKeySequence結果: $simulateResult")
+
             val commit = getRimeCommit()
             val ctx = getRimeContext()
 
-            return (simulateResult && (!commit?.text.isNullOrEmpty() || !ctx?.input.isNullOrEmpty())).also {
-                Timber.d("simulateKeySequence ${if (it) "success" else "failed"}")
+            Timber.d(
+                "【除錯】simulateKeySequence後: commit='${commit?.text}', ctx.input='${ctx?.input}', ctx.preedit='${ctx?.composition?.preedit}'",
+            )
+
+            // 詳細失敗分析
+            val hasCommitText = !commit?.text.isNullOrEmpty()
+            val hasContextInput = !ctx?.input.isNullOrEmpty()
+            val hasCompositionPreedit = !ctx?.composition?.preedit.isNullOrEmpty()
+
+            Timber.d("【除錯】simulateKeySequence詳細分析:")
+            Timber.d("  simulateResult (JNI返回): $simulateResult")
+            Timber.d("  hasCommitText: $hasCommitText ('${commit?.text}')")
+            Timber.d("  hasContextInput: $hasContextInput ('${ctx?.input}')")
+            Timber.d("  hasCompositionPreedit: $hasCompositionPreedit ('${ctx?.composition?.preedit}')")
+
+            if (!simulateResult) {
+                Timber.w("【除錯】JNI層simulateRimeKeySequence返回失敗!")
+
+                // 檢查可能的失敗原因
+                if (preStatus?.isDisabled == true) {
+                    Timber.w("【除錯】可能原因: RIME引擎已禁用")
+                }
+                if (preStatus?.isAsciiMode == true) {
+                    Timber.w("【除錯】可能原因: RIME處於ASCII模式")
+                }
+                if (preStatus?.schemaId.isNullOrEmpty()) {
+                    Timber.w("【除錯】可能原因: 沒有選中的輸入方案")
+                }
+
+                return false
+            }
+
+            return (simulateResult && (hasCommitText || hasContextInput)).also {
+                Timber.d("【除錯】simulateKeySequence最終結果: ${if (it) "success" else "failed"}")
                 if (it) {
                     handleRimeMessage(
                         4, // RimeMessage.MessageType.Response
@@ -444,13 +527,18 @@ class Rime :
         }
 
         private fun requireResponse() {
+            val commit = getRimeCommit() ?: RimeProto.Commit(null)
+            val context = getRimeContext() ?: return
+            val status = getRimeStatus() ?: return
+
+            Timber.d(
+                "【除錯】requireResponse: commit='${commit.text}', context.preedit='${context.composition.preedit}', context.input='${context.input}'",
+            )
+            Timber.d("【除錯】RIME狀態: schema='${status.schemaId}', disabled=${status.isDisabled}, composing=${status.isComposing}")
+
             handleRimeMessage(
                 4, // RimeMessage.MessageType.Response
-                arrayOf(
-                    getRimeCommit() ?: RimeProto.Commit(null),
-                    getRimeContext() ?: return,
-                    getRimeStatus() ?: return,
-                ),
+                arrayOf(commit, context, status),
             )
         }
 

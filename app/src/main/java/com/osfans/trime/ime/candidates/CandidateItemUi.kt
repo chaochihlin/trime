@@ -27,6 +27,15 @@ import splitties.views.dsl.core.view
 import splitties.views.dsl.core.wrapContent
 import splitties.views.gravityCenter
 
+/**
+ * 候選字項目的使用者介面實現
+ *
+ * 此類負責建立和管理單一候選字項目的視覺呈現，包含主要文字和註解文字的顯示。
+ * 支援根據主題配置決定註解文字的位置（頂部或右側），並提供高亮顯示功能。
+ *
+ * @param ctx Android 上下文，用於建立視圖元件
+ * @param theme 主題配置物件，包含文字大小、顏色、字型等樣式設定
+ */
 class CandidateItemUi(
     override val ctx: Context,
     theme: Theme,
@@ -86,6 +95,16 @@ class CandidateItemUi(
             }
         }
 
+    /**
+     * 更新候選字項目的顯示內容和狀態
+     *
+     * 根據候選字資料和當前狀態更新視圖的文字內容、顏色和背景。
+     * 處理主要文字和註解文字的顯示邏輯，以及高亮狀態的視覺回饋。
+     *
+     * @param item 候選字項目資料，包含文字內容和註解
+     * @param isHighlighted 是否處於高亮選中狀態
+     * @param obtainLast 是否顯示註解文字
+     */
     fun update(
         item: CandidateItem,
         isHighlighted: Boolean,

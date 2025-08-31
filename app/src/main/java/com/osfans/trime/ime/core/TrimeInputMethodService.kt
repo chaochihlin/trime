@@ -139,11 +139,11 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     /**
-     * Post a rime operation to [jobs] to be executed
+     * 將 rime 操作發布到 [jobs] 中執行
      *
-     * Unlike `rime.runOnReady` or `rime.launchOnReady` where
-     * subsequent operations can start if the prior operation is not finished (suspended),
-     * [postRimeJob] ensures that operations are executed sequentially.
+     * 與 `rime.runOnReady` 或 `rime.launchOnReady` 不同，在這些方法中
+     * 如果先前的操作未完成（暫停），後續操作可以開始，
+     * [postRimeJob] 確保操作按順序執行。
      */
     fun postRimeJob(block: suspend RimeApi.() -> Unit) = postJob(rime.lifecycleScope) { rime.runOnReady(block) }
 
@@ -193,12 +193,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         super.onCreate()
         decorView = window.window!!.decorView
         contentView = decorView.findViewById(android.R.id.content)
-        // MUST WRAP all code within Service onCreate() in try..catch to prevent any crash loops
+        // 必須在 Service onCreate() 中用 try..catch 包裝所有程式碼以防止任何崩潰循環
         try {
-            // Additional try..catch wrapper as the event listeners chain or the super.onCreate() method
-            // could crash
-            //  and lead to a crash loop
-            Timber.d("onCreate")
+            Timber.d("建立服務")
             InputFeedbackManager.init(this)
             registerReceiver()
         } catch (e: Exception) {
@@ -207,14 +204,18 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     private fun handleRimeMessage(it: RimeMessage<*>) {
+        Timber.d("【除錯】handleRimeMessage: 收到訊息類型: ${it::class.simpleName}")
         when (it) {
             is RimeMessage.ResponseMessage ->
                 it.data.let event@{
                     val (commit, ctx) = it
+                    Timber.d("【除錯】ResponseMessage: commit.text='${commit.text}', ctx.composition.preedit='${ctx.composition.preedit}'")
                     if (commit.text?.isNotEmpty() == true) {
+                        Timber.d("【除錯】提交文字: '${commit.text}'")
                         commitText(commit.text)
                         InputFeedbackManager.textCommitSpeak(commit.text)
                     }
+                    Timber.d("【除錯】更新編輯文字前: composition='${ctx.composition.preedit}', input='${ctx.input}'")
                     updateComposingText(ctx)
                     KeyboardSwitcher.currentKeyboardView?.invalidateAllKeys()
                 }
@@ -228,7 +229,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                                     commitText("${Char(it.value.value)}")
                                 }
                             }
-                            else -> Timber.w("Unhandled Rime KeyEvent: $it")
+                            else -> Timber.w("未處理的 Rime 按鍵事件: $it")
                         }
                         return
                     }
@@ -239,15 +240,15 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                         return
                     }
 
-                    // TODO: look for better workaround for this
+                    // 待辦：尋找更好的解決方案
                     if (keyCode == KeyEvent.KEYCODE_ENTER) {
                         handleReturnKey()
                         return
                     }
 
                     if (keyCode in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_EQUALS) {
-                        // ignore KP_X keys, which is handled in `CommonKeyboardActionListener`.
-                        // Requires this empty body becoz Kotlin request it
+                        // 忽略 KP_X 鍵，這些由 `CommonKeyboardActionListener` 處理。
+                        // 因為 Kotlin 要求，需要這個空主體
                         return
                     }
 
@@ -329,7 +330,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     override fun onWindowShown() {
         super.onWindowShown()
-        // navbar foreground/background color would reset every time window shows
+        // 每次視窗顯示時，導航列前景/背景顏色會重置
         navBarManager.update(window.window!!)
     }
 
@@ -349,8 +350,8 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         decorView.getLocationOnScreen(decorLocationInt)
         decorLocation[0] = decorLocationInt[0].toFloat()
         decorLocation[1] = decorLocationInt[1].toFloat()
-        // contentSize and decorLocation can be completely wrong,
-        // when measuring right after the very first onStartInputView() of an IMS' lifecycle
+        // contentSize 和 decorLocation 可能完全錯誤，
+        // 當在 IMS 生命週期第一次 onStartInputView() 後立即測量時
         if (contentSize[0] > 0 && contentSize[1] > 0) {
             decorLocationUpdated = true
         }
@@ -365,17 +366,17 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     override fun onUpdateCursorAnchorInfo(info: CursorAnchorInfo) {
         val bounds = info.getCharacterBounds(0)
-        // update anchorPosition
+        // 更新錨點位置
         if (bounds == null) {
-            // composing is disabled in target app or trime settings
-            // use the position of the insertion marker instead
+            // 目標應用程式或 trime 設定中禁用了編輯
+            // 改用插入標記的位置
             anchorPosition.top = info.insertionMarkerTop
             anchorPosition.left = info.insertionMarkerHorizontal
             anchorPosition.bottom = info.insertionMarkerBottom
             anchorPosition.right = info.insertionMarkerHorizontal
         } else {
-            // for different writing system (e.g. right to left languages),
-            // we have to calculate the correct RectF
+            // 對於不同的書寫系統（例如從右到左的語言），
+            // 我們必須計算正確的 RectF
             val horizontal = if (candidatesView?.layoutDirection == View.LAYOUT_DIRECTION_RTL) bounds.right else bounds.left
             anchorPosition.top = bounds.top
             anchorPosition.left = horizontal
@@ -445,17 +446,17 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
     }
 
-    // always show InputView since we delegate CandidatesView's visibility to it
+    // 總是顯示 InputView，因為我們將 CandidatesView 的可見性委託給它
     @SuppressLint("MissingSuperCall")
     override fun onEvaluateInputViewShown() = true
 
     fun superEvaluateInputViewShown() = super.onEvaluateInputViewShown()
 
     override fun onCreateInputView(): View? {
-        Timber.d("onCreateInputView")
+        Timber.d("建立輸入視窗")
         replaceInputViews(ThemeManager.activeTheme)
         inputView?.keyboardWindow?.initializeDrawingState()
-        // We will call `setInputView` by ourselves. This is fine.
+        // 我們會自己呼叫 `setInputView`。這沒問題。
         return null
     }
 
@@ -482,10 +483,10 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         attribute: EditorInfo,
         restarting: Boolean,
     ) {
-        Timber.d("onStartInput: restarting=$restarting")
+        Timber.d("開始輸入: 重新啟動=$restarting")
         postRimeJob {
             if (restarting) {
-                // when input restarts in the same editor, clear previous composition
+                // 當在同一編輯器中重新開始輸入時，清除先前的組合
                 clearComposition()
             }
         }
@@ -510,7 +511,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         attribute: EditorInfo,
         restarting: Boolean,
     ) {
-        Timber.d("onStartInputView: restarting=$restarting")
+        Timber.d("開始輸入視窗: 重新啟動=$restarting")
 
         // 開始測量鍵盤顯示時間
         val sessionId = "${System.currentTimeMillis()}-${attribute.packageName}"
@@ -583,9 +584,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                     if (attribute.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
                         == EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING
                     ) {
-                        //  应用程求以隐身模式打开键盘应用程序
+                        // 應用程式要求以隱身模式開啟鍵盤應用程式
                         normalTextEditor = false
-                        Timber.d("EditorInfo: normal -> private, IME_FLAG_NO_PERSONALIZED_LEARNING")
+                        Timber.d("編輯器資訊: 一般 -> 隱私模式, IME_FLAG_NO_PERSONALIZED_LEARNING")
                     } else if (attribute.packageName == BuildConfig.APPLICATION_ID ||
                         draftExcludeApps
                             .trim()
@@ -593,7 +594,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                             .contains(attribute.packageName)
                     ) {
                         normalTextEditor = false
-                        Timber.d("EditorInfo: normal -> exclude, packageName=%s", attribute.packageName)
+                        Timber.d("編輯器資訊: 一般 -> 排除, 套件名稱=%s", attribute.packageName)
                     } else {
                         normalTextEditor = true
                         currentInputConnection?.let { DraftHelper.onExtractedTextChanged(it) }
@@ -604,7 +605,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
-        Timber.d("onFinishInputView: finishingInput=$finishingInput")
+        Timber.d("結束輸入視窗: 完成輸入=$finishingInput")
         decorLocationUpdated = false
         inputDeviceManager.onFinishInputView()
         currentInputConnection?.apply {
@@ -620,7 +621,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         InputFeedbackManager.finishInput()
     }
 
-    // 直接commit不做任何处理
+    // 直接 commit 不做任何處理
     fun commitText(
         text: CharSequence,
         clearMeatKeyState: Boolean = false,
@@ -636,15 +637,14 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     /**
-     * Constructs a meta state integer flag which can be used for setting the `metaState` field when sending a KeyEvent
-     * to the input connection. If this method is called without a meta modifier set to true, the default value `0` is
-     * returned.
+     * 建構一個 meta state 整數標誌，可用於在向輸入連接傳送 KeyEvent 時設定 `metaState` 欄位。
+     * 如果呼叫此方法時沒有將 meta 修飾鍵設為 true，則回傳預設值 `0`。
      *
-     * @param ctrl Set to true to enable the CTRL meta modifier. Defaults to false.
-     * @param alt Set to true to enable the ALT meta modifier. Defaults to false.
-     * @param shift Set to true to enable the SHIFT meta modifier. Defaults to false.
+     * @param ctrl 設為 true 以啟用 CTRL meta 修飾鍵。預設為 false。
+     * @param alt 設為 true 以啟用 ALT meta 修飾鍵。預設為 false。
+     * @param shift 設為 true 以啟用 SHIFT meta 修飾鍵。預設為 false。
      *
-     * @return An integer containing all meta flags passed and formatted for use in a [KeyEvent].
+     * @return 包含所有傳遞的 meta 標誌並格式化以用於 [KeyEvent] 的整數。
      */
     fun meta(
         ctrl: Boolean = false,
@@ -718,14 +718,14 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     /**
-     * Same as [InputMethodService.sendDownUpKeyEvents] but also allows to set meta state.
+     * 與 [InputMethodService.sendDownUpKeyEvents] 相同，但也允許設定 meta state。
      *
-     * @param keyEventCode The key code to send, use a key code defined in Android's [KeyEvent].
-     * @param metaState Flags indicating which meta keys are currently pressed.
-     * @param count How often the key is pressed while the meta keys passed are down. Must be greater than or equal to
-     *  `1`, else this method will immediately return false.
+     * @param keyEventCode 要傳送的按鍵代碼，使用 Android [KeyEvent] 中定義的按鍵代碼。
+     * @param metaState 指示目前按下哪些 meta 鍵的標誌。
+     * @param count 在傳遞的 meta 鍵按下時按鍵被按下的次數。必須大於或等於
+     *  `1`，否則此方法將立即回傳 false。
      *
-     * @return True on success, false if an error occurred or the input connection is invalid.
+     * @return 成功時回傳 true，如果發生錯誤或輸入連接無效則回傳 false。
      */
     fun sendDownUpKeyEvent(
         keyEventCode: Int,
@@ -803,7 +803,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
             }
             return true
         }
-        Timber.d("Skipped KeyEvent: $event")
+        Timber.d("跳過按鍵事件: $event")
         return false
     }
 
@@ -823,7 +823,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         event: KeyEvent,
     ): Boolean = forwardKeyEvent(event) || super.onKeyUp(keyCode, event)
 
-    // Added in API level 14, deprecated in 29
+    // 在 API level 14 中新增，在 29 中棄用
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onViewClicked(focusChanged: Boolean) {
         super.onViewClicked(focusChanged)
@@ -849,7 +849,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                 inputMethodManager.switchToLastInputMethod(window.window!!.attributes.token)
             }
         } catch (e: Exception) {
-            Timber.e(e, "Unable to switch to the previous IME.")
+            Timber.e(e, "無法切換到上一個輸入法。")
             inputMethodManager.showInputMethodPicker()
         }
     }
@@ -863,7 +863,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                 inputMethodManager.switchToNextInputMethod(window.window!!.attributes.token, false)
             }
         } catch (e: Exception) {
-            Timber.e(e, "Unable to switch to the next IME.")
+            Timber.e(e, "無法切換到下一個輸入法。")
             inputMethodManager.showInputMethodPicker()
         }
     }
@@ -884,7 +884,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         mask: Int,
     ): Boolean {
         val ic = currentInputConnection ?: return false
-        // 没按下 Ctrl 键
+        // 沒按下 Ctrl 鍵
         if (mask != KeyEvent.META_CTRL_ON) {
             return false
         }
@@ -900,7 +900,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
         when (code) {
             KeyEvent.KEYCODE_A -> {
-                // 全选
+                // 全選
                 return if (prefs.keyboard.hookCtrlA.getValue()) {
                     ic.performContextMenuAction(android.R.id.selectAll)
                 } else {
@@ -909,7 +909,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
             }
 
             KeyEvent.KEYCODE_X -> {
-                // 剪切
+                // 剪下
                 if (prefs.keyboard.hookCtrlCV.getValue()) {
                     val etr = ExtractedTextRequest()
                     etr.token = 0
@@ -918,12 +918,12 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                         if (et.selectionStart != et.selectionEnd) return ic.performContextMenuAction(android.R.id.cut)
                     }
                 }
-                Timber.w("hookKeyboard cut fail")
+                Timber.w("鍵盤鉤子剪下失敗")
                 return false
             }
 
             KeyEvent.KEYCODE_C -> {
-                // 复制
+                // 複製
                 if (prefs.keyboard.hookCtrlCV.getValue()) {
                     val etr = ExtractedTextRequest()
                     etr.token = 0
@@ -939,18 +939,18 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                         }
                     }
                 }
-                Timber.w("hookKeyboard copy fail")
+                Timber.w("鍵盤鉤子複製失敗")
                 return false
             }
 
             KeyEvent.KEYCODE_V -> {
-                // 粘贴
+                // 貼上
                 if (prefs.keyboard.hookCtrlCV.getValue()) {
                     val etr = ExtractedTextRequest()
                     etr.token = 0
                     val et = ic.getExtractedText(etr, 0)
                     if (et == null) {
-                        Timber.d("hookKeyboard paste, et == null, try commitText")
+                        Timber.d("鍵盤鉤子貼上, et == null, 嘗試 commitText")
                         val clipboardText = clipboardManager.primaryClip?.getItemAt(0)?.coerceToText(this)
                         if (ic.commitText(clipboardText, 1)) {
                             return true
@@ -958,7 +958,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                     } else if (ic.performContextMenuAction(android.R.id.paste)) {
                         return true
                     }
-                    Timber.w("hookKeyboard paste fail")
+                    Timber.w("鍵盤鉤子貼上失敗")
                 }
                 return false
             }
@@ -1006,15 +1006,34 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     private fun updateComposingText(ctx: RimeProto.Context) {
         val ic = currentInputConnection ?: return
+        Timber.d("【除錯】updateComposingText: composingTextMode=$composingTextMode")
         val text =
             when (composingTextMode) {
-                ComposingTextMode.DISABLE -> ""
-                ComposingTextMode.PREEDIT -> ctx.composition.preedit ?: ""
-                ComposingTextMode.COMMIT_TEXT_PREVIEW -> ctx.composition.commitTextPreview ?: ""
-                ComposingTextMode.RAW_INPUT -> ctx.input
+                ComposingTextMode.DISABLE -> {
+                    Timber.d("【除錯】ComposingTextMode.DISABLE")
+                    ""
+                }
+                ComposingTextMode.PREEDIT -> {
+                    val preedit = ctx.composition.preedit ?: ""
+                    Timber.d("【除錯】ComposingTextMode.PREEDIT: preedit='$preedit'")
+                    preedit
+                }
+                ComposingTextMode.COMMIT_TEXT_PREVIEW -> {
+                    val preview = ctx.composition.commitTextPreview ?: ""
+                    Timber.d("【除錯】ComposingTextMode.COMMIT_TEXT_PREVIEW: preview='$preview'")
+                    preview
+                }
+                ComposingTextMode.RAW_INPUT -> {
+                    Timber.d("【除錯】ComposingTextMode.RAW_INPUT: input='${ctx.input}'")
+                    ctx.input
+                }
             }
+        Timber.d("【除錯】最終設定的編輯文字: '$text'")
         if (ic.getSelectedText(0).isNullOrEmpty() || text.isNotEmpty()) {
+            Timber.d("【除錯】呼叫 setComposingText: '$text'")
             ic.setComposingText(text, 1)
+        } else {
+            Timber.d("【除錯】跳過 setComposingText: selectedText不為空且text為空")
         }
     }
 
@@ -1082,7 +1101,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     companion object {
-        /** Delimiter regex to split language/locale tags. */
+        /** 用於分割語言/地區標籤的分隔符號正規表示式。 */
         private val DELIMITER_SPLITTER = """[-_]""".toRegex()
     }
 }

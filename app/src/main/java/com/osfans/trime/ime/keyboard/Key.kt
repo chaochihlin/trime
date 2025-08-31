@@ -116,7 +116,7 @@ class Key(
         } else {
             sendBindings = true
         }
-        parent.setModiferKey(this.code, this)
+        parent.setModifierKey(this.code, this)
     }
 
     fun setOn(on: Boolean): Boolean {

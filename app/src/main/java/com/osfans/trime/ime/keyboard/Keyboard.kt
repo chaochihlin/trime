@@ -68,16 +68,13 @@ class Keyboard(
     var mSymKey: Key? = null
 
     /**
-     * Total height of the keyboard, including the padding and keys
-     *
-     * @return the total height of the keyboard
+     * 鍵盤的總高度，包括填充和按鍵
      */
     var height = 0
         private set
 
     /**
-     * Total width of the keyboard, including left side gaps and keys, but not any gaps on the right
-     * side.
+     * 鍵盤的總寬度，包括左側間隔和按鍵，但不包括右側的任何間隔
      */
     var minWidth = 0
         private set
@@ -88,7 +85,7 @@ class Keyboard(
     var modifier = 0
         private set
 
-    /** Width of the screen available to fit the keyboard  */
+    /** 螢幕可用於放置鍵盤的寬度 */
     private val allowedWidth: Int
         get() {
             val keyboardSidePadding = theme.generalStyle.keyboardPadding
@@ -97,11 +94,10 @@ class Keyboard(
             return appContext.resources.displayMetrics.widthPixels - 2 * appContext.dp(sidePaddingPx)
         }
 
-    /** Keyboard default ascii mode  */
+    /** 鍵盤預設 ASCII 模式 */
     val asciiMode = selfConfig?.asciiMode ?: false
     val resetAsciiMode = selfConfig?.resetAsciiMode ?: true
 
-    val landscapeKeyboard: String? = selfConfig?.landscapeKeyboard
     private val preferredSplitPercent by AppPrefs.defaultInstance().keyboard.splitSpacePercent
     private val landscapePercent =
         intArrayOf(
@@ -109,7 +105,7 @@ class Keyboard(
             preferredSplitPercent,
         ).firstOrNull { it > 0 } ?: 0
 
-    // Variables for pre-computing nearest keys.
+    // 預計算最近按鍵的變數
     private val labelTransform = selfConfig?.labelTransform ?: TextKeyboard.LabelTransform.NONE
     private var mCellWidth = 0
     private var mCellHeight = 0
@@ -120,7 +116,7 @@ class Keyboard(
     val isLock = selfConfig?.lock ?: false // 切換程序時記憶鍵盤
     val asciiKeyboard: String? = selfConfig?.asciiKeyboard // 英文鍵盤
 
-    // todo 把按下按键弹出的内容改为单独设计的view，而不是keyboard
+    // 待辦：將按下按鍵彈出的內容改為單獨設計的檢視，而不是鍵盤
     val keyboardHeight: Int =
         intArrayOf(
             selfConfig?.let { getKeyboardHeightFromKeyboardConfig(it) } ?: 0,
@@ -130,14 +126,14 @@ class Keyboard(
     init {
         if (selfConfig != null) {
             val columns = selfConfig.columns
-            // 按键高度取值顺序： keys > keyboard/height > style/key_height
-            // 考虑到key设置height_land需要对皮肤做大量修改，而当部分key设置height而部分没有设时会造成按键高度异常，故取消普通按键的height_land参数
+            // 按鍵高度取值順序：keys > keyboard/height > style/key_height
+            // 考慮到 key 設定 height_land 需要對皮膚做大量修改，而當部分 key 設定 height 而部分沒有設定時會造成按鍵高度異常，故取消普通按鍵的 height_land 參數
             var rowHeight = keyHeight
-            // 定义 新的键盘尺寸计算方式， 避免尺寸计算不恰当，导致切换键盘时键盘高度发生变化，UI闪烁的问题。同时可以快速调整整个键盘的尺寸
-            // 1. default键盘的高度 = 其他键盘的高度
-            // 2. 当键盘高度(不含padding)与keyboard_height不一致时，每行按键等比例缩放按键高度高度，行之间的间距向上取整数、padding不缩放；
-            // 3. 由于高度只能取整数，缩放后仍然存在余数的，由 auto_height_index 指定的行吸收（遵循四舍五入）
-            //    特别的，当值为负数时，为倒序序号（-1即倒数第一个）;当值大于按键行数时，为最后一行
+            // 定義新的鍵盤尺寸計算方式，避免尺寸計算不恰當，導致切換鍵盤時鍵盤高度發生變化，UI 閃爍的問題。同時可以快速調整整個鍵盤的尺寸
+            // 1. default 鍵盤的高度 = 其他鍵盤的高度
+            // 2. 當鍵盤高度（不含 padding）與 keyboard_height 不一致時，每行按鍵等比例縮放按鍵高度，行之間的間距向上取整數、padding 不縮放
+            // 3. 由於高度只能取整數，縮放後仍然存在餘數的，由 auto_height_index 指定的行吸收（遵循四捨五入）
+            //    特別的，當值為負數時，為倒序序號（-1 即倒數第一個）；當值大於按鍵行數時，為最後一行
             val autoHeightIndex = selfConfig.autoHeightIndex
             val keys = selfConfig.keys
             val keyboardKeyWidth = selfConfig.width
@@ -176,7 +172,7 @@ class Keyboard(
                     var widthPx = (keyWidth * oneWeightWidthPx).toInt()
                     widthPx -= gap
                     if (column >= maxColumns || x + widthPx > allowedWidth) {
-                        // new row
+                        // 新行
                         rowWidthWeight = 0f
                         x = gap / 2
                         y += scaledVerticalGap + rowHeight
@@ -193,10 +189,10 @@ class Keyboard(
                         rowWidthWeight = Int.MIN_VALUE.toFloat()
                         val weight = (totalWeightOfThisRow * multiplier * oneWeightWidthPx).toInt()
                         if (keyWidth > 20) {
-                            // enlarge the key if this key is a long key
+                            // 如果此按鍵是長按鍵則放大按鍵
                             widthPx += weight
                         } else {
-                            x += weight // (10 * (defaultWidth));
+                            x += weight // (10 * (defaultWidth))
                         }
                     }
                     if (column == 0) {
@@ -213,48 +209,17 @@ class Keyboard(
                     }
                     if (textKey.click.isEmpty()) { // 無按鍵事件
                         x += widthPx + gap
-                        continue // 縮進
+                        continue // 縮排
                     }
                     val key = Key(this, textKey)
                     key.keyTextOffsetX = textKey.keyTextOffsetX
-                        ?: selfConfig.keyTextOffsetX
-                        ?: theme.generalStyle.keyTextOffsetX
-                        ?: 0f
-
                     key.keyTextOffsetY = textKey.keyTextOffsetY
-                        ?: selfConfig.keyTextOffsetY
-                        ?: theme.generalStyle.keyTextOffsetY
-                        ?: 0f
-
                     key.keySymbolOffsetX = textKey.keySymbolOffsetX
-                        ?: selfConfig.keySymbolOffsetX
-                        ?: theme.generalStyle.keySymbolOffsetX
-                        ?: 0f
-
                     key.keySymbolOffsetY = textKey.keySymbolOffsetY
-                        ?: selfConfig.keySymbolOffsetY
-                        ?: theme.generalStyle.keySymbolOffsetY
-                        ?: 0f
-
                     key.keyHintOffsetX = textKey.keyHintOffsetX
-                        ?: selfConfig.keyHintOffsetX
-                        ?: theme.generalStyle.keyHintOffsetX
-                        ?: 0f
-
                     key.keyHintOffsetY = textKey.keyHintOffsetY
-                        ?: selfConfig.keyHintOffsetY
-                        ?: theme.generalStyle.keyHintOffsetY
-                        ?: 0f
-
                     key.keyPressOffsetX = textKey.keyPressOffsetX
-                        ?: selfConfig.keyPressOffsetX
-                        ?: theme.generalStyle.keyPressOffsetX
-                        ?: 0
-
                     key.keyPressOffsetY = textKey.keyPressOffsetY
-                        ?: selfConfig.keyPressOffsetY
-                        ?: theme.generalStyle.keyPressOffsetY
-                        ?: 0
                     key.x = x
                     key.y = y
                     val rightGap = abs(allowedWidth - x - widthPx - gap / 2)
@@ -283,11 +248,17 @@ class Keyboard(
                     if (key.row == row) key.edgeFlags = key.edgeFlags or EDGE_BOTTOM
                 }
             } catch (e: Exception) {
-                Timber.e(e, "Failed to create keyboard")
+                Timber.e(e, "建立鍵盤失敗")
             }
         }
     }
 
+    /**
+     * 從主題獲取鍵盤高度
+     *
+     * @param theme 主題物件
+     * @return 鍵盤高度（像素）
+     */
     private fun getKeyboardHeightFromTheme(theme: Theme): Int {
         var keyboardHeight = theme.generalStyle.keyboardHeight
         if (appContext.isLandscapeMode()) {
@@ -297,6 +268,12 @@ class Keyboard(
         return appContext.dp(keyboardHeight)
     }
 
+    /**
+     * 從鍵盤配置獲取鍵盤高度
+     *
+     * @param textKeyboard 文字鍵盤配置
+     * @return 鍵盤高度（像素）
+     */
     private fun getKeyboardHeightFromKeyboardConfig(textKeyboard: TextKeyboard): Int {
         var keyboardHeight = textKeyboard.keyboardHeight
         if (appContext.isLandscapeMode()) {
@@ -306,7 +283,13 @@ class Keyboard(
         return appContext.dp(keyboardHeight)
     }
 
-    fun setModiferKey(
+    /**
+     * 設定修飾鍵
+     *
+     * @param c 按鍵代碼
+     * @param key 要設定的按鍵物件
+     */
+    fun setModifierKey(
         c: Int,
         key: Key?,
     ) {
@@ -329,9 +312,19 @@ class Keyboard(
         }
     }
 
+    /**
+     * 獲取鍵盤中所有按鍵的列表
+     */
     val keys: List<Key>
         get() = mKeys
 
+    /**
+     * 設定修飾鍵狀態
+     *
+     * @param mask 修飾鍵掩碼
+     * @param value 要設定的狀態值
+     * @return 修飾鍵狀態是否發生變化
+     */
     private fun setModifier(
         mask: Int,
         value: Boolean,
@@ -341,20 +334,26 @@ class Keyboard(
         return true
     }
 
+    /**
+     * 檢查 Shift 鍵是否被按下或鎖定
+     */
     val isShifted: Boolean
         get() = modifier.hasFlag(KeyEvent.META_SHIFT_ON) || mShiftKey?.isOn == true
 
+    /**
+     * 檢查是否只有 Shift 鍵被按下，沒有其他修飾鍵
+     */
     val isOnlyShiftOn: Boolean
         get() =
             isShifted &&
                 !modifier.hasFlag(KeyEvent.META_CTRL_ON or KeyEvent.META_ALT_ON or KeyEvent.META_SYM_ON or KeyEvent.META_META_ON)
 
     /**
-     * 设置Shift键状态（用于自动大写）
+     * 設置 Shift 鍵狀態（用於自動大寫）
      *
-     * @param on 是否锁定Shift键
-     * @param shifted 是否按下Shift键
-     * @return Shift键状态是否改变
+     * @param on 是否鎖定 Shift 鍵
+     * @param shifted 是否按下 Shift 鍵
+     * @return Shift 鍵狀態是否改變
      */
     fun setShifted(
         on: Boolean,
@@ -365,13 +364,13 @@ class Keyboard(
     }
 
     /**
-     * 设置修饰键的状态
+     * 設置修飾鍵的狀態
      *
-     * @param on 是否锁定修饰键
-     * @param keycode 修饰键的 KeyEvent 掩码
-     * @return 修饰键状态是否改变
+     * @param on 是否鎖定修飾鍵
+     * @param keycode 修飾鍵的 KeyEvent 掩碼
+     * @return 修飾鍵狀態是否改變
      */
-    fun clikModifierKey(
+    fun clickModifierKey(
         on: Boolean,
         keycode: Int,
     ): Boolean {
@@ -389,8 +388,13 @@ class Keyboard(
         return if (on) setModifier(keycode, keepOn) else setModifier(keycode, keyDown)
     }
 
+    /**
+     * 刷新修飾鍵狀態，重置所有未鎖定的修飾鍵
+     *
+     * @return 修飾鍵狀態是否發生變化
+     */
     fun refreshModifier(): Boolean {
-        // 这里改为了一次性重置全部修饰键状态并返回TRUE刷新UI，可能有bug
+        // 此處改為一次性重置全部修飾鍵狀態並返回 TRUE 刷新 UI，可能有問題
         var result = false
         if (mShiftKey != null && !mShiftKey!!.isOn) result = result || setModifier(KeyEvent.META_SHIFT_ON, false)
         if (mAltKey != null && !mAltKey!!.isOn) result = result || setModifier(KeyEvent.META_ALT_ON, false)
@@ -400,8 +404,11 @@ class Keyboard(
         return result
     }
 
+    /**
+     * 計算最近鄰按鍵的網格
+     */
     private fun computeNearestNeighbors() {
-        // Round-up so we don't have any pixels outside the grid
+        // 向上取整以免有任何像素落在網格外
         mCellWidth = (minWidth + GRID_WIDTH - 1) / GRID_WIDTH
         mCellHeight = (height + GRID_HEIGHT - 1) / GRID_HEIGHT
         gridNeighbors = arrayOfNulls(GRID_SIZE)
@@ -440,12 +447,11 @@ class Keyboard(
     }
 
     /**
-     * Returns the indices of the keys that are closest to the given point.
+     * 返回距離給定點最近的按鍵索引
      *
-     * @param x the x-coordinate of the point
-     * @param y the y-coordinate of the point
-     * @return the array of integer indices for the nearest keys to the given point. If the given
-     * point is out of range, then an array of size zero is returned.
+     * @param x 點的 x 座標
+     * @param y 點的 y 座標
+     * @return 距離給定點最近的按鍵整數索引陣列。如果給定點超出範圍，則返回大小為零的陣列
      */
     fun getNearestKeys(
         x: Int,
@@ -461,6 +467,9 @@ class Keyboard(
         return IntArray(0)
     }
 
+    /**
+     * 檢查按鍵標籤是否應該顯示為大寫
+     */
     val isLabelUppercase: Boolean
         get() = labelTransform == TextKeyboard.LabelTransform.UPPERCASE
 
@@ -473,7 +482,7 @@ class Keyboard(
         private const val GRID_HEIGHT = 5
         private const val GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 
-        /** Number of key widths from current touch point to search for nearest keys.  */
+        /** 從當前觸摸點搜尋最近按鍵的鍵寬數量 */
         const val SEARCH_DISTANCE = 1.4f
     }
 }
