@@ -9,7 +9,18 @@ import androidx.core.graphics.createBitmap
 import timber.log.Timber
 
 /**
- * KeyboardView 的智慧點陣圖快取，最小化記憶體使用並提升效能
+ * 智慧位元圖快取管理器
+ * 
+ * 專為 KeyboardView 設計的智慧位元圖快取系統，能夠最小化記憶體使用並提升渲染效能。
+ * 此類別採用懶性建立策略，只有在必要時才建立或重新建立位元圖緩衝區。
+ * 
+ * 主要特性：
+ * - 懶性建立：只有在需要時才建立緩衝區
+ * - 尺寸變化檢測：自動檢測尺寸變化並重建
+ * - 髒為狀態追蹤：減少不必要的重繪作業
+ * - 記憶體壓力感知：支援主動清理以釋放記憶體
+ * 
+ * @since 1.0
  */
 class SmartBitmapCache {
     private var currentBuffer: Bitmap? = null

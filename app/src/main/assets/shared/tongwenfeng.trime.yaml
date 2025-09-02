@@ -1073,7 +1073,7 @@ preset_keyboards:
       - {click: 'g', label: 'ㄍ', label_symbol: 'e', key_back_color: bh1, key_text_color: th1}
       - {click: 'j', label: 'ㄐ', label_symbol: 'r', key_back_color: bh1, key_text_color: th1}
       - {click: 'C', label: 'ㄔ', label_symbol: 't', key_back_color: bh1, key_text_color: th1}
-      - {click: 'z', label: 'ㄗ', label_symbol: 'y', key_back_color: bh1, key_text_color: th1}
+      - {click: 'z', label: 'ㄗ', label_symbol: 'y', preview: 'ㄗ', key_back_color: bh1, key_text_color: th1}
       - {click: 'i', label: 'ㄧ', label_symbol: 'u', key_back_color: bh1, key_text_color: th1}
       - {click: 'o', label: 'ㄛ', label_symbol: 'i', key_back_color: bh1, key_text_color: th1}
       - {click: 'U', label: 'ㄟ', label_symbol: 'o', key_back_color: bh1, key_text_color: th1}
@@ -1394,65 +1394,13 @@ preset_keys:
   Keyboard_o: {label: "O", functional: false, send: comma, key_text_color: bct0}
   Keyboard_e: {label: "E", functional: false, send: period, key_text_color: bct0}
 
-  Keyboard_u2: {label: "丨", text: '""{Left}'}
-  Keyboard_a2: {label: "一", send: 0}
-  Keyboard_i2: {label: "丿", text: "''{Left}"}
-  Keyboard_o2: {label: "丶", send: 9}
-  Keyboard_e2: {label: "ㄥ", text: "{}{Left}"}
-  Keyboard_k: {label: "一", send: A}
-  Keyboard_v: {label: "丨", send: U}
-  Keyboard_h: {label: "丿", send: I}
-  Keyboard_r: {label: "丶", send: O}
-  Keyboard_e0: {label: "ㄥ", send: E}
-  
+
   Keyboard_a3: {label: "……", functional: false, send: asciicircum}
 
    # 表情键自定义
   Keyboard_bqfh: {label: ⌘, functional: true, send: Eisu_toggle, select: bqfh1}
   Keyboard_bqrw: {label: ⌘, functional: false, send: Eisu_toggle, select: bqfh1}
-  Keyboard_bqrw1: {label: '🙂', functional: false, send: Eisu_toggle, select: bqrw1}
-  Keyboard_bqrw2: {label: 人物2,functional: false, send: Eisu_toggle, select: bqrw2}
-  Keyboard_bqrw3: {label: 人物3, functional: false, send: Eisu_toggle, select: bqrw3}
-  Keyboard_bqrw4: {label: 人物4, functional: false, send: Eisu_toggle, select: bqrw4}
-  Keyboard_bqrw5: {label: 人物5, functional: false, send: Eisu_toggle, select: bqrw5}
-  Keyboard_bqrw6: {label: 人物6, functional: false, send: Eisu_toggle, select: bqrw6}
-  Keyboard_bqrw7: {label: 人物7, functional: false, send: Eisu_toggle, select: bqrw7}
-  Keyboard_bqrw8: {label: 人物8, functional: false, send: Eisu_toggle, select: bqrw8}
 
-  Keyboard_bqqt1: {label: '🔶', functional: false, send: Eisu_toggle, select: bqqt1}
-  Keyboard_bqqt2: {label: 其它1, functional: false, send: Eisu_toggle, select: bqqt2}
-  Keyboard_bqqt3: {label: 其它1, functional: false, send: Eisu_toggle, select: bqqt3}
-  Keyboard_bqqt4: {label: 其它1, functional: false, send: Eisu_toggle, select: bqqt4}
-
-  Keyboard_bqqz1: {label: '🇨🇳', functional: false, send: Eisu_toggle, select: bqqz1}
-  Keyboard_bqqz2: {label: 旗帜1, functional: false, send: Eisu_toggle, select: bqqz2}
-  Keyboard_bqqz3: {label: 旗帜1, functional: false, send: Eisu_toggle, select: bqqz3}
-  Keyboard_bqqz4: {label: 旗帜1, functional: false, send: Eisu_toggle, select: bqqz4}
-  Keyboard_bqqz5: {label: 旗帜1, functional: false, send: Eisu_toggle, select: bqqz5}
-  Keyboard_bqqz6: {label: 旗帜1, functional: false, send: Eisu_toggle, select: bqqz6}
-
-  Keyboard_bqpt1: {label: '🎂', functional: false, send: Eisu_toggle, select: bqpt1}
-  Keyboard_bqpt2: {label: 聚会2, functional: false, send: Eisu_toggle, select: bqpt2}
-
-  Keyboard_bqhd1: {label: '🎉', functional: false, send: Eisu_toggle, select: bqhd1}
-  Keyboard_bqhd2: {label: 活动2, functional: false, send: Eisu_toggle, select: bqhd2}
-
-  Keyboard_bqhc1: {label: '🌼', functional: false, send: Eisu_toggle, select: bqhc1}
-  Keyboard_bqhc2: {label: 花草2, functional: false, send: Eisu_toggle, select: bqhc2}
-  Keyboard_bqhc3: {label: 花草2, functional: false, send: Eisu_toggle, select: bqhc3}
-
-  Keyboard_bqlx1: {label: '🚖', functional: false, send: Eisu_toggle, select: bqlx1}
-  Keyboard_bqlx2: {label: 旅行2, functional: false, send: Eisu_toggle, select: bqlx2}
-  Keyboard_bqlx3: {label: 旅行3, functional: false, send: Eisu_toggle, select: bqlx3}
-  Keyboard_bqlx4: {label: 旅行4, functional: false, send: Eisu_toggle, select: bqlx4}
-  Keyboard_bqlx5: {label: 旅行5, functional: false, send: Eisu_toggle, select: bqlx5}
-  Keyboard_bqlx6: {label: 旅行6, functional: false, send: Eisu_toggle, select: bqlx6}
-
-  Keyboard_bqkj1: {label: '🔌', functional: false, send: Eisu_toggle, select: bqkj1}
-  Keyboard_bqkj2: {label: 科技2, functional: false, send: Eisu_toggle, select: bqkj2}
-  Keyboard_bqkj3: {label: 科技3, functional: false, send: Eisu_toggle, select: bqkj3}
-  Keyboard_bqkj4: {label: 科技4, functional: false, send: Eisu_toggle, select: bqkj4}
-  Keyboard_bqkj5: {label: 科技5, functional: false, send: Eisu_toggle, select: bqkj5}
 
   Keyboard_bqfh1: {label: "#!?", functional: false, send: Eisu_toggle, select: bqfh1}
   Keyboard_bqfh2: {label: "上页", functional: false, send: Eisu_toggle, select: bqfh2, key_text_size: "14"}
@@ -1461,17 +1409,9 @@ preset_keys:
 
   Keyboard_bqsy1: {label: "中文", functional: false, send: Eisu_toggle, select: bqfh1, key_text_size: "14"}
   Keyboard_bqsy2: {label: "英文", functional: false, send: Eisu_toggle, select: bqfh3, key_text_size: "14"}
-  Keyboard_bqsy3: {label: "表情", functional: false, send: Eisu_toggle, select: bqrw1, key_text_size: "14"}
-  Keyboard_bqsy4: {label: "颜文", functional: false, send: Eisu_toggle, select: kao_happy, key_text_size: "14"}
 
 #颜文字键盘
   Keyboard_kao: {label: ^_^, functional: false, send: Eisu_toggle, select: kao_happy}
-  Keyboard_kaoh: {label: 开心, functional: false, send: Eisu_toggle, select: kao_happy}
-  Keyboard_kaof: {label: 喜欢, functional: false, send: Eisu_toggle, select: kao_fond}
-  Keyboard_kaos: {label: 伤心, functional: false, send: Eisu_toggle, select: kao_sad}
-  Keyboard_kaom: {label: 生气, functional: false, send: Eisu_toggle, select: kao_mad}
-  Keyboard_kaoa: {label: 惊讶, functional: false, send: Eisu_toggle, select: kao_astonished}
-  Keyboard_kaoi: {label: 无奈, functional: false, send: Eisu_toggle, select: kao_impotent}
 
   Zcj: {label: 单字, functional: false, text: "{Home}{Right}{Right}"}
   Tab: {label: 字词, send: Tab}
@@ -1481,38 +1421,12 @@ preset_keys:
   space_R2: {label: "中", functional: false, send: Eisu_toggle, select: fbj}
   #符号
   符号: {text: '{Escape}/fh', label: 符号, functional: false}
-  电脑: {text: '{Escape}/dn', label: 电脑, functional: false}
-  象棋: {text: '{Escape}/xq', label: 象棋, functional: false}
-  麻将: {text: '{Escape}/mj', label: 麻将, functional: false}
-  骰子: {text: '{Escape}/sz', label: 骰子, functional: false}
-  扑克: {text: '{Escape}/pk', label: 扑克, functional: false}
-  天气: {text: '{Escape}/tq', label: 天气, functional: false}
-  音乐: {text: '{Escape}/yy', label: 音乐, functional: false}
-  八卦: {text: '{Escape}/bg', label: 八卦, functional: false}
-  易经: {text: '{Escape}/lssg', label: 易经, functional: false}
-  天体: {text: '{Escape}/tt', label: 天体, functional: false}
-  星座: {text: '{Escape}/xz', label: 星座, functional: false}
-  星号: {text: '{Escape}/xh', label: 星号, functional: false}
-  方块: {text: '{Escape}/fk', label: 方块, functional: false}
   几何: {text: '{Escape}/jh', label: 几何, functional: false}
-  箭头: {text: '{Escape}/jt', label: 箭头, functional: false}
   数学: {text: '{Escape}/sx', label: 数学, functional: false}
   上标: {text: '{Escape}/sb', label: 上标, functional: false}
   下标: {text: '{Escape}/xb', label: 下标, functional: false}
-  单位: {text: '{Escape}/dw', label: 单位, functional: false}
-  货币: {text: '{Escape}/hb', label: 货币, functional: false}
   拼音: {text: '{Escape}/py', label: 拼音, functional: false}
   注音: {text: '{Escape}/zy', label: 注音, functional: false}
-  假名: {text: '{Escape}/jm', label: 假名, functional: false}
-  片假名: {text: '{Escape}/pjm', label: 片假名, functional: false}
-  韩文: {text: '{Escape}/hw', label: 韩文, functional: false}
-  希腊: {text: '{Escape}/xl', label: 希腊, functional: false}
-  希腊大写: {text: '{Escape}/xld', label: 大写, functional: false}
-  罗马: {text: '{Escape}/lm', label: 罗马, functional: false}
-  罗马大写: {text: '{Escape}/lmd', label: 大写, functional: false}
-  俄语: {text: '{Escape}/ey', label: 俄语, functional: false}
-  俄语大写: {text: '{Escape}/eyd', label: 大写, functional: false}
-  表情: {text: '{Escape}/bq', label: 😁}
   一: {text: '{Escape}/1', label: 1}
   二: {text: '{Escape}/2', label: 2}
   三: {text: '{Escape}/3', label: 3}

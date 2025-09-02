@@ -39,7 +39,26 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 
-/** 顯示[鍵盤][Keyboard]及[按鍵][Key]  */
+/**
+ * 鍵盤視圖類別
+ * 
+ * 負責顯示鍵盤和處理使用者的觸控互動。此類別是 Trime 輸入法的核心繪製元件，
+ * 負責繪製按鍵、處理觸控事件、管理鍵盤狀態等。
+ * 
+ * 功能特性：
+ * - 高效的鍵盤繪製和觸控事件處理
+ * - 支援多點觸控和手勢操作
+ * - 智慧快取系統以優化效能
+ * - 記憶體壓力監控和管理
+ * - 按鍵預覽和回饋功能
+ * 
+ * @param context Android 上下文
+ * @param theme 主題配置
+ * @param keyboard 鍵盤實例
+ * @param keyPreviewChoreographer 按鍵預覽編排器
+ * 
+ * @since 1.0
+ */
 @SuppressLint("ViewConstructor")
 class KeyboardView(
     context: Context,
@@ -62,6 +81,7 @@ class KeyboardView(
     private val originCoords = intArrayOf(0, 0)
     private val mKeys get() = keyboard.keys
 
+    /** 鍵盤動作監聽器，用於處理按鍵事件 */
     var keyboardActionListener: KeyboardActionListener? = null
     private val mVerticalCorrection = theme.generalStyle.verticalCorrection
     private var mProximityThreshold = 0
@@ -145,6 +165,11 @@ class KeyboardView(
     private var showKeySymbol: Boolean = true
     private var showKeyHint: Boolean = true
 
+    /**
+     * 初始化縪製狀態
+     * 
+     * 設置鍵盤的初始縪製狀態，包括讀取 RIME 的運行時選項和預計算按鍵縪製信息。
+     */
     fun initializeDrawingState() {
         lifecycleScope.launch {
             showKeySymbol = !rime.run { getRuntimeOption("_hide_key_symbol") }
@@ -157,6 +182,11 @@ class KeyboardView(
 
     private var labelEnter: String = theme.generalStyle.enterLabel.default
 
+    /**
+     * 更新 Enter 鍵標籤
+     * 
+     * @param label 新的 Enter 鍵標籤文字
+     */
     fun onEnterKeyLabelUpdate(label: String) {
         labelEnter = label
     }
@@ -348,7 +378,12 @@ class KeyboardView(
         behavior: KeyBehavior,
     ) {
         getLocationInWindow(originCoords)
-        keyPreviewChoreographer.placeAndShowKeyPreview(key, key.getPreviewText(behavior), width, originCoords)
+        keyPreviewChoreographer.placeAndShowKeyPreview(
+            key,
+            key.getPreviewText(behavior),
+            width,
+            originCoords,
+            )
     }
 
     private fun dismissKeyPreviewWithoutDelay(key: Key) {
@@ -389,7 +424,9 @@ class KeyboardView(
     }
 
     /**
-     * 返回鍵盤是否爲大寫狀態
+     * 返回鍵盤是否為大寫狀態
+     * 
+     * @return true 如果 Shift 鍵處於開啟狀態，false 否則
      */
     val isCapsOn: Boolean
         get() = keyboard.mShiftKey?.isOn ?: false
@@ -625,6 +662,12 @@ class KeyboardView(
 
     private val hookShiftArrow by AppPrefs.defaultInstance().keyboard.hookShiftArrow
 
+    /**
+     * 檢查是否為需要 Hook Shift 的箭頭鍵
+     * 
+     * @param keyCode 按鍵代碼
+     * @return true 如果是需要 Hook 的箭頭鍵，false 否則
+     */
     fun isHookShiftArrow(keyCode: Int): Boolean {
         if (!hookShiftArrow) return false
 
@@ -698,6 +741,14 @@ class KeyboardView(
      * 鍵盤將按鍵渲染到離屏緩衝區，而 invalidate() 只繪製快取的
      * 緩衝區。
      *
+     * @see invalidateKey
+     */
+    /**
+     * 請求重新繪製整個鍵盤
+     * 
+     * 呼叫 [invalidate] 是不夠的，因為鍵盤將按鍵縪製到離屏緩衝區，
+     * 而 invalidate() 只繪製快取的緩衝區。此方法會正確地標記所有按鍵為需要重繪。
+     * 
      * @see invalidateKey
      */
     fun invalidateAllKeys() {
@@ -1037,6 +1088,11 @@ class KeyboardView(
         removePreviewJob = null
     }
 
+    /**
+     * 視圖分離時的清理操作
+     * 
+     * 取消所有正在運行的協程作業和釋放繪製資源。
+     */
     fun onDetach() {
         cancelAllJobs()
         freeDrawingBuffer()

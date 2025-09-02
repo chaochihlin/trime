@@ -66,6 +66,12 @@ class CompactCandidateModule(
 
     val unrolledCandidateOffset = _unrolledCandidateOffset.asSharedFlow()
 
+    /**
+     * 重新整理展開候選字列表的狀態
+     * 
+     * 更新展開候選字的偏移量，並通知工具列狀態機更新展開按鈕的狀態。
+     * 當候選字列表內容變更時會被調用。
+     */
     fun refreshUnrolled() {
         runBlocking {
             _unrolledCandidateOffset.emit(adapter.previous + view.childCount)
@@ -77,6 +83,7 @@ class CompactCandidateModule(
         )
     }
 
+    /** 候選字列表適配器，處理候選字項目的顯示和互動邏輯 */
     val adapter by lazy {
         CompactCandidateViewAdapter(theme).apply {
             setOnItemClickListener { _, view, position ->
@@ -92,6 +99,7 @@ class CompactCandidateModule(
         }
     }
 
+    /** Flexbox 佈局管理器，提供彈性的候選字排列方式 */
     val layoutManager by lazy {
         object : FlexboxLayoutManager(context) {
             override fun canScrollHorizontally(): Boolean = false
@@ -105,6 +113,7 @@ class CompactCandidateModule(
         }
     }
 
+    /** 候選字項目間的分隔線繪製物件 */
     private val separatorDrawable by lazy {
         ShapeDrawable(RectShape()).apply {
             val spacing = theme.generalStyle.candidateSpacing
@@ -115,6 +124,7 @@ class CompactCandidateModule(
         }
     }
 
+    /** 候選字列表視圖，使用 RecyclerView 實現 */
     val view by lazy {
         context.recyclerView(R.id.candidate_view) {
             adapter = this@CompactCandidateModule.adapter
@@ -123,6 +133,13 @@ class CompactCandidateModule(
         }
     }
 
+    /**
+     * 處理輸入上下文更新事件
+     * 
+     * 當 RIME 引擎的候選字資料更新時被調用，負責更新候選字列表的顯示內容。
+     * 
+     * @param ctx RIME 輸入上下文，包含候選字資料和狀態資訊
+     */
     override fun onInputContextUpdate(ctx: RimeProto.Context) {
         val candidates = ctx.menu.candidates.map { CandidateItem(it.text, it.comment ?: "") }
         val isLastPage = ctx.menu.isLastPage
@@ -136,6 +153,15 @@ class CompactCandidateModule(
 
     private var candidateActionMenu: PopupMenu? = null
 
+    /**
+     * 顯示候選字操作選單
+     * 
+     * 長按候選字時顯示的彈出選單，提供忘記該詞等操作選項。
+     * 
+     * @param idx 候選字在列表中的索引
+     * @param text 候選字的文字內容
+     * @param view 觸發操作的視圖元件
+     */
     fun showCandidateAction(
         idx: Int,
         text: String,

@@ -42,6 +42,19 @@ import splitties.systemservices.clipboardManager
 import splitties.systemservices.inputMethodManager
 import timber.log.Timber
 
+/**
+ * 通用鍵盤動作監聽器
+ * 
+ * 負責處理鍵盤互動事件，包括按鍵按下、釋放、動作執行和文本輸入。
+ * 支援 RIME 引擎整合、特殊功能命令、鍵盤切換等功能。
+ * 
+ * @param context Android 應用程式上下文
+ * @param service Trime 輸入法服務實例
+ * @param rime RIME 輸入引擎會話物件
+ * @param liquidKeyboard 液態鍵盤實例
+ * @param windowManager 視窗管理器
+ * @param lazyKeyboardWindow 懶加載的鍵盤視窗實例
+ */
 @InputScope
 @Inject
 class CommonKeyboardActionListener(
@@ -53,12 +66,13 @@ class CommonKeyboardActionListener(
     private val lazyKeyboardWindow: Lazy<KeyboardWindow>,
 ) {
     companion object {
-        /** Pattern for braced key event like `{Left}`, `{Right}`, etc. */
+        /** 大括號包裹的按鍵事件樣式，如 `{Left}`, `{Right}` 等 */
         private val BRACED_KEY_EVENT = """^(\{[^{}]+\}).*$""".toRegex()
 
-        /** Pattern for unbraced characters (including {Escape}) like `abc`, `{Escape}jk` etc. */
+        /** 非大括號字元樣式（包含 {Escape}），如 `abc`, `{Escape}jk` 等 */
         private val UNBRACED_CHAR = """^((\{Escape\})?[^{}]+).*$""".toRegex()
 
+        /** 占位符樣式，用於識別文本中的參數占位符 */
         private val PLACEHOLDER_PATTERN = Regex(".*(%([1-4]\\$)?s).*")
     }
 
@@ -68,6 +82,13 @@ class CommonKeyboardActionListener(
 
     private var shouldReleaseKey: Boolean = false
 
+    /**
+     * 顯示對話框
+     * 
+     * 在 RIME 引擎準備好後顯示指定的對話框。
+     * 
+     * @param dialog 對話框建立函數，接收 RimeApi 並返回 Dialog
+     */
     private fun showDialog(dialog: suspend (RimeApi) -> Dialog) {
         rime.launchOnReady { api ->
             service.lifecycleScope.launch {
@@ -76,9 +97,19 @@ class CommonKeyboardActionListener(
         }
     }
 
+    /**
+     * 顯示主題選擇器
+     * 
+     * 目前未實現，為保留方法。
+     */
     private fun showThemePicker() {
     }
 
+    /**
+     * 顯示已啟用的輸入方案選擇器
+     * 
+     * 展示當前可用的輸入方案列表，並提供跳轉至設定的選項。
+     */
     private fun showEnabledSchemaPicker() {
         showDialog { api ->
             EnabledSchemaPickerDialog.build(api, service.lifecycleScope, context) {
@@ -89,6 +120,14 @@ class CommonKeyboardActionListener(
         }
     }
 
+    /**
+     * 展開活躍文本中的占位符
+     * 
+     * 將輸入文本中的占位符（%s, %1\$s 等）替換為當前活躍的文本內容。
+     * 
+     * @param input 包含占位符的輸入字串
+     * @return 已替換占位符的字串
+     */
     private fun expandActiveText(input: String): String =
         if (input.matches(PLACEHOLDER_PATTERN)) {
             input.format(
@@ -101,6 +140,7 @@ class CommonKeyboardActionListener(
             input
         }
 
+    /** 鍵盤動作監聽器實例，處理所有鍵盤互動事件 */
     val listener by lazy {
         object : KeyboardActionListener {
             override fun onPress(keyEventCode: Int) {

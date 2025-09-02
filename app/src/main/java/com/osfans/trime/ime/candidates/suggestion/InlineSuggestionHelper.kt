@@ -25,7 +25,22 @@ import com.osfans.trime.R
 import com.osfans.trime.data.theme.ColorManager
 import splitties.dimensions.dp
 
+/**
+ * 內嵌建議功能的輔助工具類
+ * 
+ * 提供建立 Android R+ 內嵌建議請求的功能，配置建議項目的
+ * 視覺樣式和佈局參數，使其與 Trime 主題保持一致。
+ */
 object InlineSuggestionHelper {
+    /**
+     * 建立內嵌建議請求
+     * 
+     * 為 Android R 以上版本建立內嵌建議請求，配置建議項目的
+     * 視覺樣式，包括背景、文字顏色、大小和內邊距等。
+     * 
+     * @param ctx Android 上下文
+     * @return 配置完成的內嵌建議請求
+     */
     @SuppressLint("RestrictedApi")
     @RequiresApi(Build.VERSION_CODES.R)
     fun createRequest(ctx: Context): InlineSuggestionsRequest {

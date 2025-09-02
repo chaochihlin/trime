@@ -17,13 +17,33 @@ import timber.log.Timber
 import kotlin.math.abs
 import kotlin.math.pow
 
-/** 從YAML中加載鍵盤配置，包含多個[按鍵][Key]。  */
+/**
+ * 虛擬鍵盤類別，從 YAML 配置檔案中載入鍵盤布局和按鍵定義
+ *
+ * 此類別是輸入法鍵盤系統的核心組件，負責管理整個鍵盤的布局、按鍵配置和狀態。
+ * 它包含多個 [Key] 實例，每個都代表一個可互動的按鍵元件。
+ *
+ * 主要功能：
+ * - 從主題配置載入鍵盤师局和外觀設定
+ * - 動態計算按鍵的位置、尺寸和間距
+ * - 管理修飾鍵（Shift、Ctrl、Alt等）的狀態
+ * - 支援橫/直屏和分割鍵盤模式
+ * - 提供按鍵的距離計算和最近鄰居檢索
+ * - 支援自動高度調整和響應式布局
+ *
+ * @param theme 主題配置物件，包含整體外觀設定
+ * @param selfConfig 鍵盤的自定義配置，若為 null 則使用預設配置
+ *
+ * @see Key
+ * @see Theme
+ * @see TextKeyboard
+ */
 @Suppress("ktlint:standard:property-naming")
 class Keyboard(
     private val theme: Theme,
     selfConfig: TextKeyboard? = null,
 ) {
-    /** 按鍵默認水平間距  */
+    /** 按鍵預設水平間距 */
     private val horizontalGap: Int =
         (
             intArrayOf(
@@ -32,10 +52,10 @@ class Keyboard(
             ).firstOrNull { it > 0 } ?: 0
         ).also { appContext.dp(it) }
 
-    /** 默認鍵寬  */
+    /** 按鍵預設寬度 */
     private val keyWidth: Int = (allowedWidth * theme.generalStyle.keyWidth / 100).toInt()
 
-    /** 默認鍵高  */
+    /** 按鍵預設高度 */
     private val keyHeight: Int =
         (
             intArrayOf(
@@ -44,7 +64,7 @@ class Keyboard(
             ).firstOrNull { it > 0 } ?: 0
         ).also { appContext.dp(it) }
 
-    /** 默認行距  */
+    /** 按鍵預設垂直間距 */
     private val verticalGap: Int =
         (
             intArrayOf(
@@ -53,35 +73,33 @@ class Keyboard(
             ).firstOrNull { it > 0 } ?: 0
         ).also { appContext.dp(it) }
 
-    /** 默認按鍵圓角半徑  */
+    /** 按鍵預設圓角半徑 */
     val roundCorner: Float =
         floatArrayOf(
             selfConfig?.roundCorner ?: 0f,
             theme.generalStyle.roundCorner,
         ).firstOrNull { it > 0 } ?: 0f
 
-    /** 鍵盤的Shift鍵  */
+    /** 鍵盤上的 Shift 修飾鍵 */
     var mShiftKey: Key? = null
     var mCtrlKey: Key? = null
     var mAltKey: Key? = null
     var mMetaKey: Key? = null
     var mSymKey: Key? = null
 
-    /**
-     * 鍵盤的總高度，包括填充和按鍵
-     */
+    /** 鍵盤的總高度（包括所有按鍵和間距） */
     var height = 0
         private set
 
-    /**
-     * 鍵盤的總寬度，包括左側間隔和按鍵，但不包括右側的任何間隔
-     */
+    /** 鍵盤的最小寬度（包括左側間距和按鍵，不包括右側間距） */
     var minWidth = 0
         private set
 
-    /** List of keys in this keyboard  */
+    /** 鍵盤中的所有按鍵列表 */
     private val mKeys = mutableListOf<Key>()
+    /** 可用於組字的按鍵列表 */
     val composingKeys = mutableListOf<Key>()
+    /** 當前按下的修飾鍵狀態遐罩 */
     var modifier = 0
         private set
 
@@ -447,11 +465,14 @@ class Keyboard(
     }
 
     /**
-     * 返回距離給定點最近的按鍵索引
+     * 取得距離指定座標點最近的按鍵索引陣列
      *
-     * @param x 點的 x 座標
-     * @param y 點的 y 座標
-     * @return 距離給定點最近的按鍵整數索引陣列。如果給定點超出範圍，則返回大小為零的陣列
+     * 使用預計算的網格系統快速找出指定座標附近的所有按鍵。
+     * 這個方法主要用於觸摸事件的按鍵匹配。
+     *
+     * @param x 目標點的 x 座標
+     * @param y 目標點的 y 座標
+     * @return 最近按鍵的索引陣列，若座標超出範圍則返回空陣列
      */
     fun getNearestKeys(
         x: Int,
@@ -467,22 +488,33 @@ class Keyboard(
         return IntArray(0)
     }
 
-    /**
-     * 檢查按鍵標籤是否應該顯示為大寫
-     */
+    /** 檢查按鍵標籤是否應該強制顯示為大寫 */
     val isLabelUppercase: Boolean
         get() = labelTransform == TextKeyboard.LabelTransform.UPPERCASE
 
     companion object {
+        /** 按鍵位於鍵盤左邊緣的標記 */
         const val EDGE_LEFT = 0x01
+        
+        /** 按鍵位於鍵盤右邊緣的標記 */
         const val EDGE_RIGHT = 0x02
+        
+        /** 按鍵位於鍵盤上邊緣的標記 */
         const val EDGE_TOP = 0x04
+        
+        /** 按鍵位於鍵盤下邊緣的標記 */
         const val EDGE_BOTTOM = 0x08
+        
+        /** 網格系統的水平網格數量 */
         private const val GRID_WIDTH = 10
+        
+        /** 網格系統的垂直網格數量 */
         private const val GRID_HEIGHT = 5
+        
+        /** 網格系統的總網格數量 */
         private const val GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 
-        /** 從當前觸摸點搜尋最近按鍵的鍵寬數量 */
+        /** 從當前觸摸點搜尋最近按鍵的搜尋半徑（以按鍵寬度為單位） */
         const val SEARCH_DISTANCE = 1.4f
     }
 }

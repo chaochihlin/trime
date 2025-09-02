@@ -7,7 +7,18 @@ package com.osfans.trime.ime.keyboard
 import timber.log.Timber
 
 /**
- * 鍵盤檢視優化的記憶體壓力監控
+ * 記憶體壓力監控器
+ * 
+ * 專為鍵盤視圖優化設計的記憶體壓力監控系統。此類別在 Wear OS 裝置上特別重要，
+ * 能夠及時檢測記憶體壓力並觸發相應的優化措施。
+ * 
+ * 主要功能：
+ * - 監控系統記憶體使用狀態
+ * - 為不同裝置類型提供適當的闾值設定
+ * - 建議執行垃圾回收時機
+ * - 提供記憶體壓力等級評估
+ * 
+ * @since 1.0
  */
 class MemoryMonitor {
     private val maxBufferSize = 10 * 1024 * 1024 // 10MB
