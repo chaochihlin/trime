@@ -162,7 +162,7 @@ object DataManager {
             val newChecksums = appContext.assets.dataChecksums()
 
             val diffs = DataDiff.diff(oldChecksums, newChecksums).sortedByDescending { it.ordinal }.toMutableList()
-            
+
             // Force sync critical files if they don't exist, even if checksums match
             val criticalFiles = listOf("shared/tongwenfeng.trime.yaml", "shared/trime.yaml", "shared/default.yaml")
             criticalFiles.forEach { path ->
@@ -174,11 +174,11 @@ object DataManager {
                     }
                 }
             }
-            
+
             if (diffs.isNotEmpty()) {
                 Timber.i("Syncing ${diffs.size} file differences")
             }
-            
+
             diffs.forEach {
                 when (it) {
                     is DataDiff.CreateFile,

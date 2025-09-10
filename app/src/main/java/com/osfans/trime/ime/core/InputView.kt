@@ -13,7 +13,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InlineSuggestionsResponse
 import android.widget.ImageView
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import androidx.core.view.updateLayoutParams
@@ -285,7 +284,6 @@ class InputView(
 
             is RimeMessage.OptionMessage -> {
                 broadcaster.onRimeOptionUpdated(it.data)
-
             }
 
             is RimeMessage.ResponseMessage ->

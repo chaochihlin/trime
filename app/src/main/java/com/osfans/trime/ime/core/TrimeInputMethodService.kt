@@ -51,7 +51,6 @@ import com.osfans.trime.data.schema.SchemaManager
 import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.data.theme.ThemeManager
-import com.osfans.trime.ime.candidates.popup.PopupCandidatesMode
 import com.osfans.trime.ime.composition.CandidatesView
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import com.osfans.trime.ime.keyboard.KeyboardDisplayTimer
@@ -182,10 +181,10 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
         prefs.candidates.registerOnChangeListener(recreateCandidatesViewListener)
         DataManager.sync()
-        
+
         // 確保 RIME 引擎在主題載入前啟動，以便 deployRimeConfigFile 能正常工作
         RimeDaemon.ensureRimeStarted()
-        
+
         SchemaManager.init("bopomofo_tw")
         ThemeManager.init(resources.configuration)
         postRimeJob { selectSchema("bopomofo_tw") }
@@ -447,7 +446,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
     }
 
-    // 總是顯示 InputView，因為我們將 CandidatesView 的可見性委託給它
+    // 總是顯示 InputView，專為手錶裝置優化
     @SuppressLint("MissingSuperCall")
     override fun onEvaluateInputViewShown() = true
 
@@ -527,7 +526,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                 if (useVirtualKeyboard) {
                     inputView?.startInput(attribute, restarting)
                 }
-                if (!useVirtualKeyboard || candidatesMode == PopupCandidatesMode.ALWAYS_SHOW) {
+                if (!useVirtualKeyboard) {
                     if (currentInputConnection?.monitorCursorAnchor() != true) {
                         if (!decorLocationUpdated) {
                             updateDecorLocation()

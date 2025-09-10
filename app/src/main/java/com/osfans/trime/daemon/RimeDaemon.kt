@@ -98,7 +98,7 @@ object RimeDaemon {
     /**
      * 確保 RIME 引擎已啟動，主要用於初始化階段
      * 這個方法不會創建會話，只是確保引擎處於可用狀態
-     * 
+     *
      * @throws RuntimeException 如果 RIME 引擎啟動失敗
      */
     fun ensureRimeStarted(): Unit =
