@@ -109,7 +109,7 @@ class CommonKeyboardActionListener(
         showDialog { api ->
             EnabledSchemaPickerDialog.build(api, service.lifecycleScope, context) {
                 setNegativeButton(R.string.schemata) { _, _ ->
-                    AppUtils.launchMainToSchemaList(context)
+                    AppUtils.launchMainActivity(context) // 手錶裝置使用簡化的主活動
                 }
             }
         }
@@ -223,7 +223,7 @@ class CommonKeyboardActionListener(
                     KeyEvent.KEYCODE_SETTINGS -> { // Settings
                         when (action.option) {
                             "theme" -> showThemePicker()
-                            "schema" -> AppUtils.launchMainToSchemaList(context)
+                            "schema" -> AppUtils.launchMainActivity(context) // 手錶裝置使用簡化的主活動
                             else -> AppUtils.launchMainActivity(service)
                         }
                     }

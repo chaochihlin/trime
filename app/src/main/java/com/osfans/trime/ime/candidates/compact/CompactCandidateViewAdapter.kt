@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.ViewGroup
 import androidx.core.view.updateLayoutParams
 import com.chad.library.adapter4.BaseQuickAdapter
-import com.google.android.flexbox.FlexboxLayoutManager
 import com.osfans.trime.core.CandidateItem
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.candidates.CandidateItemUi
@@ -22,7 +21,7 @@ import splitties.views.setPaddingDp
  * 簡潔型候選字視圖適配器
  *
  * 此適配器負責將候選字資料綁定到視圖元件，管理候選字列表的顯示狀態，
- * 包括分頁資訊、高亮索引和前置偏移量。使用 FlexboxLayoutManager
+ * 包括分頁資訊、高亮索引和前置偏移量。使用簡化的 LinearLayoutManager（手錶裝置優化版）
  * 提供彈性的佈局效果。
  *
  * @param theme 主題配置物件，控制候選字的視覺樣式
@@ -85,7 +84,7 @@ open class CompactCandidateViewAdapter(
             minimumWidth = dp(40)
             val size = theme.generalStyle.candidatePadding
             setPaddingDp(size, 0, size, 0)
-            layoutParams = FlexboxLayoutManager.LayoutParams(wrapContent, matchParent)
+            layoutParams = ViewGroup.MarginLayoutParams(wrapContent, matchParent)
         }
         return CandidateViewHolder(ui)
     }
@@ -111,9 +110,8 @@ open class CompactCandidateViewAdapter(
         holder.text = item.text
         holder.comment = item.comment
         holder.idx = previous + position // unused
-        holder.ui.root.updateLayoutParams<FlexboxLayoutManager.LayoutParams> {
-            minWidth = 0
-            flexGrow = 0f
+        holder.ui.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            // 簡化版本不需要 flexGrow 和 minWidth 設定
         }
     }
 }

@@ -64,9 +64,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
             android:exported="true"
             android:launchMode="singleTask" />
 
-        <activity
-            android:name=".ui.setup.SetupActivity"
-            android:exported="false" />
 
         <!-- Input test activity -->
         <activity

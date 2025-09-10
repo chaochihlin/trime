@@ -50,27 +50,6 @@ object AppUtils {
         }
     }
 
-    private fun launchMainToDest(
-        context: Context,
-        @IdRes dest: Int,
-        arguments: Bundle? = null,
-    ) {
-        NavDeepLinkBuilder(context)
-            .setComponentName(PrefMainActivity::class.java)
-            .setGraph(R.navigation.pref_nav)
-            .addDestination(dest, arguments)
-            .createTaskStackBuilder()
-            /**
-             * [androidx.core.app.TaskStackBuilder.getIntents] would add unwanted flags
-             * [Intent.FLAG_ACTIVITY_CLEAR_TASK] and [Intent.FLAG_ACTIVITY_TASK_ON_HOME]
-             * so we must launch the Intent by ourselves
-             */
-            .editIntentAt(0)
-            ?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-                context.startActivity(this)
-            }
-    }
-
-    fun launchMainToSchemaList(context: Context) = launchMainToDest(context, R.id.schemaListFragment)
+    // 手錶裝置不需要複雜的導航功能，移除 launchMainToDest 和 launchMainToSchemaList
+    // 所有功能都通過簡化的 PrefMainActivity 處理
 }

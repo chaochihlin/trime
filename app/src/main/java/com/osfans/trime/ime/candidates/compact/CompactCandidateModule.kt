@@ -15,7 +15,7 @@ import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.flexbox.FlexboxLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.osfans.trime.R
 import com.osfans.trime.core.CandidateItem
 import com.osfans.trime.core.RimeProto
@@ -26,7 +26,6 @@ import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.bar.QuickBar
 import com.osfans.trime.ime.bar.UnrollButtonStateMachine
 import com.osfans.trime.ime.broadcast.InputBroadcastReceiver
-import com.osfans.trime.ime.candidates.unrolled.decoration.FlexboxVerticalDecoration
 import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import kotlinx.coroutines.channels.BufferOverflow
@@ -41,8 +40,8 @@ import kotlin.math.max
 /**
  * 簡潔型候選字模組
  *
- * 此模組提供緊湊的候選字顯示界面，使用 RecyclerView 和 FlexboxLayoutManager
- * 實現彈性的候選字佈局。支援候選字的點擊選擇、長按顯示操作選單，
+ * 此模組提供緊湊的候選字顯示界面，使用 RecyclerView 和簡化的 LinearLayoutManager（手錶裝置優化版）
+ * 實現簡潔的候選字佈局。支援候選字的點擊選擇、長按顯示操作選單，
  * 以及與展開狀態的候選字列表進行整合。
  *
  * @param context Android 應用程式上下文
@@ -99,9 +98,9 @@ class CompactCandidateModule(
         }
     }
 
-    /** Flexbox 佈局管理器，提供彈性的候選字排列方式 */
+    /** 簡化的線性佈局管理器（手錶裝置優化版） */
     val layoutManager by lazy {
-        object : FlexboxLayoutManager(context) {
+        object : LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false) {
             override fun canScrollHorizontally(): Boolean = false
 
             override fun canScrollVertically(): Boolean = false
@@ -129,7 +128,7 @@ class CompactCandidateModule(
         context.recyclerView(R.id.candidate_view) {
             adapter = this@CompactCandidateModule.adapter
             layoutManager = this@CompactCandidateModule.layoutManager
-            addItemDecoration(FlexboxVerticalDecoration(separatorDrawable))
+            // 移除裝飾元件以節省記憶體（手錶裝置優化）
         }
     }
 
