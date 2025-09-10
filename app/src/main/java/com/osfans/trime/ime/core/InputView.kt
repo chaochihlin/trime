@@ -24,7 +24,6 @@ import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.bar.QuickBar
 import com.osfans.trime.ime.candidates.compact.CompactCandidateModule
-import com.osfans.trime.ime.candidates.suggestion.SuggestionCandidateModule
 import com.osfans.trime.ime.composition.PreeditModule
 import com.osfans.trime.ime.dependency.InputComponent
 import com.osfans.trime.ime.dependency.create
@@ -94,7 +93,6 @@ class InputView(
     private val preedit: PreeditModule = inputComponent.preedit
     public val keyboardWindow: KeyboardWindow = inputComponent.keyboardWindow
     private val compactCandidate: CompactCandidateModule = inputComponent.candidate.compactCandidateModule
-    private val suggestionCandidate: SuggestionCandidateModule = inputComponent.candidate.suggestionCandidateModule
     private val preview: KeyPreviewChoreographer = inputComponent.preview
 
     private fun addBroadcastReceivers() {
@@ -102,7 +100,6 @@ class InputView(
         broadcaster.addReceiver(preedit)
         broadcaster.addReceiver(keyboardWindow)
         broadcaster.addReceiver(compactCandidate)
-        broadcaster.addReceiver(suggestionCandidate)
     }
 
     private val keyboardSidePadding = theme.generalStyle.keyboardPadding
