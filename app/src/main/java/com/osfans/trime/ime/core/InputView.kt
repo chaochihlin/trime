@@ -30,7 +30,6 @@ import com.osfans.trime.ime.dependency.InputComponent
 import com.osfans.trime.ime.dependency.create
 import com.osfans.trime.ime.keyboard.KeyboardWindow
 import com.osfans.trime.ime.preview.KeyPreviewChoreographer
-import com.osfans.trime.ime.symbol.LiquidKeyboard
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import splitties.dimensions.dp
@@ -94,7 +93,6 @@ class InputView(
     private val quickBar: QuickBar = inputComponent.quickBar
     private val preedit: PreeditModule = inputComponent.preedit
     public val keyboardWindow: KeyboardWindow = inputComponent.keyboardWindow
-    private val liquidKeyboard: LiquidKeyboard = inputComponent.liquidKeyboard
     private val compactCandidate: CompactCandidateModule = inputComponent.candidate.compactCandidateModule
     private val suggestionCandidate: SuggestionCandidateModule = inputComponent.candidate.suggestionCandidateModule
     private val preview: KeyPreviewChoreographer = inputComponent.preview
@@ -103,7 +101,6 @@ class InputView(
         broadcaster.addReceiver(quickBar)
         broadcaster.addReceiver(preedit)
         broadcaster.addReceiver(keyboardWindow)
-        broadcaster.addReceiver(liquidKeyboard)
         broadcaster.addReceiver(compactCandidate)
         broadcaster.addReceiver(suggestionCandidate)
     }
@@ -130,7 +127,6 @@ class InputView(
         setBackgroundColor("#FF00FF".toColorInt()) // 洋紅色背景
 
         windowManager.cacheResidentWindow(keyboardWindow, createView = true)
-        windowManager.cacheResidentWindow(liquidKeyboard)
         // show KeyboardWindow by default
         windowManager.attachWindow(KeyboardWindow)
 
@@ -293,12 +289,6 @@ class InputView(
             is RimeMessage.OptionMessage -> {
                 broadcaster.onRimeOptionUpdated(it.data)
 
-                if (it.data.option == "_liquid_keyboard") {
-                    ContextCompat.getMainExecutor(service).execute {
-                        windowManager.attachWindow(LiquidKeyboard)
-                        liquidKeyboard.select(0)
-                    }
-                }
             }
 
             is RimeMessage.ResponseMessage ->

@@ -11,11 +11,9 @@ import com.charleskorn.kaml.yamlScalar
 import com.osfans.trime.core.Rime
 import com.osfans.trime.data.base.DataManager
 import com.osfans.trime.data.theme.mapper.GeneralStyleMapper
-import com.osfans.trime.data.theme.mapper.LiquidKeyboardMapper
 import com.osfans.trime.data.theme.mapper.TextKeyboardMapper
 import com.osfans.trime.data.theme.model.ColorScheme
 import com.osfans.trime.data.theme.model.GeneralStyle
-import com.osfans.trime.data.theme.model.LiquidKeyboard
 import com.osfans.trime.data.theme.model.PresetKey
 import com.osfans.trime.data.theme.model.TextKeyboard
 import com.osfans.trime.util.getString
@@ -29,7 +27,6 @@ data class Theme(
     val configId: String,
     val name: String,
     val generalStyle: GeneralStyle,
-    val liquidKeyboard: LiquidKeyboard,
     val presetKeys: Map<String, PresetKey>,
     val presetKeyboards: Map<String, TextKeyboard>,
     val colorSchemes: List<ColorScheme>,
@@ -49,11 +46,6 @@ data class Theme(
                 configId = configId,
                 name = root.getString("name"),
                 generalStyle = GeneralStyleMapper(root.get<YamlMap>("style")!!).map(),
-                liquidKeyboard =
-                    when (val node = root.get<YamlMap>("liquid_keyboard")) {
-                        null -> LiquidKeyboard()
-                        else -> LiquidKeyboardMapper(node).map()
-                    },
                 presetKeys =
                     when (val map = root.get<YamlMap>("preset_keys")) {
                         null -> emptyMap()

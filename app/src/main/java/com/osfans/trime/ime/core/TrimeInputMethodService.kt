@@ -44,7 +44,6 @@ import com.osfans.trime.core.RimeProto
 import com.osfans.trime.daemon.RimeDaemon
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.data.base.DataManager
-import com.osfans.trime.data.db.DraftHelper
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.prefs.PreferenceDelegate
 import com.osfans.trime.data.prefs.PreferenceDelegateProvider
@@ -72,7 +71,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import splitties.bitflags.hasFlag
-import splitties.systemservices.clipboardManager
 import splitties.systemservices.inputMethodManager
 import timber.log.Timber
 
@@ -185,6 +183,10 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
         prefs.candidates.registerOnChangeListener(recreateCandidatesViewListener)
         DataManager.sync()
+        
+        // 確保 RIME 引擎在主題載入前啟動，以便 deployRimeConfigFile 能正常工作
+        RimeDaemon.ensureRimeStarted()
+        
         SchemaManager.init("bopomofo_tw")
         ThemeManager.init(resources.configuration)
         postRimeJob { selectSchema("bopomofo_tw") }
@@ -505,7 +507,6 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     private val candidatesMode by AppPrefs.defaultInstance().candidates.mode
-    private val draftExcludeApps by AppPrefs.defaultInstance().clipboard.draftExcludeApp
 
     override fun onStartInputView(
         attribute: EditorInfo,
@@ -587,17 +588,11 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                         // 應用程式要求以隱身模式開啟鍵盤應用程式
                         normalTextEditor = false
                         Timber.d("編輯器資訊: 一般 -> 隱私模式, IME_FLAG_NO_PERSONALIZED_LEARNING")
-                    } else if (attribute.packageName == BuildConfig.APPLICATION_ID ||
-                        draftExcludeApps
-                            .trim()
-                            .split('\n')
-                            .contains(attribute.packageName)
-                    ) {
+                    } else if (attribute.packageName == BuildConfig.APPLICATION_ID) {
                         normalTextEditor = false
                         Timber.d("編輯器資訊: 一般 -> 排除, 套件名稱=%s", attribute.packageName)
                     } else {
                         normalTextEditor = true
-                        currentInputConnection?.let { DraftHelper.onExtractedTextChanged(it) }
                     }
                 }
             }
@@ -610,7 +605,6 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         inputDeviceManager.onFinishInputView()
         currentInputConnection?.apply {
             if (normalTextEditor) {
-                DraftHelper.onExtractedTextChanged(this)
             }
             finishComposingText()
             monitorCursorAnchor(false)
@@ -632,7 +626,6 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         }
         if (clearMeatKeyState) {
             ic.clearMetaKeyStates(KeyEvent.getModifierMetaStateMask())
-            DraftHelper.onExtractedTextChanged(ic)
         }
     }
 
@@ -951,10 +944,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                     val et = ic.getExtractedText(etr, 0)
                     if (et == null) {
                         Timber.d("鍵盤鉤子貼上, et == null, 嘗試 commitText")
-                        val clipboardText = clipboardManager.primaryClip?.getItemAt(0)?.coerceToText(this)
-                        if (ic.commitText(clipboardText, 1)) {
-                            return true
-                        }
+                        return false
                     } else if (ic.performContextMenuAction(android.R.id.paste)) {
                         return true
                     }

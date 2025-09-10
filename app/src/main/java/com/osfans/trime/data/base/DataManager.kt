@@ -161,13 +161,30 @@ object DataManager {
 
             val newChecksums = appContext.assets.dataChecksums()
 
-            DataDiff.diff(oldChecksums, newChecksums).sortedByDescending { it.ordinal }.forEach {
-                Timber.d("Diff: $it")
+            val diffs = DataDiff.diff(oldChecksums, newChecksums).sortedByDescending { it.ordinal }.toMutableList()
+            
+            // Force sync critical files if they don't exist, even if checksums match
+            val criticalFiles = listOf("shared/tongwenfeng.trime.yaml", "shared/trime.yaml", "shared/default.yaml")
+            criticalFiles.forEach { path ->
+                val targetFile = File(assetsDir, path.substringAfterLast('/'))
+                if (!targetFile.exists() && newChecksums.files.containsKey(path)) {
+                    Timber.w("Critical file missing, forcing sync: ${path.substringAfterLast('/')}")
+                    if (diffs.none { it.path == path }) {
+                        diffs.add(DataDiff.CreateFile(path))
+                    }
+                }
+            }
+            
+            if (diffs.isNotEmpty()) {
+                Timber.i("Syncing ${diffs.size} file differences")
+            }
+            
+            diffs.forEach {
                 when (it) {
                     is DataDiff.CreateFile,
                     is DataDiff.UpdateFile,
                     -> {
-                        val destPath = sharedDataDir.resolveSibling(it.path).absolutePath
+                        val destPath = assetsDir.resolve(it.path.substringAfterLast('/')).absolutePath
                         ResourceUtils.copyFile(it.path, destPath)
                     }
                     is DataDiff.DeleteDir,
@@ -191,7 +208,5 @@ object DataManager {
                     )
                 }
             }.getOrElse { Timber.e(it, "Failed to create default.custom.yaml") }
-
-            Timber.d("Synced!")
         }
 }

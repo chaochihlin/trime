@@ -17,7 +17,6 @@ import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.keyboard.CommonKeyboardActionListener
 import com.osfans.trime.ime.keyboard.KeyboardWindow
 import com.osfans.trime.ime.preview.KeyPreviewChoreographer
-import com.osfans.trime.ime.symbol.LiquidKeyboard
 import com.osfans.trime.ime.window.BoardWindowManager
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
@@ -39,6 +38,5 @@ abstract class InputComponent(
     abstract val preview: KeyPreviewChoreographer
     abstract val keyboardWindow: KeyboardWindow
     abstract val commonKeyboardActionListener: CommonKeyboardActionListener
-    abstract val liquidKeyboard: LiquidKeyboard
     abstract val candidate: CandidateModule
 }

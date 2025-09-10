@@ -11,9 +11,6 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
-import com.osfans.trime.data.db.ClipboardHelper
-import com.osfans.trime.data.db.CollectionHelper
-import com.osfans.trime.data.db.DraftHelper
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.receiver.RimeIntentReceiver
 import com.osfans.trime.worker.BackgroundSyncWork
@@ -118,9 +115,6 @@ class TrimeApplication : Application() {
                 Timber.d("Last pid is $lastPid. Set it to current pid: $currentPid")
                 setValue(currentPid)
             }
-            ClipboardHelper.init(applicationContext)
-            CollectionHelper.init(applicationContext)
-            DraftHelper.init(applicationContext)
             registerBroadcastReceiver()
             startWorkManager()
         } catch (e: Exception) {

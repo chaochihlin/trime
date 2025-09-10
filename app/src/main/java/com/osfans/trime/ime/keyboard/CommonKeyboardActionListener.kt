@@ -27,9 +27,6 @@ import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.dependency.InputScope
 import com.osfans.trime.ime.dialog.EnabledSchemaPickerDialog
 import com.osfans.trime.ime.enums.Keycode
-import com.osfans.trime.ime.symbol.LiquidKeyboard
-import com.osfans.trime.ime.symbol.SymbolBoardType
-import com.osfans.trime.ime.symbol.TabManager
 import com.osfans.trime.ime.window.BoardWindowManager
 import com.osfans.trime.util.AppUtils
 import com.osfans.trime.util.buildIntentFromAction
@@ -38,7 +35,6 @@ import com.osfans.trime.util.customFormatDateTime
 import com.osfans.trime.util.isAsciiPrintable
 import kotlinx.coroutines.launch
 import me.tatarka.inject.annotations.Inject
-import splitties.systemservices.clipboardManager
 import splitties.systemservices.inputMethodManager
 import timber.log.Timber
 
@@ -61,7 +57,6 @@ class CommonKeyboardActionListener(
     private val context: Context,
     private val service: TrimeInputMethodService,
     private val rime: RimeSession,
-    private val liquidKeyboard: LiquidKeyboard,
     private val windowManager: BoardWindowManager,
     private val lazyKeyboardWindow: Lazy<KeyboardWindow>,
 ) {
@@ -201,33 +196,11 @@ class CommonKeyboardActionListener(
                     KeyEvent.KEYCODE_FUNCTION -> { // Command Express
                         val arg = expandActiveText(action.option)
                         when (action.command) {
-                            "liquid_keyboard" -> {
-                                val target =
-                                    when {
-                                        arg.matches("-?\\d+".toRegex()) -> arg.toInt()
-                                        arg.matches("[A-Z]+".toRegex()) -> {
-                                            val type = SymbolBoardType.valueOf(arg)
-                                            TabManager.tabTags.indexOfFirst { it.type == type }
-                                        }
-                                        else -> TabManager.tabTags.indexOfFirst { it.text == arg }
-                                    }
-                                if (target >= 0) {
-                                    windowManager.attachWindow(LiquidKeyboard)
-                                    liquidKeyboard.select(target)
-                                } else {
-                                    windowManager.attachWindow(KeyboardWindow)
-                                }
-                            }
                             "set_color_scheme" -> {
                                 val newScheme = ThemeManager.activeTheme.colorSchemes.find { it.id == arg }
                                 if (newScheme != null) ColorManager.setColorScheme(newScheme)
                             }
                             "broadcast" -> service.sendBroadcast(Intent(arg))
-                            "clipboard" -> {
-                                clipboardManager.primaryClip?.getItemAt(0)?.coerceToText(service)?.let {
-                                    service.commitText(it)
-                                }
-                            }
                             "commit" -> service.commitText(arg)
                             "date" -> service.commitText(customFormatDateTime(arg))
                             "run" -> {

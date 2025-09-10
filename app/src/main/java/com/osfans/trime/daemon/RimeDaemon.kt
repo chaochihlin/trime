@@ -95,6 +95,27 @@ object RimeDaemon {
             return@withLock session
         }
 
+    /**
+     * 確保 RIME 引擎已啟動，主要用於初始化階段
+     * 這個方法不會創建會話，只是確保引擎處於可用狀態
+     * 
+     * @throws RuntimeException 如果 RIME 引擎啟動失敗
+     */
+    fun ensureRimeStarted(): Unit =
+        lock.withLock {
+            try {
+                if (realRime.lifecycle.currentStateFlow.value == RimeLifecycle.State.STOPPED) {
+                    realRime.startup(false)
+                    // 驗證啟動狀態，避免在記憶體受限的手錶裝置上無聲失敗
+                    if (realRime.lifecycle.currentStateFlow.value == RimeLifecycle.State.STOPPED) {
+                        throw RuntimeException("RIME engine failed to start - may be due to insufficient memory on watch device")
+                    }
+                }
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to ensure RIME engine startup: ${e.message}", e)
+            }
+        }
+
     fun destroySession(name: String): Unit =
         lock.withLock {
             if (name !in sessions) {

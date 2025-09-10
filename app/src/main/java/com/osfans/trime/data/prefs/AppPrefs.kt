@@ -41,7 +41,6 @@ class AppPrefs(
     val general = General(shared).register()
     val keyboard = Keyboard(shared)
     val profile = Profile(shared).register()
-    val clipboard = Clipboard(shared)
     val other = Other(shared)
 
     val candidates = Candidates(shared).register()
@@ -224,26 +223,6 @@ class AppPrefs(
         val periodicBackgroundSyncInterval = int(PERIODIC_BACKGROUND_SYNC_INTERVAL, 30)
         val lastBackgroundSyncStatus = bool(LAST_BACKGROUND_SYNC_STATUS, false)
         val lastBackgroundSyncTime = long(LAST_BACKGROUND_SYNC_TIME, 0L)
-    }
-
-    class Clipboard(
-        shared: SharedPreferences,
-    ) : PreferenceDelegateOwner(shared) {
-        companion object {
-            const val CLIPBOARD_COMPARE_RULES = "clipboard_clipboard_compare"
-            const val CLIPBOARD_OUTPUT_RULES = "clipboard_clipboard_output"
-            const val DRAFT_OUTPUT_RULES = "clipboard_draft_output"
-            const val DRAFT_EXCLUDE_APP = "clipboard_draft_exclude_app"
-            const val DRAFT_LIMIT = "clipboard_draft_limit"
-            const val CLIPBOARD_LIMIT = "clipboard_clipboard_limit"
-        }
-
-        val clipboardCompareRules = string(CLIPBOARD_COMPARE_RULES, "")
-        val clipboardOutputRules = string(CLIPBOARD_OUTPUT_RULES, "")
-        val draftOutputRules = string(DRAFT_OUTPUT_RULES, "")
-        val clipboardLimit = int(CLIPBOARD_LIMIT, 10)
-        val draftLimit = int(DRAFT_LIMIT, 10)
-        val draftExcludeApp = string(DRAFT_EXCLUDE_APP, "")
     }
 
     /**
