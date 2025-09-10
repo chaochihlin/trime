@@ -52,17 +52,17 @@ class Rime :
                 override fun nativeStartup(fullCheck: Boolean) {
                     DataManager.sync()
 
-                    val sharedDataDir = DataManager.sharedDataDir.absolutePath
+                    val assetsDataDir = DataManager.assetsDir.absolutePath
                     val userDataDir = DataManager.userDataDir.absolutePath
                     Timber.d(
                         """
                         Starting rime with:
-                        sharedDataDir: $sharedDataDir
+                        assetsDataDir: $assetsDataDir
                         userDataDir: $userDataDir
                         fullCheck: $fullCheck
                         """.trimIndent(),
                     )
-                    startupRime(sharedDataDir, userDataDir, BuildConfig.BUILD_VERSION_NAME, fullCheck)
+                    startupRime(assetsDataDir, userDataDir, BuildConfig.BUILD_VERSION_NAME, fullCheck)
 
                     lifecycleImpl.emitState(RimeLifecycle.State.READY)
 

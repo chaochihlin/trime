@@ -9,29 +9,29 @@ import android.view.MotionEvent
 
 /**
  * 自定義滑動追蹤器
- * 
+ *
  * 追蹤觸摸事件的滑動軌跡，計算滑動速度和方向。
  * 維持最近的觸摸點歷史記錄，用於精確計算滑動參數。
  */
 class CustomSwipeTracker {
     /** 過去觸摸點的 X 座標記錄 */
     private val mPastX = FloatArray(NUM_PAST)
-    
+
     /** 過去觸摸點的 Y 座標記錄 */
     private val mPastY = FloatArray(NUM_PAST)
-    
+
     /** 過去觸摸點的時間戳記錄 */
     private val mPastTime = LongArray(NUM_PAST)
-    
+
     /** Y 軸方向的滑動速度 */
     var yVelocity = 0f
-    
+
     /** X 軸方向的滑動速度 */
     var xVelocity = 0f
 
     /**
      * 清除追蹤記錄
-     * 
+     *
      * 重設所有歷史記錄，為下一次追蹤做準備。
      */
     fun clear() {
@@ -40,9 +40,9 @@ class CustomSwipeTracker {
 
     /**
      * 添加觸摸事件的移動記錄
-     * 
+     *
      * 將觸摸事件中的所有歷史位置和當前位置加入追蹤記錄。
-     * 
+     *
      * @param ev 觸摸事件
      */
     fun addMovement(ev: MotionEvent) {
@@ -54,9 +54,9 @@ class CustomSwipeTracker {
 
     /**
      * 添加單個觸摸點記錄
-     * 
+     *
      * 將新的觸摸點加入記錄，自動管理陣列大小和過期資料。
-     * 
+     *
      * @param x X 座標
      * @param y Y 座標
      * @param time 時間戳
@@ -102,9 +102,9 @@ class CustomSwipeTracker {
 
     /**
      * 計算當前滑動速度
-     * 
+     *
      * 根據過去的觸摸點記錄計算 X 和 Y 軸的滑動速度。
-     * 
+     *
      * @param units 速度單位，通常為 1000 表示毎秒像素
      */
     fun computeCurrentVelocity(units: Int) {
@@ -131,7 +131,7 @@ class CustomSwipeTracker {
     companion object {
         /** 保存的歷史觸摸點數量 */
         const val NUM_PAST = 4
-        
+
         /** 最長的歷史時間範圍（毫秒） */
         const val LONGEST_PAST_TIME = 200
     }

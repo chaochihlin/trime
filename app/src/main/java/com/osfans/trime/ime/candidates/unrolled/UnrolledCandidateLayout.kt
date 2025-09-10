@@ -18,10 +18,10 @@ import splitties.views.dsl.recyclerview.recyclerView
 
 /**
  * 展開式候選字列表的佈局容器
- * 
+ *
  * 提供展開式候選字視窗的基本佈局結構，包含背景樣式和內嵌的
  * RecyclerView。支援主題化的邊框和圓角設定。
- * 
+ *
  * @param context Android 上下文
  * @param theme 主題配置物件，提供視覺樣式設定
  */
@@ -56,7 +56,7 @@ class UnrolledCandidateLayout(
 
     /**
      * 重設滾動位置
-     * 
+     *
      * 將 RecyclerView 的滾動位置重設為第一個項目。
      */
     fun resetPosition() {

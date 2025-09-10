@@ -39,17 +39,17 @@ import timber.log.Timber
 
 /**
  * 鍵盤視窗管理器
- * 
+ *
  * 負責管理鍵盤的顯示、切換和狀態管理。此類別是鍵盤系統的核心管理器，
  * 處理鍵盤的初始化、切換、事件響應等。
- * 
+ *
  * 主要功能：
  * - 鍵盤布局的智慧選擇和切換
  * - 根據輸入類型自動選擇合適的鍵盤
  * - 處理橫向/縱向模式的鍵盤切換
  * - 管理鍵盤的生命週期和資源
  * - 響應 RIME 和輸入法事件
- * 
+ *
  * @param context Android 上下文
  * @param service Trime 輸入法服務
  * @param theme 主題配置
@@ -57,7 +57,7 @@ import timber.log.Timber
  * @param commonKeyboardActionListener 鍵盤動作監聽器
  * @param windowManager 視窗管理器
  * @param keyPreviewChoreographer 按鍵預覽編排器
- * 
+ *
  * @since 1.0
  */
 @InputScope
@@ -75,7 +75,7 @@ class KeyboardWindow(
     InputBroadcastReceiver {
     /**
      * 獲取當前的游標大寫模式
-     * 
+     *
      * @return 大寫模式標誌，如果不支援則返回 0
      */
     private val cursorCapsMode: Int
@@ -218,9 +218,9 @@ class KeyboardWindow(
 
     /**
      * 切換到指定的鍵盤
-     * 
+     *
      * 根據提供的鍵盤 ID 進行鍵盤切換，支援特殊指令如 .default, .last 等。
-     * 
+     *
      * @param to 目標鍵盤 ID 或特殊指令
      */
     fun switchKeyboard(to: String) {
@@ -350,7 +350,7 @@ class KeyboardWindow(
 
     /**
      * 初始化繪製狀態
-     * 
+     *
      * 初始化當前鍵盤視圖的繪製狀態。
      */
     fun initializeDrawingState() {

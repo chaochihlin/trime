@@ -22,10 +22,10 @@ import splitties.views.dsl.recyclerview.recyclerView
 
 /**
  * 分頁候選字使用者介面
- * 
+ *
  * 提供一個可分頁的候選字列表介面，支援水平和垂直佈局模式。
  * 包含候選字項目和分頁控件，支援前後翻頁功能。
- * 
+ *
  * @param ctx Android 上下文
  * @param theme 主題配置物件
  * @param onCandidateClick 候選字點擊事件回調
@@ -45,7 +45,7 @@ class PagedCandidatesUi(
 
     /**
      * 封印類定義的視圖持有者
-     * 
+     *
      * 包含候選字和分頁控件兩種類型的視圖持有者。
      */
     sealed class UiHolder(
@@ -141,9 +141,9 @@ class PagedCandidatesUi(
 
     /**
      * 更新候選字列表內容和佈局模式
-     * 
+     *
      * 根據 RIME 選單資料和佈局模式更新列表內容和顯示樣式。
-     * 
+     *
      * @param menu RIME 選單資料，包含候選字和分頁資訊
      * @param isHorizontal 是否使用水平佈局模式
      */

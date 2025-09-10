@@ -28,10 +28,10 @@ import splitties.views.imageDrawable
 
 /**
  * 分頁控件使用者介面
- * 
+ *
  * 提供上一頁和下一頁的導航按鈕，根據分頁狀態動態調整按鈕的可用性。
  * 用於候選字彈出視窗中的分頁功能。
- * 
+ *
  * @param ctx Android 上下文
  * @param theme 主題配置物件
  */
@@ -41,9 +41,9 @@ class PaginationUi(
 ) : Ui {
     /**
      * 創建導航按鈕圖示
-     * 
+     *
      * 為上一頁和下一頁按鈕創建統一樣式的圖示。
-     * 
+     *
      * @param icon 圖示資源 ID
      * @return 配置完成的 ImageView
      */
@@ -57,7 +57,7 @@ class PaginationUi(
 
     /** 上一頁按鈕圖示 */
     val prevIcon = createIcon(R.drawable.ic_baseline_arrow_left_24)
-    
+
     /** 下一頁按鈕圖示 */
     val nextIcon = createIcon(R.drawable.ic_baseline_arrow_right_24)
 
@@ -85,9 +85,9 @@ class PaginationUi(
 
     /**
      * 更新分頁控件狀態
-     * 
+     *
      * 根據 RIME 選單的分頁資訊更新按鈕的可用狀態和視覺效果。
-     * 
+     *
      * @param menu RIME 選單資料，包含分頁資訊
      */
     fun update(menu: RimeProto.Context.Menu) {

@@ -24,7 +24,7 @@ import java.util.ArrayDeque
  *
  * 負責管理虛擬鍵盤按鍵預覽彈窗的顯示、位置計算和生命週期管理。
  * 當使用者按下按鍵時，會在按鍵上方顯示放大的預覽文字，提升打字準確性。
- * 
+ *
  * 主要功能：
  * - 管理預覽 UI 元件的物件池，避免頻繁創建銷毀
  * - 計算預覽彈窗的最佳顯示位置，避免超出螢幕範圍
@@ -42,7 +42,7 @@ class KeyPreviewChoreographer(
 ) {
     /** 可重複使用的預覽 UI 元件佇列，用於效能最佳化 */
     private val freeKeyPreviewUi = ArrayDeque<KeyPreviewUi>()
-    
+
     /** 目前正在顯示預覽的按鍵與對應 UI 元件的映射表 */
     private val showingKeyPreviewUi = hashMapOf<Key, KeyPreviewUi>()
 
@@ -150,7 +150,7 @@ class KeyPreviewChoreographer(
         val previewWidth = context.dp(38)
         val previewHeight = context.dp(theme.generalStyle.previewHeight)
         val keyDrawWidth = key.width
-        
+
         // 水平位置計算：預覽彈窗與按鍵中心對齊，若超出螢幕範圍則內移並調整背景樣式
         val keyPreviewPosition: KeyPreviewUi.Position
         var previewX: Int = (
@@ -167,7 +167,7 @@ class KeyPreviewChoreographer(
             keyPreviewPosition = KeyPreviewUi.Position.MIDDLE
         }
         keyPreviewUi.setPreviewBackground(keyPreviewPosition)
-        
+
         // 垂直位置計算：顯示在按鍵上方，加上主題設定的偏移量
         val previewY: Int = (
             key.y - previewHeight + theme.generalStyle.previewOffset +

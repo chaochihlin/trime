@@ -24,7 +24,7 @@ import kotlin.math.pow
  * 它包含多個 [Key] 實例，每個都代表一個可互動的按鍵元件。
  *
  * 主要功能：
- * - 從主題配置載入鍵盤师局和外觀設定
+ * - 從主題配置載入鍵盤佈局和外觀設定
  * - 動態計算按鍵的位置、尺寸和間距
  * - 管理修飾鍵（Shift、Ctrl、Alt等）的狀態
  * - 支援橫/直屏和分割鍵盤模式
@@ -97,8 +97,10 @@ class Keyboard(
 
     /** 鍵盤中的所有按鍵列表 */
     private val mKeys = mutableListOf<Key>()
+
     /** 可用於組字的按鍵列表 */
     val composingKeys = mutableListOf<Key>()
+
     /** 當前按下的修飾鍵狀態遐罩 */
     var modifier = 0
         private set
@@ -495,22 +497,22 @@ class Keyboard(
     companion object {
         /** 按鍵位於鍵盤左邊緣的標記 */
         const val EDGE_LEFT = 0x01
-        
+
         /** 按鍵位於鍵盤右邊緣的標記 */
         const val EDGE_RIGHT = 0x02
-        
+
         /** 按鍵位於鍵盤上邊緣的標記 */
         const val EDGE_TOP = 0x04
-        
+
         /** 按鍵位於鍵盤下邊緣的標記 */
         const val EDGE_BOTTOM = 0x08
-        
+
         /** 網格系統的水平網格數量 */
         private const val GRID_WIDTH = 10
-        
+
         /** 網格系統的垂直網格數量 */
         private const val GRID_HEIGHT = 5
-        
+
         /** 網格系統的總網格數量 */
         private const val GRID_SIZE = GRID_WIDTH * GRID_HEIGHT
 

@@ -46,6 +46,7 @@ class Key(
                 put(it.key, KeyActionManager.getAction(it.value))
             }
         }
+
     /** 按鍵的邊緣標記，用於標示按鍵是否位於鍵盤的邊緣 */
     var edgeFlags = 0
     private val sendBindings: Boolean
@@ -81,6 +82,7 @@ class Key(
 
     private val label = selfConfig?.label ?: ""
     private val labelSymbol = selfConfig?.labelSymbol ?: ""
+
     /** 按鍵的提示文字 */
     val hint: String = selfConfig?.hint ?: ""
 

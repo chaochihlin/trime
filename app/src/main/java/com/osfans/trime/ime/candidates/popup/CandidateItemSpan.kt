@@ -12,10 +12,10 @@ import androidx.annotation.ColorInt
 
 /**
  * 候選字項目的文字樣式設定物件
- * 
+ *
  * 此類繼承自 MetricAffectingSpan，用於為彈出視窗中的候選字項目
  * 設定特定的文字顏色、大小和字型。影響文字的繪製和度量。
- * 
+ *
  * @param color 文字顏色值
  * @param textSize 文字大小，單位為像素
  * @param typeface 文字字型
@@ -28,9 +28,9 @@ class CandidateItemSpan(
 ) : MetricAffectingSpan() {
     /**
      * 更新文字繪製狀態
-     * 
+     *
      * 設定文字繪製時的顏色、大小和字型。
-     * 
+     *
      * @param textPaint 文字繪製物件
      */
     override fun updateDrawState(textPaint: TextPaint) {
@@ -40,9 +40,9 @@ class CandidateItemSpan(
 
     /**
      * 更新文字度量狀態
-     * 
+     *
      * 設定文字度量時的大小和字型，但不設定顏色。
-     * 
+     *
      * @param textPaint 文字繪製物件
      */
     override fun updateMeasureState(textPaint: TextPaint) {
@@ -51,9 +51,9 @@ class CandidateItemSpan(
 
     /**
      * 內部狀態更新方法
-     * 
+     *
      * 將文字大小和字型應用到繪製物件上。
-     * 
+     *
      * @param textPaint 文字繪製物件
      */
     private fun updateState(textPaint: TextPaint) {

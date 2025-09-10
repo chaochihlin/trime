@@ -39,10 +39,10 @@ import kotlin.math.max
 
 /**
  * 展開式候選字視窗的抽象基礎類
- * 
+ *
  * 提供展開式候選字視窗的核心功能，包括分頁加載、点擊互动、
  * 狀態管理等。子類需要實現具體的佈局管理器和適配器。
- * 
+ *
  * @param context Android 應用程式上下文
  * @param service Trime 輸入法服務實例
  * @param rime RIME 輸入引擎會話物件
@@ -77,18 +77,18 @@ abstract class BaseUnrolledCandidateWindow(
 
     /**
      * 創建候選字佈局容器
-     * 
+     *
      * 子類必須實現此方法來提供具體的佈局實現。
-     * 
+     *
      * @return 展開式候選字佈局容器
      */
     abstract fun onCreateCandidateLayout(): UnrolledCandidateLayout
 
     /**
      * 創建視窗視圖
-     * 
+     *
      * 創建并配置候選字佈局容器，停用項目動畫以提高性能。
-     * 
+     *
      * @return 配置好的視圖
      */
     final override fun onCreateView(): View {
@@ -104,7 +104,7 @@ abstract class BaseUnrolledCandidateWindow(
 
     /** 分頁候選字視圖適配器，由子類實現 */
     abstract val adapter: PagingCandidateViewAdapter
-    
+
     /** RecyclerView 的佈局管理器，由子類實現 */
     abstract val layoutManager: RecyclerView.LayoutManager
 
@@ -124,7 +124,7 @@ abstract class BaseUnrolledCandidateWindow(
 
     /**
      * 視窗附加時的初始化操作
-     * 
+     *
      * 設置生命週期範圍、狀態更新、偏移量監聽和分頁資料的提交。
      */
     override fun onAttached() {
@@ -146,9 +146,9 @@ abstract class BaseUnrolledCandidateWindow(
 
     /**
      * 綁定候選字視圖持有者的互動事件
-     * 
+     *
      * 設定点擊和長按事件監聽器，處理候選字的選擇和操作選單。
-     * 
+     *
      * @param holder 候選字視圖持有者
      */
     fun bindCandidateUiViewHolder(holder: CandidateViewHolder) {
@@ -168,9 +168,9 @@ abstract class BaseUnrolledCandidateWindow(
 
     /**
      * 根據偏移量更新候選字列表
-     * 
+     *
      * 根據新的偏移量重新整理適配器資料，或在無候選字時關閉視窗。
-     * 
+     *
      * @param offset 新的偏移量
      */
     private fun updateCandidatesWithOffset(offset: Int) {
@@ -187,7 +187,7 @@ abstract class BaseUnrolledCandidateWindow(
 
     /**
      * 視窗分離時的清理操作
-     * 
+     *
      * 更新狀態機狀態，取消协程作業以釋放資源。
      */
     override fun onDetached() {

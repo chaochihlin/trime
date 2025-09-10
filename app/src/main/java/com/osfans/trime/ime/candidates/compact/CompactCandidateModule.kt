@@ -68,7 +68,7 @@ class CompactCandidateModule(
 
     /**
      * 重新整理展開候選字列表的狀態
-     * 
+     *
      * 更新展開候選字的偏移量，並通知工具列狀態機更新展開按鈕的狀態。
      * 當候選字列表內容變更時會被調用。
      */
@@ -135,9 +135,9 @@ class CompactCandidateModule(
 
     /**
      * 處理輸入上下文更新事件
-     * 
+     *
      * 當 RIME 引擎的候選字資料更新時被調用，負責更新候選字列表的顯示內容。
-     * 
+     *
      * @param ctx RIME 輸入上下文，包含候選字資料和狀態資訊
      */
     override fun onInputContextUpdate(ctx: RimeProto.Context) {
@@ -155,9 +155,9 @@ class CompactCandidateModule(
 
     /**
      * 顯示候選字操作選單
-     * 
+     *
      * 長按候選字時顯示的彈出選單，提供忘記該詞等操作選項。
-     * 
+     *
      * @param idx 候選字在列表中的索引
      * @param text 候選字的文字內容
      * @param view 觸發操作的視圖元件

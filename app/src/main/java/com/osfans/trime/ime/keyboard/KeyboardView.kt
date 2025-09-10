@@ -166,9 +166,9 @@ class KeyboardView(
     private var showKeyHint: Boolean = true
 
     /**
-     * 初始化縪製狀態
+     * 初始化繪製狀態
      * 
-     * 設置鍵盤的初始縪製狀態，包括讀取 RIME 的運行時選項和預計算按鍵縪製信息。
+     * 設置鍵盤的初始繪製狀態，包括讀取 RIME 的運行時選項和預計算按鍵繪製信息。
      */
     fun initializeDrawingState() {
         lifecycleScope.launch {
@@ -416,7 +416,7 @@ class KeyboardView(
         code: Int,
     ): Boolean = keyboard.clickModifierKey(on, code).also { if (it) invalidateAllKeys() }
 
-    // 重置全部修饰键的状态(如果有锁定则不重置）
+    // 重置全部修飾键的狀態(如果有鎖定則不重置）
     private fun refreshModifier() {
         if (keyboard.refreshModifier()) {
             invalidateAllKeys()

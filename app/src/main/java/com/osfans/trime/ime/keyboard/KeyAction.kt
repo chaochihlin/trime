@@ -4,6 +4,8 @@
 
 package com.osfans.trime.ime.keyboard
 
+import android.annotation.TargetApi
+import android.os.Build
 import android.view.KeyEvent
 import com.osfans.trime.daemon.RimeDaemon
 import com.osfans.trime.data.prefs.AppPrefs
@@ -23,6 +25,7 @@ import com.osfans.trime.util.virtualKeyCharacterMap
  * @see Keyboard
  * @see Keycode
  */
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 class KeyAction(
     raw: String,
 ) {

@@ -25,10 +25,10 @@ import splitties.views.padding
 
 /**
  * 帶標籤的候選字項目使用者介面
- * 
+ *
  * 此類為彈出視窗中的候選字提供帶有標籤的顯示介面。
  * 包含候選字的標籤、主要文字內容和註解文字，支援高亮顯示。
- * 
+ *
  * @param ctx Android 上下文
  * @param theme 主題配置物件，包含樣式設定
  */
@@ -57,9 +57,9 @@ class LabeledCandidateItemUi(
 
     /**
      * SpannableStringBuilder 的擴展方法，用於設定文字樣式
-     * 
+     *
      * 將指定的顏色、大小和字型應用到文字片段上。
-     * 
+     *
      * @param color 文字顏色
      * @param textSize 文字大小
      * @param typeface 文字字型
@@ -74,10 +74,10 @@ class LabeledCandidateItemUi(
 
     /**
      * 更新候選字項目的顯示內容
-     * 
+     *
      * 根據候選字資料和高亮狀態更新視圖內容，包含標籤、
      * 主要文字和註解文字的顯示和背景設定。
-     * 
+     *
      * @param candidate RIME 候選字物件，包含標籤、文字和註解
      * @param highlighted 是否處於高亮選中狀態
      */

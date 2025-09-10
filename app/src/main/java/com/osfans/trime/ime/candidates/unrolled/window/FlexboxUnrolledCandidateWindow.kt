@@ -29,10 +29,10 @@ import splitties.views.setPaddingDp
 
 /**
  * 使用 Flexbox 佈局的展開式候選字視窗
- * 
+ *
  * 使用 FlexboxLayoutManager 來實現彈性的候選字佈局，
  * 支援自動換行和空間分配。提供向上滑出的動畫效果。
- * 
+ *
  * @param context Android 應用程式上下文
  * @param service Trime 輸入法服務實例
  * @param rime RIME 輸入引擎會話物件
@@ -52,9 +52,9 @@ class FlexboxUnrolledCandidateWindow(
 ) : BaseUnrolledCandidateWindow(context, service, rime, theme, bar, windowManager, compactCandidate) {
     /**
      * 定義視窗離開時的動畫效果
-     * 
+     *
      * 使用向上滑出的動畫效果。
-     * 
+     *
      * @param nextWindow 下一個視窗
      * @return 動畫轉場
      */
@@ -102,10 +102,10 @@ class FlexboxUnrolledCandidateWindow(
 
     /**
      * 創建候選字佈局容器
-     * 
+     *
      * 創建並配置使用 Flexbox 佈局的候選字容器，
      * 添加水平分隔裝飾。
-     * 
+     *
      * @return 配置好的展開式候選字佈局容器
      */
     override fun onCreateCandidateLayout(): UnrolledCandidateLayout =

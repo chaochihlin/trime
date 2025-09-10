@@ -15,10 +15,10 @@ import com.osfans.trime.ime.candidates.CandidateViewHolder
 
 /**
  * 分頁候選字視圖適配器
- * 
+ *
  * 使用 Paging3 庫的 PagingDataAdapter 來處理候選字的分頁顯示。
  * 支援懶加載和效能優化，適用於大量候選字的展開顯示。
- * 
+ *
  * @param theme 主題配置物件，提供視覺樣式設定
  */
 open class PagingCandidateViewAdapter(
@@ -46,9 +46,9 @@ open class PagingCandidateViewAdapter(
 
     /**
      * 使用新的偏移量重新整理資料
-     * 
+     *
      * 更新偏移量並觸發資料重新整理，用於展開候選字視窗時同步狀態。
-     * 
+     *
      * @param offset 新的偏移量
      */
     fun refreshWithOffset(offset: Int) {
@@ -58,9 +58,9 @@ open class PagingCandidateViewAdapter(
 
     /**
      * 創建視圖持有者
-     * 
+     *
      * 為每個候選字項目創建對應的視圖持有者。
-     * 
+     *
      * @param parent 父視圖組
      * @param viewType 視圖類型
      * @return 候選字視圖持有者
@@ -72,9 +72,9 @@ open class PagingCandidateViewAdapter(
 
     /**
      * 綁定視圖持有者
-     * 
+     *
      * 將候選字資料綁定到視圖持有者，設定文字內容和索引。
-     * 
+     *
      * @param holder 視圖持有者
      * @param position 項目在列表中的位置
      */

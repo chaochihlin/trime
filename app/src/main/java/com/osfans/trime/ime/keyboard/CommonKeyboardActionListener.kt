@@ -44,10 +44,10 @@ import timber.log.Timber
 
 /**
  * 通用鍵盤動作監聽器
- * 
+ *
  * 負責處理鍵盤互動事件，包括按鍵按下、釋放、動作執行和文本輸入。
  * 支援 RIME 引擎整合、特殊功能命令、鍵盤切換等功能。
- * 
+ *
  * @param context Android 應用程式上下文
  * @param service Trime 輸入法服務實例
  * @param rime RIME 輸入引擎會話物件
@@ -84,9 +84,9 @@ class CommonKeyboardActionListener(
 
     /**
      * 顯示對話框
-     * 
+     *
      * 在 RIME 引擎準備好後顯示指定的對話框。
-     * 
+     *
      * @param dialog 對話框建立函數，接收 RimeApi 並返回 Dialog
      */
     private fun showDialog(dialog: suspend (RimeApi) -> Dialog) {
@@ -99,7 +99,7 @@ class CommonKeyboardActionListener(
 
     /**
      * 顯示主題選擇器
-     * 
+     *
      * 目前未實現，為保留方法。
      */
     private fun showThemePicker() {
@@ -107,7 +107,7 @@ class CommonKeyboardActionListener(
 
     /**
      * 顯示已啟用的輸入方案選擇器
-     * 
+     *
      * 展示當前可用的輸入方案列表，並提供跳轉至設定的選項。
      */
     private fun showEnabledSchemaPicker() {
@@ -122,9 +122,9 @@ class CommonKeyboardActionListener(
 
     /**
      * 展開活躍文本中的占位符
-     * 
+     *
      * 將輸入文本中的占位符（%s, %1\$s 等）替換為當前活躍的文本內容。
-     * 
+     *
      * @param input 包含占位符的輸入字串
      * @return 已替換占位符的字串
      */

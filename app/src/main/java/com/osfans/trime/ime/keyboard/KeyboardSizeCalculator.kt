@@ -12,10 +12,10 @@ import kotlin.math.ceil
 
 /**
  * 鍵盤尺寸計算器
- * 
+ *
  * 負責根據鍵盤配置和裝置參數，計算鍵盤中每個按鍵的尺寸和位置。
  * 支援分割鍵盤、自動高度調整、多行布局等功能。
- * 
+ *
  * @param isSplit 是否為分割鍵盤模式
  * @param splitPercent 分割鍵盤的空间百分比
  * @param maxColumns 最大列數
@@ -26,7 +26,7 @@ import kotlin.math.ceil
  * @param mDefaultHorizontalGap 默認水平間隙（像素）
  * @param mDefaultVerticalGap 默認垂直間隙（像素）
  * @param autoHeightIndex 自動高度調整的行索引
- * 
+ *
  * @since 1.0
  */
 class KeyboardSizeCalculator(
@@ -46,10 +46,10 @@ class KeyboardSizeCalculator(
 
     /**
      * 計算鍵盤尺寸參數
-     * 
+     *
      * 根據提供的鍵位列表，計算整個鍵盤的尺寸參數，包括每行的權重分配、
      * 縮放後的高度等。此方法會處理換行邏輯、高度調整等複雜情況。
-     * 
+     *
      * @param keys 鍵位配置列表
      * @return 計算完成的鍵盤尺寸資料
      */
@@ -126,16 +126,16 @@ class KeyboardSizeCalculator(
 
     /**
      * 計算單位權重對應的像素寬度
-     * 
+     *
      * @return 單位權重的像素寬度值
      */
     private fun calculateOneWeightWidthPx(): Float = (mAllowedWidth / (MAX_TOTAL_WEIGHT * (1 + splitSpaceRatio)))
 
     /**
      * 計算縮放後的垂直間隙
-     * 
+     *
      * 根據鍵盤總高度和原始行高度，計算適當的垂直間隙尺寸。
-     * 
+     *
      * @param rawSumHeight 原始總高度
      * @param rawHeight 原始每行高度列表
      * @return 縮放後的垂直間隙值
@@ -152,9 +152,9 @@ class KeyboardSizeCalculator(
 
     /**
      * 計算調整後的每行高度
-     * 
+     *
      * 根據可用的總高度空间，調整每行的高度，特別處理自動高度行。
-     * 
+     *
      * @param rawSumHeight 原始總高度
      * @param rawHeight 原始每行高度列表
      * @param scaledVerticalGap 縮放後的垂直間隙
