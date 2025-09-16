@@ -22,7 +22,6 @@ import com.osfans.trime.ime.broadcast.InputBroadcastReceiver
 import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.dependency.InputScope
 import com.osfans.trime.ime.keyboard.KeyboardPrefs.isLandscapeMode
-import com.osfans.trime.ime.preview.KeyPreviewChoreographer
 import com.osfans.trime.ime.window.BoardWindow
 import com.osfans.trime.ime.window.BoardWindowManager
 import com.osfans.trime.ime.window.ResidentWindow
@@ -56,7 +55,6 @@ import timber.log.Timber
  * @param rime RIME 引擎工作階段
  * @param commonKeyboardActionListener 鍵盤動作監聽器
  * @param windowManager 視窗管理器
- * @param keyPreviewChoreographer 按鍵預覽編排器
  *
  * @since 1.0
  */
@@ -69,7 +67,6 @@ class KeyboardWindow(
     private val rime: RimeSession,
     private val commonKeyboardActionListener: CommonKeyboardActionListener,
     private val windowManager: BoardWindowManager,
-    private val keyPreviewChoreographer: KeyPreviewChoreographer,
 ) : BoardWindow.NoBarBoardWindow(),
     ResidentWindow,
     InputBroadcastReceiver {
@@ -156,7 +153,7 @@ class KeyboardWindow(
                 KeyboardSwitcher.currentKeyboard = it
             }
         val newView =
-            currentKeyboardView ?: KeyboardView(context, theme, newKeyboard, keyPreviewChoreographer).also {
+            currentKeyboardView ?: KeyboardView(context, theme, newKeyboard).also {
                 cachedKeyboards[target] = newKeyboard to it
             }
         newView.let {

@@ -27,7 +27,6 @@ import com.osfans.trime.ime.composition.PreeditModule
 import com.osfans.trime.ime.dependency.InputComponent
 import com.osfans.trime.ime.dependency.create
 import com.osfans.trime.ime.keyboard.KeyboardWindow
-import com.osfans.trime.ime.preview.KeyPreviewChoreographer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import splitties.dimensions.dp
@@ -50,6 +49,10 @@ import splitties.views.dsl.core.view
 import splitties.views.dsl.core.withTheme
 import splitties.views.dsl.core.wrapContent
 import splitties.views.imageDrawable
+import com.osfans.trime.ime.circular.CircularContainer
+import com.osfans.trime.ime.circular.CircularScreenPresets
+import com.osfans.trime.ime.circular.CircularScreenConfig
+import android.content.res.Configuration
 
 /**
  * Successor of the old InputRoot
@@ -92,7 +95,6 @@ class InputView(
     private val preedit: PreeditModule = inputComponent.preedit
     public val keyboardWindow: KeyboardWindow = inputComponent.keyboardWindow
     private val compactCandidate: CompactCandidateModule = inputComponent.candidate.compactCandidateModule
-    private val preview: KeyPreviewChoreographer = inputComponent.preview
 
     private fun addBroadcastReceivers() {
         broadcaster.addReceiver(quickBar)
@@ -116,11 +118,44 @@ class InputView(
 
     val keyboardView: View
 
+    /**
+     * 檢測是否為圓形螢幕設備（如智慧手錶）
+     *
+     * 針對特定手錶設備優化：
+     * - 非標準 Wear OS，Android 9
+     * - 固定圓形螢幕，無需兼容其他形狀
+     */
+    private fun isRoundScreen(): Boolean {
+        return try {
+            // 獲取螢幕尺寸信息
+            val displayMetrics = context.resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            val screenHeight = displayMetrics.heightPixels
+            val density = displayMetrics.density
+
+            // 檢查是否為典型手錶螢幕尺寸（小正方形螢幕）
+            val isSmallSquareScreen = (screenWidth in 300..500) &&
+                                     (screenHeight in 300..500) &&
+                                     kotlin.math.abs(screenWidth - screenHeight) < 50
+
+            // 檢查設備特性（此設備固定為手錶）
+            val hasWatchProperties = context.packageManager.hasSystemFeature("android.hardware.type.watch") ||
+                                   context.resources.configuration.smallestScreenWidthDp < 200
+
+
+            // 由於目標設備固定為圓形手錶，直接返回 true
+            // 這樣可以確保圓形適配始終啟用
+            true
+        } catch (e: Exception) {
+            // 由於目標設備固定，即使檢測失敗也返回 true
+            true
+        }
+    }
+
     init {
         addBroadcastReceivers()
 
-        // 除錯：設定明顯的背景色來確認 InputView 顯示
-        setBackgroundColor("#FF00FF".toColorInt()) // 洋紅色背景
+        // 移除調試背景色
 
         windowManager.cacheResidentWindow(keyboardWindow, createView = true)
         // show KeyboardWindow by default
@@ -128,60 +163,79 @@ class InputView(
 
         keyboardBackground.imageDrawable = ColorManager.getDrawable("keyboard_background")
 
-        keyboardView =
-            constraintLayout {
-                isMotionEventSplittingEnabled = true
-                add(
-                    keyboardBackground,
-                    lParams {
-                        centerInParent()
-                    },
+        // 創建原本的 ConstraintLayout 鍵盤
+        val originalKeyboardLayout = constraintLayout {
+            isMotionEventSplittingEnabled = true
+            add(
+                keyboardBackground,
+                lParams {
+                    centerInParent()
+                },
+            )
+            add(
+                quickBar.view,
+                lParams(matchParent, dp(quickBar.themedHeight)) {
+                    topOfParent()
+                    centerHorizontally()
+                },
+            )
+            add(
+                leftPaddingSpace,
+                lParams {
+                    below(quickBar.view)
+                    startOfParent()
+                    bottomOfParent()
+                },
+            )
+            add(
+                rightPaddingSpace,
+                lParams {
+                    below(quickBar.view)
+                    endOfParent()
+                    bottomOfParent()
+                },
+            )
+            add(
+                windowManager.view,
+                lParams {
+                    below(quickBar.view)
+                    above(bottomPaddingSpace)
+                },
+            )
+            add(
+                bottomPaddingSpace,
+                lParams {
+                    startToEndOf(leftPaddingSpace)
+                    endToStartOf(rightPaddingSpace)
+                    bottomOfParent()
+                },
+            )
+        }
+
+        // 根據螢幕類型決定是否使用圓形容器
+        keyboardView = if (isRoundScreen()) {
+            CircularContainer(context).apply {
+                // 動態獲取實際螢幕尺寸並設定完全貼合的圓形配置
+                val displayMetrics = context.resources.displayMetrics
+                val screenSize = kotlin.math.min(displayMetrics.widthPixels, displayMetrics.heightPixels)
+                val perfectFitConfig = CircularScreenConfig(
+                    screenDiameter = screenSize,
+                    safeMargin = 0,  // 完全貼合螢幕邊緣，無安全邊距
+                    chinHeight = 0,  // 此設備無下巴
+                    crownPosition = 0.3f
                 )
-                add(
-                    quickBar.view.apply {
-                        // 除錯：設定 quickBar 背景色
-                        setBackgroundColor("#00FF00".toColorInt()) // 綠色背景
-                    },
-                    lParams(matchParent, dp(quickBar.themedHeight)) {
-                        topOfParent()
-                        centerHorizontally()
-                    },
-                )
-                add(
-                    leftPaddingSpace,
-                    lParams {
-                        below(quickBar.view)
-                        startOfParent()
-                        bottomOfParent()
-                    },
-                )
-                add(
-                    rightPaddingSpace,
-                    lParams {
-                        below(quickBar.view)
-                        endOfParent()
-                        bottomOfParent()
-                    },
-                )
-                add(
-                    windowManager.view.apply {
-                        // 除錯：設定 windowManager 背景色
-                        setBackgroundColor("#0000FF".toColorInt()) // 藍色背景
-                    },
-                    lParams {
-                        below(quickBar.view)
-                        above(bottomPaddingSpace)
-                    },
-                )
-                add(
-                    bottomPaddingSpace,
-                    lParams {
-                        startToEndOf(leftPaddingSpace)
-                        endToStartOf(rightPaddingSpace)
-                        bottomOfParent()
-                    },
-                )
+                setScreenConfig(perfectFitConfig)
+
+
+                // 添加原本的鍵盤佈局到圓形容器中
+                add(originalKeyboardLayout, android.widget.FrameLayout.LayoutParams(
+                    matchParent, matchParent
+                ))
             }
+        } else {
+            // 非圓形螢幕，直接使用原本的佈局
+            originalKeyboardLayout
+        }
 
         updateWindowViewHeightJob =
             service.lifecycleScope.launch {
@@ -195,10 +249,7 @@ class InputView(
         updateKeyboardSize()
 
         add(
-            preedit.ui.root.apply {
-                // 除錯：設定 preedit 區域背景色
-                setBackgroundColor(android.graphics.Color.parseColor("#FFFF00")) // 黃色背景
-            },
+            preedit.ui.root,
             lParams(matchParent, wrapContent) {
                 above(keyboardView)
                 centerHorizontally()
@@ -207,18 +258,12 @@ class InputView(
 
         add(
             keyboardView,
-            lParams(matchParent, wrapContent) {
+            lParams(matchParent, matchParent) {
                 centerHorizontally()
-                bottomOfParent()
+                // 移除 bottomOfParent() 以允許完全填滿父容器
             },
         )
 
-        add(
-            preview.root,
-            lParams(matchParent, matchParent) {
-                centerInParent()
-            },
-        )
     }
 
     private fun updateKeyboardSize() {
@@ -315,7 +360,6 @@ class InputView(
         // cancel the notification job and clear all broadcast receivers,
         // implies that InputView should not be attached again after detached.
         updateWindowViewHeightJob.cancel()
-        preview.root.removeAllViews()
         broadcaster.clear()
         super.onDetachedFromWindow()
     }

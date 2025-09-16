@@ -26,7 +26,6 @@ import com.osfans.trime.daemon.RimeDaemon
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
-import com.osfans.trime.ime.preview.KeyPreviewChoreographer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -55,7 +54,6 @@ import kotlin.math.pow
  * @param context Android 上下文
  * @param theme 主題配置
  * @param keyboard 鍵盤實例
- * @param keyPreviewChoreographer 按鍵預覽編排器
  *
  * @since 1.0
  */
@@ -64,7 +62,6 @@ class KeyboardView(
     context: Context,
     private val theme: Theme,
     private val keyboard: Keyboard,
-    private val keyPreviewChoreographer: KeyPreviewChoreographer,
 ) : View(context) {
     private val rime = RimeDaemon.getFirstSessionOrNull()!!
     private var mCurrentKeyIndex = NOT_A_KEY
@@ -78,7 +75,6 @@ class KeyboardView(
     private val mShadowColor = ColorManager.getColor("shadow_color")
 
     // 工作變數
-    private val originCoords = intArrayOf(0, 0)
     private val mKeys get() = keyboard.keys
 
     /** 鍵盤動作監聽器，用於處理按鍵事件 */
@@ -86,11 +82,6 @@ class KeyboardView(
     private val mVerticalCorrection = theme.generalStyle.verticalCorrection
     private var mProximityThreshold = 0
 
-    /**
-     * 啟用或停用按鍵回饋彈窗。這是一個顯示放大版本
-     * 按鍵的彈窗。預設啟用預覽功能。
-     */
-    private val showPreview = true
     private var mLastX = 0
     private var mLastY = 0
     private var mStartX = 0
@@ -197,7 +188,6 @@ class KeyboardView(
 
     private var longPressJob: Job? = null
     private var repeatJob: Job? = null
-    private var removePreviewJob: Job? = null
 
     private fun handleLongPressJob() {
         longPressJob?.cancel()
@@ -225,14 +215,6 @@ class KeyboardView(
             }
     }
 
-    private fun handleRemovePreviewJob(key: Key) {
-        removePreviewJob?.cancel()
-        removePreviewJob =
-            lifecycleScope.launch {
-                delay(DELAY_AFTER_PREVIEW)
-                dismissKeyPreviewWithoutDelay(key)
-            }
-    }
 
     init {
         computeProximityThreshold(keyboard)
@@ -373,31 +355,6 @@ class KeyboardView(
             },
         ).apply { setIsLongpressEnabled(false) }
 
-    private fun showKeyPreview(
-        key: Key,
-        behavior: KeyBehavior,
-    ) {
-        getLocationInWindow(originCoords)
-        keyPreviewChoreographer.placeAndShowKeyPreview(
-            key,
-            key.getPreviewText(behavior),
-            width,
-            originCoords,
-        )
-    }
-
-    private fun dismissKeyPreviewWithoutDelay(key: Key) {
-        keyPreviewChoreographer.dismissKeyPreview(key)
-        invalidateKey(key)
-    }
-
-    private fun dismissKeyPreview(key: Key) {
-        if (isHardwareAccelerated) {
-            keyPreviewChoreographer.dismissKeyPreview(key)
-            return
-        }
-        handleRemovePreviewJob(key)
-    }
 
     /**
      * 設定鍵盤修飾鍵的狀態
@@ -471,9 +428,6 @@ class KeyboardView(
         if (canvas.isHardwareAccelerated) {
             onDrawKeyboard(canvas)
             logPerformance("onDraw (Hardware)", startTime)
-
-            // 結束鍵盤顯示時間測量
-            KeyboardDisplayTimer.endMeasurement(renderInfo = "Hardware加速渲染")
             return
         }
 
@@ -489,9 +443,6 @@ class KeyboardView(
 
         canvas.drawBitmap(buffer, 0.0f, 0.0f, null)
         logPerformance("onDraw (Software)", startTime)
-
-        // 結束鍵盤顯示時間測量
-        KeyboardDisplayTimer.endMeasurement(renderInfo = "Software軟體渲染")
 
         // 定期記錄快取統計資料
         renderStateCache.logCacheStats()
@@ -726,12 +677,10 @@ class KeyboardView(
             keys.getOrNull(oldKeyIndex)?.let { oldKey ->
                 oldKey.onReleased()
                 invalidateKey(oldKey)
-                if (showPreview) dismissKeyPreview(oldKey)
             }
             keys.getOrNull(mCurrentKeyIndex)?.let { newKey ->
                 newKey.onPressed()
                 invalidateKey(newKey)
-                if (showPreview) showKeyPreview(newKey, behavior)
             }
         }
     }
@@ -1076,8 +1025,6 @@ class KeyboardView(
         repeatJob = null
         longPressJob?.cancel()
         longPressJob = null
-        removePreviewJob?.cancel()
-        removePreviewJob = null
     }
 
     /**
@@ -1209,7 +1156,6 @@ class KeyboardView(
 
     companion object {
         private const val NOT_A_KEY = -1
-        private const val DELAY_AFTER_PREVIEW = 100L
         private const val DEBOUNCE_TIME = 70
         private const val MAX_NEARBY_KEYS = 12
 

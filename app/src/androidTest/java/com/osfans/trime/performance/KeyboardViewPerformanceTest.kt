@@ -14,7 +14,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.Keyboard
 import com.osfans.trime.ime.keyboard.KeyboardView
-import com.osfans.trime.ime.preview.KeyPreviewChoreographer
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -137,9 +136,8 @@ class KeyboardViewPerformanceTest {
         // 創建簡單的測試鍵盤視圖
         val theme = Theme.get()
         val keyboard = Keyboard(context)
-        val keyPreviewChoreographer = KeyPreviewChoreographer(context)
 
-        return KeyboardView(context, theme, keyboard, keyPreviewChoreographer).apply {
+        return KeyboardView(context, theme, keyboard).apply {
             measure(
                 android.view.View.MeasureSpec
                     .makeMeasureSpec(800, android.view.View.MeasureSpec.EXACTLY),

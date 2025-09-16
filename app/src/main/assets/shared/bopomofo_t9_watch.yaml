@@ -1,0 +1,298 @@
+# SPDX-FileCopyrightText: 2025 Trime Watch Team
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# T9注音九宮格鍵盤 - 手錶專用版
+# encoding: utf-8
+
+config_version: "3.0"
+name: "T9注音手錶版"
+author: "Trime Watch Team"
+
+# 手錶專用尺寸配置
+height:
+  1: &watch_key_height 45   # 主按鍵高度 - 手錶適配
+  2: &watch_gap_h 3         # 水平間距 - 緊湊排列
+  3: &watch_gap_v 3         # 垂直間距 - 緊湊排列
+  4: &watch_round 8         # 按鍵圓角半徑
+
+# 圓形螢幕參數 - 最佳圓形螢幕適配尺寸
+screen_config:
+  diameter: 360             # 螢幕直徑
+  safe_margin: 30          # 安全邊距
+  keyboard_width: 240      # 鍵盤寬度 - 最佳4:3比例
+  keyboard_height: 180     # 鍵盤高度 - 最佳4:3比例
+
+style:
+  # 基礎設定
+  auto_caps: false
+  horizontal: true
+  reset_ascii_mode: false
+  proximity_correction: true
+
+  # 字體配置
+  candidate_font: han.ttf
+  key_font: symbol.ttf
+  label_font: label.ttf
+  text_font: latin.ttf
+
+  # 候選詞設定
+  candidate_padding: 4
+  candidate_spacing: 0.3
+  candidate_text_size: 20
+  candidate_use_cursor: true
+  candidate_view_height: 32
+
+  # 按鍵尺寸 - 手錶優化
+  key_height: *watch_key_height
+  key_text_size: 24          # 主要文字大小
+  key_long_text_size: 14     # 長標籤文字
+  label_text_size: 18        # 標籤文字
+  symbol_text_size: 10       # 符號提示文字
+
+  # 間距設定
+  horizontal_gap: *watch_gap_h
+  vertical_gap: *watch_gap_v
+  round_corner: *watch_round
+
+  # 鍵盤尺寸 - 圓形螢幕最佳適配
+  keyboard_height: 180       # 鎖定鍵盤高度
+  keyboard_height_land: 180  # 橫屏鍵盤高度
+
+  # 預覽設定
+  preview_height: 50
+  preview_offset: -25
+  preview_text_size: 32
+
+  # 佈局設定
+  layout:
+    max_width: 240
+    max_height: 180
+    margin_x: 0
+    margin_y: 0
+    spacing: 1
+    alpha: 0xff
+
+# 深色主題配色方案
+preset_color_schemes:
+  t9_dark_watch:
+    name: "T9手錶深色主題"
+    author: "Trime Watch Team"
+
+    # 背景色彩
+    back_color: 0xff000000           # 純黑背景
+    keyboard_back_color: 0xff000000   # 鍵盤背景
+    key_back_color: 0xff1e1e1e       # 按鍵背景 - 深灰
+
+    # 文字色彩
+    text_color: 0xffffffff           # 編碼區文字 - 白色
+    key_text_color: 0xffffffff       # 按鍵文字 - 白色
+    label_color: 0xffcccccc          # 標籤文字 - 淺灰
+    symbol_color: 0xff999999         # 符號提示 - 中灰
+
+    # 候選詞色彩
+    candidate_text_color: 0xffffffff           # 候選詞文字
+    hilited_candidate_back_color: 0xff333333   # 選中候選詞背景
+    hilited_candidate_text_color: 0xffffffff   # 選中候選詞文字
+
+    # 特殊按鍵色彩
+    confirm_back_color: 0xffffffff    # 確認按鍵背景 - 白色
+    confirm_text_color: 0xff000000    # 確認按鍵圖標 - 黑色
+    function_back_color: 0xff333333   # 功能鍵背景
+    function_text_color: 0xffffffff   # 功能鍵文字
+
+    # 邊框色彩
+    border_color: 0xff333333         # 按鍵邊框
+    shadow_color: 0x80000000         # 陰影色
+
+# T9注音九宮格鍵盤定義
+preset_keyboards:
+  bopomofo_t9_main:
+    name: "T9注音主鍵盤"
+    author: "Trime Watch Team"
+    width: 10
+    ascii_mode: 0
+    keys:
+      # 第一行: 1-3 + 確認按鍵
+      - click: t9_key_1
+        label: "1"
+        hint: "ㄅㄉㄚ"
+        width: 20
+        long_click: punctuation_1
+      - click: t9_key_2
+        label: "2"
+        hint: "ㄍㄐㄞㄧ"
+        width: 20
+        long_click: punctuation_2
+      - click: t9_key_3
+        label: "3"
+        hint: "ㄓㄗㄢㄦ"
+        width: 20
+        long_click: punctuation_3
+      - click: Commit
+        label: "✓"
+        width: 25
+        style: confirm_button
+      - click: "{}"
+        width: 15
+
+      # 第二行: 4-6
+      - click: t9_key_4
+        label: "4"
+        hint: "ㄆㄊㄛ"
+        width: 20
+      - click: t9_key_5
+        label: "5"
+        hint: "ㄎㄑㄟㄨ"
+        width: 20
+      - click: t9_key_6
+        label: "6"
+        hint: "ㄔㄘㄣ"
+        width: 20
+      - click: "{}"
+        width: 40
+
+      # 第三行: 7-9
+      - click: t9_key_7
+        label: "7"
+        hint: "ㄇㄋㄜㄝ"
+        width: 20
+      - click: t9_key_8
+        label: "8"
+        hint: "ㄏㄒㄠㄩ"
+        width: 20
+      - click: t9_key_9
+        label: "9"
+        hint: "ㄕㄙㄤㄥ"
+        width: 20
+      - click: BackSpace
+        label: "⌫"
+        width: 25
+        long_click: Clear
+      - click: "{}"
+        width: 15
+
+      # 第四行: 0 + 語言切換
+      - click: "{}"
+        width: 20
+      - click: t9_key_0
+        label: "0"
+        hint: "ㄈㄌㄡㄖ"
+        width: 20
+      - click: "{}"
+        width: 20
+      - click: switch_schema
+        label: "ZH"
+        long_label: "ZH(TW)"
+        width: 25
+      - click: "{}"
+        width: 15
+
+  # 符號鍵盤（長按數字鍵觸發）
+  bopomofo_t9_symbols:
+    name: "T9符號鍵盤"
+    width: 10
+    keys:
+      # 常用標點符號
+      - {click: "，", label: "，", width: 20}
+      - {click: "。", label: "。", width: 20}
+      - {click: "？", label: "？", width: 20}
+      - {click: "！", label: "！", width: 20}
+      - {click: Return, label: "返回", width: 20}
+
+      - {click: "；", label: "；", width: 20}
+      - {click: "：", label: "：", width: 20}
+      - {click: "「", label: "「", width: 20}
+      - {click: "」", label: "」", width: 20}
+      - {click: "{}", width: 20}
+
+      - {click: "（", label: "（", width: 20}
+      - {click: "）", label: "）", width: 20}
+      - {click: "、", label: "、", width: 20}
+      - {click: "～", label: "～", width: 20}
+      - {click: "{}", width: 20}
+
+# 按鍵樣式定義
+preset_key_styles:
+  number_key:
+    background: "key_back_color"
+    border_width: 1
+    border_color: "border_color"
+    round_corner: *watch_round
+
+  confirm_button:
+    background: "confirm_back_color"
+    text_color: "confirm_text_color"
+    round_corner: 25
+    elevation: 2
+
+  function_key:
+    background: "function_back_color"
+    text_color: "function_text_color"
+    round_corner: *watch_round
+
+  space_key:
+    background: "transparent"
+
+# T9按鍵映射定義
+t9_keymap:
+  # 數字鍵對應的注音符號組
+  "1": ["ㄅ", "ㄉ", "ㄚ"]           # 1鍵: ㄅㄉㄚ
+  "2": ["ㄍ", "ㄐ", "ㄞ", "ㄧ"]     # 2鍵: ㄍㄐㄞㄧ
+  "3": ["ㄓ", "ㄗ", "ㄢ", "ㄦ"]     # 3鍵: ㄓㄗㄢㄦ
+  "4": ["ㄆ", "ㄊ", "ㄛ"]           # 4鍵: ㄆㄊㄛ
+  "5": ["ㄎ", "ㄑ", "ㄟ", "ㄨ"]     # 5鍵: ㄎㄑㄟㄨ
+  "6": ["ㄔ", "ㄘ", "ㄣ"]           # 6鍵: ㄔㄘㄣ
+  "7": ["ㄇ", "ㄋ", "ㄜ", "ㄝ"]     # 7鍵: ㄇㄋㄜㄝ
+  "8": ["ㄏ", "ㄒ", "ㄠ", "ㄩ"]     # 8鍵: ㄏㄒㄠㄩ
+  "9": ["ㄕ", "ㄙ", "ㄤ", "ㄥ"]     # 9鍵: ㄕㄙㄤㄥ
+  "0": ["ㄈ", "ㄌ", "ㄡ", "ㄖ"]     # 0鍵: ㄈㄌㄡㄖ
+
+# 聲調鍵定義
+tone_keys:
+  space: "˙"        # 輕聲
+  swipe_up: "ˊ"     # 二聲
+  swipe_down: "ˇ"   # 三聲
+  swipe_left: "ˋ"   # 四聲
+  # 一聲不標調
+
+# 情境顯示配置
+context_display:
+  # 待輸入狀態顯示常用標點
+  idle_state:
+    symbols: ["，", "。", "？"]
+    position: "left_side"
+
+  # 輸入中狀態顯示注音序列
+  input_state:
+    type: "dynamic"
+    source: "composition"
+    position: "left_side"
+    max_length: 6
+
+# 候選詞設定
+candidate_config:
+  page_size: 5              # 每頁候選詞數量
+  horizontal_scroll: true   # 水平滾動
+  auto_select: false        # 自動選擇
+
+# 手錶專用優化設定
+watch_optimizations:
+  # 觸控優化
+  touch_feedback: true      # 觸控震動回饋
+  large_touch_area: true    # 擴大觸控區域
+
+  # 效能優化
+  reduce_animations: true   # 減少動畫效果
+  fast_response: true       # 快速響應模式
+
+  # 省電優化
+  dim_timeout: 30          # 30秒後變暗
+  sleep_timeout: 120       # 2分鐘後休眠
+
+# 驗收測試配置
+test_config:
+  layout_bounds_check: true    # 佈局邊界檢查
+  touch_area_validation: true  # 觸控區域驗證
+  color_contrast_test: true    # 色彩對比度測試
+  performance_monitoring: true # 效能監控

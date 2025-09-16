@@ -69,7 +69,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <activity
             android:name=".ui.test.InputTestActivity"
             android:exported="true"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
 
 
 

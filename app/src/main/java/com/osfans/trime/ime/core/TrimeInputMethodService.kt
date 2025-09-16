@@ -53,7 +53,6 @@ import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.data.theme.ThemeManager
 import com.osfans.trime.ime.composition.CandidatesView
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
-import com.osfans.trime.ime.keyboard.KeyboardDisplayTimer
 import com.osfans.trime.ime.keyboard.KeyboardSwitcher
 import com.osfans.trime.receiver.RimeIntentReceiver
 import com.osfans.trime.util.any
@@ -429,7 +428,14 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     private val inputViewLocation = intArrayOf(0, 0)
 
     override fun onComputeInsets(outInsets: Insets) {
-        if (inputDeviceManager.isVirtualKeyboard) {
+        if (isRoundScreen() && inputDeviceManager.isVirtualKeyboard) {
+            // 圓形螢幕特殊處理：強制全螢幕
+            outInsets.apply {
+                contentTopInsets = 0  // 佔用整個螢幕
+                visibleTopInsets = 0  // 可見區域從頂部開始
+                touchableInsets = Insets.TOUCHABLE_INSETS_FRAME  // 整個框架可觸摸
+            }
+        } else if (inputDeviceManager.isVirtualKeyboard) {
             outInsets.apply {
                 contentTopInsets = inputViewLocation[1]
                 visibleTopInsets = inputViewLocation[1]
@@ -443,6 +449,39 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
                 visibleTopInsets = h
                 touchableInsets = Insets.TOUCHABLE_INSETS_VISIBLE
             }
+        }
+    }
+
+    private fun isRoundScreen(): Boolean {
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+        return (screenWidth in 300..500) && (screenHeight in 300..500) &&
+               kotlin.math.abs(screenWidth - screenHeight) < 50
+    }
+
+    private fun applyFullScreenHeight() {
+        try {
+            val window = window.window
+            if (window != null && isRoundScreen()) {
+                // 允許窗口超出系統限制
+                window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+                window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
+                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
+                val layoutParams = window.attributes
+                layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
+                layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+
+                // 移除系統窗口裝飾
+                layoutParams.flags = layoutParams.flags or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+
+                window.attributes = layoutParams
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "無法套用全螢幕高度")
         }
     }
 
@@ -512,10 +551,8 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     ) {
         Timber.d("開始輸入視窗: 重新啟動=$restarting")
 
-        // 開始測量鍵盤顯示時間
-        val sessionId = "${System.currentTimeMillis()}-${attribute.packageName}"
-        val isFirstTime = !restarting && inputView?.isShown != true
-        KeyboardDisplayTimer.startMeasurement(sessionId, isFirstTime)
+        // 圓形螢幕全螢幕配置
+        applyFullScreenHeight()
 
         InputFeedbackManager.startInput()
         postRimeJob {
