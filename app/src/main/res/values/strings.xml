@@ -176,10 +176,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <string name="rime_daemon">Rime Daemon</string>
     <string name="restarting_rime">Restarting Rime</string>
     <string name="select_current_schema">Select current schema</string>
-    <string name="enable_schemata">Enable schemata</string>
-    <string name="no_schema_to_select">Currently there is no schema to select. Please go to enable schemata from the available list.</string>
     <string name="no_schema_to_enable">No schema to enable. Make sure you have prelude and schema files in the user directory.</string>
-    <string name="schemata">Schemata</string>
     <string name="navbar_background">Navigation bar background</string>
     <string name="no_theme_to_select">Currently there is no theme to select.</string>
     <string name="no_color_to_select">Currently there is no color scheme to select.</string>

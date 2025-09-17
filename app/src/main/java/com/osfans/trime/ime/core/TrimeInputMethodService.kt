@@ -186,7 +186,10 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
         SchemaManager.init("bopomofo_t9")
         ThemeManager.init(resources.configuration)
-        postRimeJob { selectSchema("bopomofo_t9") }
+        postRimeJob {
+            setEnabledSchemata(arrayOf("bopomofo_t9"))
+            selectSchema("bopomofo_t9")
+        }
         ThemeManager.addOnChangedListener(onThemeChangeListener)
         ColorManager.addOnChangedListener(onColorChangeListener)
         super.onCreate()

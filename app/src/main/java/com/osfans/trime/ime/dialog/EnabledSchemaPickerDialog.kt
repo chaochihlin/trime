@@ -29,7 +29,7 @@ object EnabledSchemaPickerDialog {
             .apply {
                 setTitle(R.string.select_current_schema)
                 if (rime.isEmpty()) {
-                    setMessage(R.string.no_schema_to_select)
+                    setMessage(R.string.no_schema_to_enable)
                 } else {
                     setSingleChoiceItems(
                         selectedNames.toTypedArray(),
