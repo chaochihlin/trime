@@ -23,10 +23,10 @@ class BackgroundSyncWork(
 ) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         try {
-            Timber.i("Starting background sync ...")
+            Timber.i("開始背景同步 (手錶優化：需要充電，120分鐘間隔) ...")
             return doBackgroundSync()
         } catch (e: Exception) {
-            Timber.e(e, "Background sync job failed.")
+            Timber.e(e, "背景同步工作失敗")
             return Result.retry()
         }
     }
@@ -53,7 +53,7 @@ class BackgroundSyncWork(
         private var lastSyncTime by prefs.lastBackgroundSyncTime
 
         fun start(context: Context) {
-            Timber.i("BackgroundSyncWork scheduled!")
+            Timber.i("背景同步工作已排程 (手錶優化：需要充電，${interval.toLong()}分鐘間隔)！")
             internalStart(context, ExistingPeriodicWorkPolicy.UPDATE)
         }
 
@@ -68,7 +68,7 @@ class BackgroundSyncWork(
             val instance = WorkManager.getInstance(context.applicationContext)
             if (!enable) {
                 instance.cancelUniqueWork(PERIODIC_BACKGROUND_SYNC_KEY)
-                Timber.i("BackgroundSyncWork canceled!")
+                Timber.i("背景同步工作已取消！")
                 return
             }
             val constraints =
@@ -76,6 +76,7 @@ class BackgroundSyncWork(
                     .Builder()
                     .setRequiresBatteryNotLow(true)
                     .setRequiresStorageNotLow(true)
+                    .setRequiresCharging(true)
                     .build()
 
             val workRequest =

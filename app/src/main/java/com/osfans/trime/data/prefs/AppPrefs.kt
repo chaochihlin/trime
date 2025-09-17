@@ -220,7 +220,7 @@ class AppPrefs(
 
         val userDataDir = string(USER_DATA_DIR, DataManager.configDir.path)
         val periodicBackgroundSync = bool(PERIODIC_BACKGROUND_SYNC, false)
-        val periodicBackgroundSyncInterval = int(PERIODIC_BACKGROUND_SYNC_INTERVAL, 30)
+        val periodicBackgroundSyncInterval = int(PERIODIC_BACKGROUND_SYNC_INTERVAL, 120)
         val lastBackgroundSyncStatus = bool(LAST_BACKGROUND_SYNC_STATUS, false)
         val lastBackgroundSyncTime = long(LAST_BACKGROUND_SYNC_TIME, 0L)
     }
