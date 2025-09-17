@@ -72,10 +72,11 @@ class FlexboxUnrolledCandidateWindow(
                         val size = theme.generalStyle.candidatePadding
                         setPaddingDp(size, 0, size, 0)
                         // 使用簡單的 LinearLayout.LayoutParams 替代 Flexbox
-                        layoutParams = ViewGroup.MarginLayoutParams(
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            dp(theme.generalStyle.run { candidateViewHeight + commentHeight })
-                        )
+                        layoutParams =
+                            ViewGroup.MarginLayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                dp(theme.generalStyle.run { candidateViewHeight + commentHeight }),
+                            )
                     }
                 }
 

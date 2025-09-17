@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
 import androidx.lifecycle.lifecycleScope
-import com.osfans.trime.R
 import com.osfans.trime.core.KeyModifier
 import com.osfans.trime.core.KeyModifiers
 import com.osfans.trime.core.Rime
@@ -107,11 +106,7 @@ class CommonKeyboardActionListener(
      */
     private fun showEnabledSchemaPicker() {
         showDialog { api ->
-            EnabledSchemaPickerDialog.build(api, service.lifecycleScope, context) {
-                setNegativeButton(R.string.schemata) { _, _ ->
-                    AppUtils.launchMainActivity(context) // 手錶裝置使用簡化的主活動
-                }
-            }
+            EnabledSchemaPickerDialog.build(api, service.lifecycleScope, context)
         }
     }
 
@@ -223,8 +218,8 @@ class CommonKeyboardActionListener(
                     KeyEvent.KEYCODE_SETTINGS -> { // Settings
                         when (action.option) {
                             "theme" -> showThemePicker()
-                            "schema" -> AppUtils.launchMainActivity(context) // 手錶裝置使用簡化的主活動
-                            else -> AppUtils.launchMainActivity(service)
+                            "schema" -> { /* 手錶裝置不提供設定介面 */ }
+                            else -> { /* 手錶裝置不提供設定介面 */ }
                         }
                     }
                     KeyEvent.KEYCODE_MENU -> showEnabledSchemaPicker()

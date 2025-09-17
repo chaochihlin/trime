@@ -24,7 +24,6 @@ import kotlin.math.sqrt
  * - 支援多種圓形螢幕配置
  */
 object SafeAreaCalculator {
-
     /**
      * 計算圓形螢幕的可用矩形區域
      *
@@ -42,10 +41,10 @@ object SafeAreaCalculator {
         val squareHalfSide = radius / sqrt(2f)
 
         return RectF(
-            center - squareHalfSide,    // left
-            center - squareHalfSide,    // top
-            center + squareHalfSide,    // right
-            center + squareHalfSide     // bottom
+            center - squareHalfSide, // left
+            center - squareHalfSide, // top
+            center + squareHalfSide, // right
+            center + squareHalfSide, // bottom
         )
     }
 
@@ -60,7 +59,7 @@ object SafeAreaCalculator {
      */
     fun calculateUsableAreaWithAspectRatio(
         config: CircularScreenConfig,
-        aspectRatio: Float
+        aspectRatio: Float,
     ): RectF {
         val center = config.centerX
         val radius = config.usableRadius.toFloat()
@@ -86,7 +85,7 @@ object SafeAreaCalculator {
             center - halfWidth,
             center - halfHeight,
             center + halfWidth,
-            center + halfHeight
+            center + halfHeight,
         )
     }
 
@@ -97,15 +96,18 @@ object SafeAreaCalculator {
      * @param config 圓形螢幕配置
      * @return 如果視圖完全可見則返回 true
      */
-    fun isViewFullyVisible(view: View, config: CircularScreenConfig): Boolean {
+    fun isViewFullyVisible(
+        view: View,
+        config: CircularScreenConfig,
+    ): Boolean {
         val bounds = Rect()
         view.getGlobalVisibleRect(bounds)
 
         // 檢查視圖的四個角點是否都在圓形內
         return config.isPointInCircle(bounds.left.toFloat(), bounds.top.toFloat()) &&
-                config.isPointInCircle(bounds.right.toFloat(), bounds.top.toFloat()) &&
-                config.isPointInCircle(bounds.left.toFloat(), bounds.bottom.toFloat()) &&
-                config.isPointInCircle(bounds.right.toFloat(), bounds.bottom.toFloat())
+            config.isPointInCircle(bounds.right.toFloat(), bounds.top.toFloat()) &&
+            config.isPointInCircle(bounds.left.toFloat(), bounds.bottom.toFloat()) &&
+            config.isPointInCircle(bounds.right.toFloat(), bounds.bottom.toFloat())
     }
 
     /**
@@ -115,9 +117,10 @@ object SafeAreaCalculator {
      * @param config 圓形螢幕配置
      * @return 如果矩形完全可見則返回 true
      */
-    fun isRectFullyVisible(rect: RectF, config: CircularScreenConfig): Boolean {
-        return config.isRectangleInCircle(rect.left, rect.top, rect.right, rect.bottom)
-    }
+    fun isRectFullyVisible(
+        rect: RectF,
+        config: CircularScreenConfig,
+    ): Boolean = config.isRectangleInCircle(rect.left, rect.top, rect.right, rect.bottom)
 
     /**
      * 計算視圖在圓形螢幕內的最佳位置
@@ -137,18 +140,19 @@ object SafeAreaCalculator {
         viewHeight: Float,
         preferredX: Float,
         preferredY: Float,
-        config: CircularScreenConfig
+        config: CircularScreenConfig,
     ): Pair<Float, Float> {
         val halfWidth = viewWidth / 2f
         val halfHeight = viewHeight / 2f
 
         // 檢查期望位置是否可行
-        val preferredRect = RectF(
-            preferredX - halfWidth,
-            preferredY - halfHeight,
-            preferredX + halfWidth,
-            preferredY + halfHeight
-        )
+        val preferredRect =
+            RectF(
+                preferredX - halfWidth,
+                preferredY - halfHeight,
+                preferredX + halfWidth,
+                preferredY + halfHeight,
+            )
 
         if (isRectFullyVisible(preferredRect, config)) {
             return Pair(preferredX, preferredY)
@@ -174,9 +178,14 @@ object SafeAreaCalculator {
         val unitY = dy / distance
 
         // 計算視圖矩形在此方向上能放置的最遠距離
-        val maxDistance = calculateMaxDistanceForRect(
-            halfWidth, halfHeight, unitX, unitY, radius
-        )
+        val maxDistance =
+            calculateMaxDistanceForRect(
+                halfWidth,
+                halfHeight,
+                unitX,
+                unitY,
+                radius,
+            )
 
         val optimalX = centerX + unitX * maxDistance
         val optimalY = centerY + unitY * maxDistance
@@ -192,15 +201,16 @@ object SafeAreaCalculator {
         halfHeight: Float,
         unitX: Float,
         unitY: Float,
-        radius: Float
+        radius: Float,
     ): Float {
         // 計算矩形四個角點相對於中心的位置
-        val corners = arrayOf(
-            Pair(-halfWidth, -halfHeight),
-            Pair(halfWidth, -halfHeight),
-            Pair(-halfWidth, halfHeight),
-            Pair(halfWidth, halfHeight)
-        )
+        val corners =
+            arrayOf(
+                Pair(-halfWidth, -halfHeight),
+                Pair(halfWidth, -halfHeight),
+                Pair(-halfWidth, halfHeight),
+                Pair(halfWidth, halfHeight),
+            )
 
         var minDistance = Float.MAX_VALUE
 
@@ -245,7 +255,7 @@ object SafeAreaCalculator {
     fun getPositionAtAngle(
         config: CircularScreenConfig,
         angleInDegrees: Float,
-        distanceRatio: Float
+        distanceRatio: Float,
     ): Pair<Float, Float> {
         val angleInRadians = Math.toRadians(angleInDegrees.toDouble())
         val distance = config.usableRadius * distanceRatio
@@ -269,7 +279,7 @@ object SafeAreaCalculator {
     fun calculateGridPositions(
         config: CircularScreenConfig,
         gridSize: Int,
-        elementSize: Float
+        elementSize: Float,
     ): List<Pair<Float, Float>> {
         val positions = mutableListOf<Pair<Float, Float>>()
         val usableArea = calculateUsableArea(config)

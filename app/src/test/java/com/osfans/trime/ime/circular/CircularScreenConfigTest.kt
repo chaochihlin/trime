@@ -4,7 +4,9 @@
 
 package com.osfans.trime.ime.circular
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.sqrt
 
@@ -15,7 +17,6 @@ import kotlin.math.sqrt
  * 區域檢查等核心功能的正確性。
  */
 class CircularScreenConfigTest {
-
     @Test
     fun `測試預設配置數值正確`() {
         val config = CircularScreenConfig()
@@ -37,10 +38,11 @@ class CircularScreenConfigTest {
 
     @Test
     fun `測試點在圓形內的判斷`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 10
-        ) // usableRadius = 90
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 10,
+            ) // usableRadius = 90
 
         // 測試圓心點
         assertTrue(config.isPointInCircle(100f, 100f))
@@ -51,32 +53,41 @@ class CircularScreenConfigTest {
 
         // 測試對角線方向的點
         val diagonalDistance = 90f / sqrt(2f) // 約 63.64
-        assertTrue(config.isPointInCircle(
-            100f + diagonalDistance,
-            100f + diagonalDistance
-        ))
-        assertFalse(config.isPointInCircle(
-            100f + diagonalDistance + 1f,
-            100f + diagonalDistance + 1f
-        ))
+        assertTrue(
+            config.isPointInCircle(
+                100f + diagonalDistance,
+                100f + diagonalDistance,
+            ),
+        )
+        assertFalse(
+            config.isPointInCircle(
+                100f + diagonalDistance + 1f,
+                100f + diagonalDistance + 1f,
+            ),
+        )
     }
 
     @Test
     fun `測試矩形完全在圓形內的判斷`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 10
-        ) // usableRadius = 90, center = (100, 100)
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 10,
+            ) // usableRadius = 90, center = (100, 100)
 
         // 測試小矩形在圓心附近
         assertTrue(config.isRectangleInCircle(95f, 95f, 105f, 105f))
 
         // 測試較大矩形，四個角點都在圓內
         val halfSide = 90f / sqrt(2f) - 5f // 確保在圓內
-        assertTrue(config.isRectangleInCircle(
-            100f - halfSide, 100f - halfSide,
-            100f + halfSide, 100f + halfSide
-        ))
+        assertTrue(
+            config.isRectangleInCircle(
+                100f - halfSide,
+                100f - halfSide,
+                100f + halfSide,
+                100f + halfSide,
+            ),
+        )
 
         // 測試超出圓形的矩形
         assertFalse(config.isRectangleInCircle(50f, 50f, 150f, 150f))
@@ -99,10 +110,11 @@ class CircularScreenConfigTest {
 
     @Test
     fun `測試安全觸控區域判斷`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 10
-        )
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 10,
+            )
 
         // 測試圓心區域（應該是安全的）
         assertTrue(config.isInSafeTouchArea(100f, 100f))
@@ -138,10 +150,11 @@ class CircularScreenConfigTest {
 
     @Test
     fun `測試邊界條件`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 100,
-            safeMargin = 0
-        ) // usableRadius = 50
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 100,
+                safeMargin = 0,
+            ) // usableRadius = 50
 
         // 測試零尺寸矩形
         assertTrue(config.isRectangleInCircle(50f, 50f, 50f, 50f))

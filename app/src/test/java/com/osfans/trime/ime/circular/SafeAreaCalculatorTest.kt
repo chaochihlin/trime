@@ -5,7 +5,9 @@
 package com.osfans.trime.ime.circular
 
 import android.graphics.RectF
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.sqrt
 
@@ -16,13 +18,13 @@ import kotlin.math.sqrt
  * 最佳位置計算、網格佈局等核心功能。
  */
 class SafeAreaCalculatorTest {
-
     @Test
     fun `測試可用矩形區域計算`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 0
-        ) // usableRadius = 100, center = (100, 100)
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 0,
+            ) // usableRadius = 100, center = (100, 100)
 
         val usableArea = SafeAreaCalculator.calculateUsableArea(config)
 
@@ -39,18 +41,23 @@ class SafeAreaCalculatorTest {
         assertEquals(expectedBottom, usableArea.bottom, 0.01f)
 
         // 驗證計算出的矩形確實在圓內
-        assertTrue(config.isRectangleInCircle(
-            usableArea.left, usableArea.top,
-            usableArea.right, usableArea.bottom
-        ))
+        assertTrue(
+            config.isRectangleInCircle(
+                usableArea.left,
+                usableArea.top,
+                usableArea.right,
+                usableArea.bottom,
+            ),
+        )
     }
 
     @Test
     fun `測試指定長寬比的可用區域計算`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 0
-        ) // usableRadius = 100
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 0,
+            ) // usableRadius = 100
 
         // 測試正方形（長寬比 1:1）
         val squareArea = SafeAreaCalculator.calculateUsableAreaWithAspectRatio(config, 1.0f)
@@ -65,26 +72,39 @@ class SafeAreaCalculatorTest {
         assertEquals(0.5f, tallArea.width() / tallArea.height(), 0.01f)
 
         // 驗證計算出的矩形都在圓內
-        assertTrue(config.isRectangleInCircle(
-            squareArea.left, squareArea.top,
-            squareArea.right, squareArea.bottom
-        ))
-        assertTrue(config.isRectangleInCircle(
-            wideArea.left, wideArea.top,
-            wideArea.right, wideArea.bottom
-        ))
-        assertTrue(config.isRectangleInCircle(
-            tallArea.left, tallArea.top,
-            tallArea.right, tallArea.bottom
-        ))
+        assertTrue(
+            config.isRectangleInCircle(
+                squareArea.left,
+                squareArea.top,
+                squareArea.right,
+                squareArea.bottom,
+            ),
+        )
+        assertTrue(
+            config.isRectangleInCircle(
+                wideArea.left,
+                wideArea.top,
+                wideArea.right,
+                wideArea.bottom,
+            ),
+        )
+        assertTrue(
+            config.isRectangleInCircle(
+                tallArea.left,
+                tallArea.top,
+                tallArea.right,
+                tallArea.bottom,
+            ),
+        )
     }
 
     @Test
     fun `測試矩形可見性檢查`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 10
-        ) // usableRadius = 90
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 10,
+            ) // usableRadius = 90
 
         // 測試完全在圓內的小矩形
         val smallRect = RectF(95f, 95f, 105f, 105f)
@@ -101,49 +121,56 @@ class SafeAreaCalculatorTest {
 
     @Test
     fun `測試最佳位置計算`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 10
-        ) // usableRadius = 90, center = (100, 100)
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 10,
+            ) // usableRadius = 90, center = (100, 100)
 
         // 測試期望位置已經是最佳的情況
-        val (optimalX1, optimalY1) = SafeAreaCalculator.calculateOptimalPosition(
-            viewWidth = 20f,
-            viewHeight = 20f,
-            preferredX = 100f,
-            preferredY = 100f,
-            config = config
-        )
+        val (optimalX1, optimalY1) =
+            SafeAreaCalculator.calculateOptimalPosition(
+                viewWidth = 20f,
+                viewHeight = 20f,
+                preferredX = 100f,
+                preferredY = 100f,
+                config = config,
+            )
         assertEquals(100f, optimalX1, 0.01f)
         assertEquals(100f, optimalY1, 0.01f)
 
         // 測試需要調整位置的情況（期望位置會導致視圖超出圓形）
-        val (optimalX2, optimalY2) = SafeAreaCalculator.calculateOptimalPosition(
-            viewWidth = 40f,
-            viewHeight = 40f,
-            preferredX = 180f, // 太靠右
-            preferredY = 100f,
-            config = config
-        )
+        val (optimalX2, optimalY2) =
+            SafeAreaCalculator.calculateOptimalPosition(
+                viewWidth = 40f,
+                viewHeight = 40f,
+                preferredX = 180f, // 太靠右
+                preferredY = 100f,
+                config = config,
+            )
 
         // 最佳位置應該比期望位置更靠近圓心
         assertTrue(optimalX2 < 180f)
         assertEquals(100f, optimalY2, 0.01f)
 
         // 驗證計算出的位置確實能讓視圖完全在圓內
-        val resultRect = RectF(
-            optimalX2 - 20f, optimalY2 - 20f,
-            optimalX2 + 20f, optimalY2 + 20f
-        )
+        val resultRect =
+            RectF(
+                optimalX2 - 20f,
+                optimalY2 - 20f,
+                optimalX2 + 20f,
+                optimalY2 + 20f,
+            )
         assertTrue(SafeAreaCalculator.isRectFullyVisible(resultRect, config))
     }
 
     @Test
     fun `測試角度位置計算`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 0
-        ) // usableRadius = 100, center = (100, 100)
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 0,
+            ) // usableRadius = 100, center = (100, 100)
 
         // 測試 0 度（正右方）
         val (x0, y0) = SafeAreaCalculator.getPositionAtAngle(config, 0f, 1.0f)
@@ -173,17 +200,19 @@ class SafeAreaCalculatorTest {
 
     @Test
     fun `測試網格位置計算`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 200,
-            safeMargin = 10
-        ) // usableRadius = 90
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 200,
+                safeMargin = 10,
+            ) // usableRadius = 90
 
         // 測試 3x3 網格
-        val gridPositions = SafeAreaCalculator.calculateGridPositions(
-            config = config,
-            gridSize = 3,
-            elementSize = 20f
-        )
+        val gridPositions =
+            SafeAreaCalculator.calculateGridPositions(
+                config = config,
+                gridSize = 3,
+                elementSize = 20f,
+            )
 
         // 應該生成 9 個位置（某些位置可能因為超出圓形而被排除）
         assertTrue(gridPositions.size <= 9)
@@ -195,11 +224,12 @@ class SafeAreaCalculatorTest {
         }
 
         // 測試 1x1 網格（應該只有圓心位置）
-        val singlePosition = SafeAreaCalculator.calculateGridPositions(
-            config = config,
-            gridSize = 1,
-            elementSize = 20f
-        )
+        val singlePosition =
+            SafeAreaCalculator.calculateGridPositions(
+                config = config,
+                gridSize = 1,
+                elementSize = 20f,
+            )
         assertEquals(1, singlePosition.size)
         val (centerX, centerY) = singlePosition.first()
         assertEquals(config.centerX, centerX, 5f) // 允許一些誤差
@@ -208,10 +238,11 @@ class SafeAreaCalculatorTest {
 
     @Test
     fun `測試邊界條件和異常處理`() {
-        val config = CircularScreenConfig(
-            screenDiameter = 100,
-            safeMargin = 40
-        ) // usableRadius = 10，非常小的可用區域
+        val config =
+            CircularScreenConfig(
+                screenDiameter = 100,
+                safeMargin = 40,
+            ) // usableRadius = 10，非常小的可用區域
 
         // 測試極小可用區域的情況
         val tinyUsableArea = SafeAreaCalculator.calculateUsableArea(config)
@@ -219,13 +250,14 @@ class SafeAreaCalculatorTest {
         assertTrue(tinyUsableArea.height() > 0)
 
         // 測試大視圖在小圓形中的位置計算
-        val (optimalX, optimalY) = SafeAreaCalculator.calculateOptimalPosition(
-            viewWidth = 100f, // 比可用區域大很多
-            viewHeight = 100f,
-            preferredX = 50f,
-            preferredY = 50f,
-            config = config
-        )
+        val (optimalX, optimalY) =
+            SafeAreaCalculator.calculateOptimalPosition(
+                viewWidth = 100f, // 比可用區域大很多
+                viewHeight = 100f,
+                preferredX = 50f,
+                preferredY = 50f,
+                config = config,
+            )
 
         // 應該返回圓心位置（最佳的妥協方案）
         assertEquals(config.centerX, optimalX, 5f)
@@ -237,13 +269,14 @@ class SafeAreaCalculatorTest {
         val config = CircularScreenConfig(screenDiameter = 200, safeMargin = 0)
 
         // 測試零尺寸視圖
-        val (x, y) = SafeAreaCalculator.calculateOptimalPosition(
-            viewWidth = 0f,
-            viewHeight = 0f,
-            preferredX = 100f,
-            preferredY = 100f,
-            config = config
-        )
+        val (x, y) =
+            SafeAreaCalculator.calculateOptimalPosition(
+                viewWidth = 0f,
+                viewHeight = 0f,
+                preferredX = 100f,
+                preferredY = 100f,
+                config = config,
+            )
         assertEquals(100f, x, 0.01f)
         assertEquals(100f, y, 0.01f)
 

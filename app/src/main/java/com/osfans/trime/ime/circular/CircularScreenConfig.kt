@@ -18,10 +18,14 @@ import kotlin.math.sqrt
  * @param crownPosition 錶冠位置（0.0-1.0），影響可觸控區域的設計
  */
 data class CircularScreenConfig(
-    val screenDiameter: Int = 360,           // 預設 360px 直徑（常見手錶螢幕尺寸）
-    val safeMargin: Int = 20,                // 預設 20px 安全邊距
-    val chinHeight: Int = 30,                // 預設 30px 下巴高度
-    val crownPosition: Float = 0.3f          // 預設錶冠在 30% 位置
+    // 預設 360px 直徑（常見手錶螢幕尺寸）
+    val screenDiameter: Int = 360,
+    // 預設 20px 安全邊距
+    val safeMargin: Int = 20,
+    // 預設 30px 下巴高度
+    val chinHeight: Int = 30,
+    // 預設錶冠在 30% 位置
+    val crownPosition: Float = 0.3f,
 ) {
     /**
      * 可用半徑 = (螢幕直徑 / 2) - 安全邊距
@@ -45,7 +49,10 @@ data class CircularScreenConfig(
      * @param y Y 座標
      * @return 如果點在圓形內則返回 true
      */
-    fun isPointInCircle(x: Float, y: Float): Boolean {
+    fun isPointInCircle(
+        x: Float,
+        y: Float,
+    ): Boolean {
         val dx = x - centerX
         val dy = y - centerY
         return sqrt(dx * dx + dy * dy) <= usableRadius
@@ -60,12 +67,17 @@ data class CircularScreenConfig(
      * @param bottom 矩形下邊界
      * @return 如果矩形完全在圓形內則返回 true
      */
-    fun isRectangleInCircle(left: Float, top: Float, right: Float, bottom: Float): Boolean {
+    fun isRectangleInCircle(
+        left: Float,
+        top: Float,
+        right: Float,
+        bottom: Float,
+    ): Boolean {
         // 檢查矩形四個角點是否都在圓形內
         return isPointInCircle(left, top) &&
-                isPointInCircle(right, top) &&
-                isPointInCircle(left, bottom) &&
-                isPointInCircle(right, bottom)
+            isPointInCircle(right, top) &&
+            isPointInCircle(left, bottom) &&
+            isPointInCircle(right, bottom)
     }
 
     /**
@@ -75,7 +87,10 @@ data class CircularScreenConfig(
      * @param y Y 座標
      * @return 距離中心點的距離
      */
-    fun distanceFromCenter(x: Float, y: Float): Float {
+    fun distanceFromCenter(
+        x: Float,
+        y: Float,
+    ): Float {
         val dx = x - centerX
         val dy = y - centerY
         return sqrt(dx * dx + dy * dy)
@@ -88,7 +103,10 @@ data class CircularScreenConfig(
      * @param y Y 座標
      * @return 如果在安全觸控區域內則返回 true
      */
-    fun isInSafeTouchArea(x: Float, y: Float): Boolean {
+    fun isInSafeTouchArea(
+        x: Float,
+        y: Float,
+    ): Boolean {
         if (!isPointInCircle(x, y)) return false
 
         // 避開錶冠區域（右側一定範圍）
@@ -109,23 +127,26 @@ data class CircularScreenConfig(
  */
 object CircularScreenPresets {
     /** 標準 360px 手錶螢幕 */
-    val STANDARD_360 = CircularScreenConfig(
-        screenDiameter = 360,
-        safeMargin = 20,
-        chinHeight = 30
-    )
+    val STANDARD_360 =
+        CircularScreenConfig(
+            screenDiameter = 360,
+            safeMargin = 20,
+            chinHeight = 30,
+        )
 
     /** 較小的 320px 手錶螢幕 */
-    val COMPACT_320 = CircularScreenConfig(
-        screenDiameter = 320,
-        safeMargin = 18,
-        chinHeight = 25
-    )
+    val COMPACT_320 =
+        CircularScreenConfig(
+            screenDiameter = 320,
+            safeMargin = 18,
+            chinHeight = 25,
+        )
 
     /** 較大的 480px 手錶螢幕 */
-    val LARGE_480 = CircularScreenConfig(
-        screenDiameter = 480,
-        safeMargin = 25,
-        chinHeight = 40
-    )
+    val LARGE_480 =
+        CircularScreenConfig(
+            screenDiameter = 480,
+            safeMargin = 25,
+            chinHeight = 40,
+        )
 }

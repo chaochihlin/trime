@@ -431,9 +431,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         if (isRoundScreen() && inputDeviceManager.isVirtualKeyboard) {
             // 圓形螢幕特殊處理：強制全螢幕
             outInsets.apply {
-                contentTopInsets = 0  // 佔用整個螢幕
-                visibleTopInsets = 0  // 可見區域從頂部開始
-                touchableInsets = Insets.TOUCHABLE_INSETS_FRAME  // 整個框架可觸摸
+                contentTopInsets = 0 // 佔用整個螢幕
+                visibleTopInsets = 0 // 可見區域從頂部開始
+                touchableInsets = Insets.TOUCHABLE_INSETS_FRAME // 整個框架可觸摸
             }
         } else if (inputDeviceManager.isVirtualKeyboard) {
             outInsets.apply {
@@ -456,8 +456,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         val displayMetrics = resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
-        return (screenWidth in 300..500) && (screenHeight in 300..500) &&
-               kotlin.math.abs(screenWidth - screenHeight) < 50
+        return (screenWidth in 300..500) &&
+            (screenHeight in 300..500) &&
+            kotlin.math.abs(screenWidth - screenHeight) < 50
     }
 
     private fun applyFullScreenHeight() {

@@ -6,13 +6,8 @@ package com.osfans.trime.util
 
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.util.SparseArray
 import android.view.KeyEvent
-import androidx.annotation.IdRes
-import androidx.navigation.NavDeepLinkBuilder
-import com.osfans.trime.R
-import com.osfans.trime.ui.main.PrefMainActivity
 import timber.log.Timber
 
 object AppUtils {
@@ -44,12 +39,5 @@ object AppUtils {
             }
         } ?: false
 
-    fun launchMainActivity(context: Context) {
-        context.startActivity<PrefMainActivity> {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-        }
-    }
-
-    // 手錶裝置不需要複雜的導航功能，移除 launchMainToDest 和 launchMainToSchemaList
-    // 所有功能都通過簡化的 PrefMainActivity 處理
+    // 手錶裝置不需要設定介面，移除所有相關功能
 }

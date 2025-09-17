@@ -27,7 +27,7 @@ import splitties.views.setPaddingDp
  * @param theme 主題配置物件，控制候選字的視覺樣式
  */
 open class CompactCandidateViewAdapter(
-    val theme: Theme,
+    var theme: Theme?,
 ) : BaseQuickAdapter<CandidateItem, CandidateViewHolder>() {
     /** 是否為最後一頁候選字 */
     var isLastPage: Boolean = false
@@ -79,10 +79,11 @@ open class CompactCandidateViewAdapter(
         parent: ViewGroup,
         viewType: Int,
     ): CandidateViewHolder {
-        val ui = CandidateItemUi(context, theme)
+        val currentTheme = theme ?: throw IllegalStateException("Theme cannot be null when creating view holder")
+        val ui = CandidateItemUi(context, currentTheme)
         ui.root.apply {
             minimumWidth = dp(40)
-            val size = theme.generalStyle.candidatePadding
+            val size = currentTheme.generalStyle.candidatePadding
             setPaddingDp(size, 0, size, 0)
             layoutParams = ViewGroup.MarginLayoutParams(wrapContent, matchParent)
         }
@@ -104,7 +105,7 @@ open class CompactCandidateViewAdapter(
         item: CandidateItem?,
     ) {
         item ?: return
-        val isHighlighted = theme.generalStyle.candidateUseCursor && position == highlightedIdx
+        val isHighlighted = theme?.generalStyle?.candidateUseCursor == true && position == highlightedIdx
         val obtainComment = items.any { it.comment.isNotEmpty() }
         holder.ui.update(item, isHighlighted, obtainComment)
         holder.text = item.text
@@ -113,5 +114,35 @@ open class CompactCandidateViewAdapter(
         holder.ui.root.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             // 簡化版本不需要 flexGrow 和 minWidth 設定
         }
+    }
+
+    /**
+     * 更新候選字列表資料 (T9簡化版本)
+     */
+    fun updateCandidates(
+        list: List<CandidateItem>,
+        previous: Int,
+        isLastPage: Boolean,
+    ) {
+        this.isLastPage = isLastPage
+        this.previous = previous
+        this.highlightedIdx = -1
+        super.submitList(list)
+    }
+
+    /**
+     * 更新主題
+     */
+    fun updateTheme(newTheme: Theme?) {
+        this.theme = newTheme
+        notifyDataSetChanged()
+    }
+
+    /**
+     * 設置適配器啟用狀態
+     */
+    fun setEnabled(enabled: Boolean) {
+        // 這裡可以實現啟用/禁用邏輯
+        notifyDataSetChanged()
     }
 }

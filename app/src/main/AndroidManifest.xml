@@ -58,11 +58,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <!-- Settings activity -->
-        <activity
-            android:name=".ui.main.PrefMainActivity"
-            android:exported="true"
-            android:launchMode="singleTask" />
 
 
         <!-- Input test activity -->

@@ -58,7 +58,7 @@ object InputFeedbackManager {
         longPress: Boolean = false,
     ) {
         if (!vibrateOnKeyPress) return
-        
+
         val duration: Long = vibrationDuration.toLong()
         val hfc =
             if (longPress) {

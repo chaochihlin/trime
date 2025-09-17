@@ -26,7 +26,10 @@ import com.osfans.trime.daemon.RimeDaemon
 import com.osfans.trime.data.prefs.AppPrefs
 import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -183,7 +186,12 @@ class KeyboardView(
     }
 
     private val lifecycleScope by lazy {
-        findViewTreeLifecycleOwner()?.lifecycleScope!!
+        try {
+            findViewTreeLifecycleOwner()?.lifecycleScope ?: throw IllegalStateException("No lifecycle owner found")
+        } catch (e: Exception) {
+            // 創建一個安全的 CoroutineScope 作為備用
+            CoroutineScope(Dispatchers.Main + SupervisorJob())
+        }
     }
 
     private var longPressJob: Job? = null
@@ -214,7 +222,6 @@ class KeyboardView(
                 }
             }
     }
-
 
     init {
         computeProximityThreshold(keyboard)
@@ -354,7 +361,6 @@ class KeyboardView(
                 }
             },
         ).apply { setIsLongpressEnabled(false) }
-
 
     /**
      * 設定鍵盤修飾鍵的狀態

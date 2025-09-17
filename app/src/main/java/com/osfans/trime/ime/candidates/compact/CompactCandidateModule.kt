@@ -14,8 +14,8 @@ import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.osfans.trime.R
 import com.osfans.trime.core.CandidateItem
 import com.osfans.trime.core.RimeProto

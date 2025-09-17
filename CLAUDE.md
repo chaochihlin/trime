@@ -116,8 +116,15 @@ make translate
 
 ## 目標裝置與架構
 
-- **主要目標**: Android Wear OS (手錶裝置)
+- **主要目標**: 智慧手錶裝置（非標準 Wear OS）
 - **架構**: armeabi-v7a (32位元 ARM 架構)
+- **Android 版本**: Android 9（API level 28）
+- **螢幕特性**: 固定圓形螢幕，無需兼容方形或其他形狀
 - **建置命令**: 使用 `BUILD_ABI=armeabi-v7a ./gradlew assembleDebug` 針對特定架構建置
 - **部署**: ✅ 已成功部署優化版本至手錶裝置
 - **效能監控**: 使用 `./test_performance.sh` 和 `./test_general_trime.sh` 進行即時監控
+
+### 手錶設備特性
+- **非標準 Wear OS**: 不支援標準 WearOS API 檢測方法
+- **圓形螢幕檢測**: 使用螢幕尺寸和固定配置方式而非系統 API
+- **兼容性**: 專為此特定手錶型號優化，無需支援其他手錶形狀

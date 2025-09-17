@@ -20,7 +20,6 @@ import com.osfans.trime.ime.bar.ui.ToolButton
 import com.osfans.trime.ime.broadcast.InputBroadcastReceiver
 import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.window.BoardWindow
-import com.osfans.trime.util.AppUtils
 import kotlinx.coroutines.launch
 import splitties.dimensions.dp
 import splitties.views.dsl.core.add
@@ -100,7 +99,8 @@ class SwitchOptionWindow(
 
     private val settingsButton by lazy {
         ToolButton(context, R.drawable.ic_baseline_settings_24).apply {
-            setOnClickListener { AppUtils.launchMainActivity(context) }
+            // 手錶裝置不提供設定介面
+            setOnClickListener { /* 無操作 */ }
         }
     }
 

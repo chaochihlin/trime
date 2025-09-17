@@ -40,7 +40,7 @@ class InputTestActivity : Activity() {
         // 方法 2: 設定全螢幕 flag
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
+            WindowManager.LayoutParams.FLAG_FULLSCREEN,
         )
 
         // 方法 3: 隱藏狀態列和導航列
@@ -55,11 +55,11 @@ class InputTestActivity : Activity() {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
             )
         }
 

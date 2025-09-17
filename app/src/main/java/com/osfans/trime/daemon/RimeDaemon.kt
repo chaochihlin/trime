@@ -4,9 +4,7 @@
 
 package com.osfans.trime.daemon
 
-import android.graphics.Color
-import androidx.core.app.NotificationCompat
-import com.osfans.trime.R
+import android.util.Log
 import com.osfans.trime.TrimeApplication
 import com.osfans.trime.core.Rime
 import com.osfans.trime.core.RimeApi
@@ -14,15 +12,12 @@ import com.osfans.trime.core.RimeLifecycle
 import com.osfans.trime.core.RimeMessage
 import com.osfans.trime.core.lifecycleScope
 import com.osfans.trime.core.whenReady
-import com.osfans.trime.util.appContext
-import com.osfans.trime.util.createNotificationChannel
 import com.osfans.trime.util.subprocess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import splitties.systemservices.notificationManager
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -132,15 +127,9 @@ object RimeDaemon {
      */
     fun getFirstSessionOrNull() = sessions.firstNotNullOfOrNull { it.value }
 
-    private const val CHANNEL_ID = "rime-daemon"
-    private const val MESSAGE_ID = 2331
-    private var restartId = 0
+    private const val TAG = "RimeDaemon"
 
     init {
-        createNotificationChannel(
-            CHANNEL_ID,
-            appContext.getString(R.string.rime_daemon),
-        )
         TrimeApplication.getInstance().coroutineScope.launch {
             realRime.messageFlow.collect {
                 handleRimeMessage(it)
@@ -148,40 +137,21 @@ object RimeDaemon {
         }
     }
 
-    private inline fun sendNotification(
-        id: Int,
-        buildAction: NotificationCompat.Builder.() -> Unit,
-    ) {
-        val builder =
-            NotificationCompat
-                .Builder(appContext, CHANNEL_ID)
-                .setContentTitle(appContext.getString(R.string.rime_daemon))
-        builder.buildAction()
-        builder.build().let { notificationManager.notify(id, it) }
-    }
-
     /**
      * Restart Rime instance to deploy while keep the session
      */
     fun restartRime(fullCheck: Boolean = false) =
         lock.withLock {
-            val id = restartId++
             if (!fullCheck) {
-                sendNotification(id) {
-                    setSmallIcon(R.drawable.ic_baseline_sync_24)
-                    setContentTitle(appContext.getString(R.string.rime_daemon))
-                    setContentText(appContext.getString(R.string.restarting_rime))
-                    setOngoing(true)
-                    setProgress(100, 0, true)
-                    setPriority(NotificationCompat.PRIORITY_HIGH)
-                }
+                Log.i(TAG, "Restarting RIME engine...")
+            } else {
+                Log.i(TAG, "Restarting RIME engine with full check...")
             }
             realRime.finalize()
             realRime.startup(fullCheck)
             TrimeApplication.getInstance().coroutineScope.launch {
-                // cancel notification on ready
                 realRime.lifecycle.whenReady {
-                    notificationManager.cancel(id)
+                    Log.i(TAG, "RIME engine restart completed")
                 }
             }
         }
@@ -190,34 +160,14 @@ object RimeDaemon {
         if (it is RimeMessage.DeployMessage) {
             when (it.data) {
                 RimeMessage.DeployMessage.State.Start -> {
-                    sendNotification(MESSAGE_ID) {
-                        setSmallIcon(R.drawable.ic_baseline_sync_24)
-                        setColor(Color.GRAY)
-                        setContentText(appContext.getString(R.string.deploy_progress))
-                        setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        setTimeoutAfter(2000L)
-                    }
+                    Log.i(TAG, "RIME deploy started")
                     withContext(Dispatchers.IO) { subprocess("logcat", "--clear") }
                 }
                 RimeMessage.DeployMessage.State.Success -> {
-                    sendNotification(MESSAGE_ID + 1) {
-                        setSmallIcon(R.drawable.ic_baseline_sync_24)
-                        setColor(Color.GREEN)
-                        setContentText(appContext.getString(R.string.deploy_finish))
-                        setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        setTimeoutAfter(2000L)
-                    }
+                    Log.i(TAG, "RIME deploy completed successfully")
                 }
                 RimeMessage.DeployMessage.State.Failure -> {
-                    // Simplified failure notification for watch optimization
-                    sendNotification(MESSAGE_ID + 2) {
-                        setSmallIcon(R.drawable.ic_baseline_warning_24)
-                        setColor(Color.YELLOW)
-                        setContentText(appContext.getString(R.string.deploy_failure))
-                        setOngoing(false)
-                        setAutoCancel(true)
-                        setPriority(NotificationCompat.PRIORITY_HIGH)
-                    }
+                    Log.w(TAG, "RIME deploy failed")
                 }
             }
         }
