@@ -117,9 +117,17 @@ class T9InputEventHandler(
                 // 提交當前組合
                 rime.commitComposition()
 
-                // 在主線程更新UI
+                // 在主線程更新UI並收合鍵盤
                 coroutineScope.launch {
                     clearInputState()
+
+                    // 收合虛擬鍵盤
+                    try {
+                        Timber.d("$TAG: Hiding keyboard after confirm")
+                        service.requestHideSelf(0)
+                    } catch (e: Exception) {
+                        Timber.e(e, "$TAG: Error hiding keyboard")
+                    }
                 }
             }
         } catch (e: Exception) {
