@@ -4,7 +4,6 @@
 
 package com.osfans.trime.daemon
 
-import android.util.Log
 import com.osfans.trime.TrimeApplication
 import com.osfans.trime.core.Rime
 import com.osfans.trime.core.RimeApi
@@ -18,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -102,31 +102,33 @@ object RimeDaemon {
                 // 記憶體監控 - 手錶設備記憶體限制分析
                 val runtime = Runtime.getRuntime()
                 val totalMemory = runtime.totalMemory() / 1024 / 1024 // MB
-                val freeMemory = runtime.freeMemory() / 1024 / 1024   // MB
+                val freeMemory = runtime.freeMemory() / 1024 / 1024 // MB
                 val usedMemory = totalMemory - freeMemory
 
-                Log.i(TAG, "記憶體狀態 - 總計: ${totalMemory}MB, 已用: ${usedMemory}MB, 可用: ${freeMemory}MB")
+                Timber.i("記憶體狀態 - 總計: ${totalMemory}MB, 已用: ${usedMemory}MB, 可用: ${freeMemory}MB")
 
                 // 手錶設備記憶體不足警告閾值 (可用記憶體低於 50MB)
                 if (freeMemory < 50) {
-                    Log.w(TAG, "記憶體不足警告: 可用記憶體僅 ${freeMemory}MB，可能影響 RIME 引擎啟動")
+                    Timber.w("記憶體不足警告: 可用記憶體僅 ${freeMemory}MB，可能影響 RIME 引擎啟動")
                 }
 
                 try {
-                    Log.i(TAG, "開始啟動 RIME 引擎 (針對手錶設備優化)")
+                    Timber.i("開始啟動 RIME 引擎 (針對手錶設備優化)")
                     realRime.startup(false)
 
                     // 記錄啟動後記憶體狀態
                     val afterFreeMemory = runtime.freeMemory() / 1024 / 1024
-                    Log.i(TAG, "RIME 引擎啟動完成 - 剩餘可用記憶體: ${afterFreeMemory}MB")
-
+                    Timber.i("RIME 引擎啟動完成 - 剩餘可用記憶體: ${afterFreeMemory}MB")
                 } catch (e: Exception) {
                     val currentFreeMemory = runtime.freeMemory() / 1024 / 1024
-                    Log.w(TAG, "RIME 引擎啟動失敗: ${e.message}, 當前可用記憶體: ${currentFreeMemory}MB", e)
+                    Timber.w(
+                        e,
+                        "RIME 引擎啟動失敗: ${e.message}, 當前可用記憶體: ${currentFreeMemory}MB"
+                    )
 
                     // 針對手錶設備記憶體限制的建議
                     if (currentFreeMemory < 30) {
-                        Log.w(TAG, "建議: 手錶設備記憶體嚴重不足，請重啟設備或關閉其他應用程式")
+                        Timber.w("建議: 手錶設備記憶體嚴重不足，請重啟設備或關閉其他應用程式")
                     }
                     // 不重新拋出異常，讓應用程式繼續運行以提供基本功能
                 }
@@ -149,8 +151,6 @@ object RimeDaemon {
      */
     fun getFirstSessionOrNull() = sessions.firstNotNullOfOrNull { it.value }
 
-    private const val TAG = "RimeDaemon"
-
     init {
         TrimeApplication.getInstance().coroutineScope.launch {
             realRime.messageFlow.collect {
@@ -165,15 +165,15 @@ object RimeDaemon {
     fun restartRime(fullCheck: Boolean = false) =
         lock.withLock {
             if (!fullCheck) {
-                Log.i(TAG, "Restarting RIME engine...")
+                Timber.i("Restarting RIME engine...")
             } else {
-                Log.i(TAG, "Restarting RIME engine with full check...")
+                Timber.i("Restarting RIME engine with full check...")
             }
             realRime.finalize()
             realRime.startup(fullCheck)
             TrimeApplication.getInstance().coroutineScope.launch {
                 realRime.lifecycle.whenReady {
-                    Log.i(TAG, "RIME engine restart completed")
+                    Timber.i("RIME engine restart completed")
                 }
             }
         }
@@ -182,14 +182,14 @@ object RimeDaemon {
         if (it is RimeMessage.DeployMessage) {
             when (it.data) {
                 RimeMessage.DeployMessage.State.Start -> {
-                    Log.i(TAG, "RIME deploy started")
+                    Timber.i("RIME deploy started")
                     withContext(Dispatchers.IO) { subprocess("logcat", "--clear") }
                 }
                 RimeMessage.DeployMessage.State.Success -> {
-                    Log.i(TAG, "RIME deploy completed successfully")
+                    Timber.i("RIME deploy completed successfully")
                 }
                 RimeMessage.DeployMessage.State.Failure -> {
-                    Log.w(TAG, "RIME deploy failed")
+                    Timber.w("RIME deploy failed")
                 }
             }
         }
