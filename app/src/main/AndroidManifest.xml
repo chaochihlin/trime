@@ -65,12 +65,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
             android:name=".ui.test.InputTestActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
-
-
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
 
         <!-- Using an activity alias to disable/enable the app icon in the launcher -->
-        <activity-alias
+        <!--activity-alias
             android:name="com.osfans.trime.PrefLauncherAlias"
             android:exported="true"
             android:label="@string/trime_app_name"
@@ -82,8 +85,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity-alias>
-
-        <!-- All activities must be declared above <activity-alias> tag -->
+        </activity-alias -->
     </application>
 </manifest>

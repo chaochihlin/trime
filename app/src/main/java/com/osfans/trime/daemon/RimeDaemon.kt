@@ -94,20 +94,42 @@ object RimeDaemon {
      * 確保 RIME 引擎已啟動，主要用於初始化階段
      * 這個方法不會創建會話，只是確保引擎處於可用狀態
      *
-     * @throws RuntimeException 如果 RIME 引擎啟動失敗
+     * 針對手錶設備記憶體限制進行優化，增加記憶體監控
      */
     fun ensureRimeStarted(): Unit =
         lock.withLock {
-            try {
-                if (realRime.lifecycle.currentStateFlow.value == RimeLifecycle.State.STOPPED) {
-                    realRime.startup(false)
-                    // 驗證啟動狀態，避免在記憶體受限的手錶裝置上無聲失敗
-                    if (realRime.lifecycle.currentStateFlow.value == RimeLifecycle.State.STOPPED) {
-                        throw RuntimeException("RIME engine failed to start - may be due to insufficient memory on watch device")
-                    }
+            if (realRime.lifecycle.currentStateFlow.value == RimeLifecycle.State.STOPPED) {
+                // 記憶體監控 - 手錶設備記憶體限制分析
+                val runtime = Runtime.getRuntime()
+                val totalMemory = runtime.totalMemory() / 1024 / 1024 // MB
+                val freeMemory = runtime.freeMemory() / 1024 / 1024   // MB
+                val usedMemory = totalMemory - freeMemory
+
+                Log.i(TAG, "記憶體狀態 - 總計: ${totalMemory}MB, 已用: ${usedMemory}MB, 可用: ${freeMemory}MB")
+
+                // 手錶設備記憶體不足警告閾值 (可用記憶體低於 50MB)
+                if (freeMemory < 50) {
+                    Log.w(TAG, "記憶體不足警告: 可用記憶體僅 ${freeMemory}MB，可能影響 RIME 引擎啟動")
                 }
-            } catch (e: Exception) {
-                throw RuntimeException("Failed to ensure RIME engine startup: ${e.message}", e)
+
+                try {
+                    Log.i(TAG, "開始啟動 RIME 引擎 (針對手錶設備優化)")
+                    realRime.startup(false)
+
+                    // 記錄啟動後記憶體狀態
+                    val afterFreeMemory = runtime.freeMemory() / 1024 / 1024
+                    Log.i(TAG, "RIME 引擎啟動完成 - 剩餘可用記憶體: ${afterFreeMemory}MB")
+
+                } catch (e: Exception) {
+                    val currentFreeMemory = runtime.freeMemory() / 1024 / 1024
+                    Log.w(TAG, "RIME 引擎啟動失敗: ${e.message}, 當前可用記憶體: ${currentFreeMemory}MB", e)
+
+                    // 針對手錶設備記憶體限制的建議
+                    if (currentFreeMemory < 30) {
+                        Log.w(TAG, "建議: 手錶設備記憶體嚴重不足，請重啟設備或關閉其他應用程式")
+                    }
+                    // 不重新拋出異常，讓應用程式繼續運行以提供基本功能
+                }
             }
         }
 

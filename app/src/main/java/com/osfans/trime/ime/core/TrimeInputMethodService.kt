@@ -184,9 +184,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         // 確保 RIME 引擎在主題載入前啟動，以便 deployRimeConfigFile 能正常工作
         RimeDaemon.ensureRimeStarted()
 
-        SchemaManager.init("bopomofo_tw")
+        SchemaManager.init("bopomofo_t9")
         ThemeManager.init(resources.configuration)
-        postRimeJob { selectSchema("bopomofo_tw") }
+        postRimeJob { selectSchema("bopomofo_t9") }
         ThemeManager.addOnChangedListener(onThemeChangeListener)
         ColorManager.addOnChangedListener(onColorChangeListener)
         super.onCreate()

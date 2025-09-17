@@ -17,8 +17,6 @@ schema:
     7: ㄇㄋㄜㄝ 8: ㄏㄒㄠㄩ  9: ㄕㄙㄤㄥ
     0: ㄈㄌㄡㄖ
 
-  dependencies:
-    - terra_pinyin
 
 trime:
   import_preset: bopomofo_t9_watch

@@ -166,8 +166,8 @@ class KeyboardView(
      */
     fun initializeDrawingState() {
         lifecycleScope.launch {
-            showKeySymbol = !rime.run { getRuntimeOption("_hide_key_symbol") }
-            showKeyHint = !rime.run { getRuntimeOption("_hide_key_hint") }
+            showKeySymbol = !rime.runOnReady { getRuntimeOption("_hide_key_symbol") }
+            showKeyHint = !rime.runOnReady { getRuntimeOption("_hide_key_hint") }
             // 正確的預計算時機：在 RIME 選項讀取之後
             precomputeKeyRenderInfo()
             invalidateAllKeysWithBatch()
