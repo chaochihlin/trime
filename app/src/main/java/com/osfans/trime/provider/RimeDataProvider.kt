@@ -27,7 +27,6 @@ class RimeDataProvider : DocumentsProvider() {
 
         private val TEXT_EXTENSIONS =
             arrayOf(
-                "lua",
                 "yml",
                 "yaml",
             )
