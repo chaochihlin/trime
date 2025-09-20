@@ -79,14 +79,20 @@ object RimeDaemon {
 
     fun createSession(name: String): RimeSession =
         lock.withLock {
+            Timber.w("🔍 [RimeDaemon] createSession: 請求創建 session '$name'，當前sessions: ${sessions.keys}")
             if (name in sessions) {
+                Timber.w("🔍 [RimeDaemon] createSession: session '$name' 已存在，直接返回")
                 return@withLock sessions.getValue(name)
             }
-            if (realRime.lifecycle.currentStateFlow.value == RimeLifecycle.State.STOPPED) {
+            val currentState = realRime.lifecycle.currentStateFlow.value
+            Timber.w("🔍 [RimeDaemon] createSession: RIME 當前狀態: $currentState")
+            if (currentState == RimeLifecycle.State.STOPPED) {
+                Timber.w("🔍 [RimeDaemon] createSession: RIME 引擎已停止，正在啟動...")
                 realRime.startup(false)
             }
             val session = establish(name)
             sessions[name] = session
+            Timber.w("🔍 [RimeDaemon] createSession: session '$name' 創建成功，當前sessions: ${sessions.keys}")
             return@withLock session
         }
 
@@ -138,10 +144,14 @@ object RimeDaemon {
     fun destroySession(name: String): Unit =
         lock.withLock {
             if (name !in sessions) {
+                Timber.w("🔍 [RimeDaemon] destroySession: session '$name' 不存在，當前sessions: ${sessions.keys}")
                 return
             }
+            Timber.w("🔍 [RimeDaemon] destroySession: 正在銷毀 session '$name'，當前sessions: ${sessions.keys}")
             sessions -= name
+            Timber.w("🔍 [RimeDaemon] destroySession: 銷毀後剩餘sessions: ${sessions.keys}")
             if (sessions.isEmpty()) {
+                Timber.w("🔍 [RimeDaemon] destroySession: 沒有剩餘session，正在關閉RIME引擎")
                 realRime.finalize()
             }
         }
@@ -149,7 +159,11 @@ object RimeDaemon {
     /**
      * Reuse a session for remote service
      */
-    fun getFirstSessionOrNull() = sessions.firstNotNullOfOrNull { it.value }
+    fun getFirstSessionOrNull(): RimeSession? {
+        val result = sessions.firstNotNullOfOrNull { it.value }
+        Timber.d("🔍 [RimeDaemon] getFirstSessionOrNull: 當前sessions: ${sessions.keys}, 返回: ${result != null}")
+        return result
+    }
 
     init {
         TrimeApplication.getInstance().coroutineScope.launch {

@@ -38,22 +38,22 @@ class T9NumberKey
         context: Context,
         attrs: AttributeSet? = null,
     ) : LinearLayout(context, attrs) {
-        // 數字顯示TextView
-        private val numberTextView =
-            TextView(context).apply {
-                textSize = 22f
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                typeface = Typeface.DEFAULT_BOLD
-            }
-
-        // 注音提示TextView
+        // 注音提示TextView（現在作為主要顯示）
         private val hintTextView =
             TextView(context).apply {
-                textSize = 10f
-                setTextColor(Color.GRAY)
+                textSize = 18f  // 增大注音符號字體
+                setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
                 maxLines = 2
+                typeface = Typeface.DEFAULT_BOLD  // 加粗注音符號
+            }
+
+        // 數字顯示TextView（現在作為次要顯示）
+        private val numberTextView =
+            TextView(context).apply {
+                textSize = 10f  // 縮小數字字體
+                setTextColor(Color.GRAY)
+                gravity = Gravity.CENTER
             }
 
         // 背景Drawable
@@ -105,21 +105,21 @@ class T9NumberKey
             // 設置內距
             setPadding(dp(4), dp(4), dp(4), dp(4))
 
-            // 添加數字TextView
+            // 添加注音符號TextView（現在作為主要顯示，放在上方）
             addView(
-                numberTextView,
+                hintTextView,
                 LayoutParams(
                     LayoutParams.WRAP_CONTENT,
                     LayoutParams.WRAP_CONTENT,
                 ).apply {
                     gravity = Gravity.CENTER
-                    weight = 1f
+                    weight = 1f  // 給注音符號更多空間
                 },
             )
 
-            // 添加提示TextView
+            // 添加數字TextView（現在作為次要顯示，放在下方）
             addView(
-                hintTextView,
+                numberTextView,
                 LayoutParams(
                     LayoutParams.WRAP_CONTENT,
                     LayoutParams.WRAP_CONTENT,
@@ -182,17 +182,17 @@ class T9NumberKey
             this.theme = theme
 
             try {
-                // 更新數字文字顏色
+                // 更新注音符號文字顏色（現在是主要顯示）
                 val keyTextColor =
                     ColorManager.getColor("key_text_color")
                         ?: Color.WHITE
-                numberTextView.setTextColor(keyTextColor)
+                hintTextView.setTextColor(keyTextColor)
 
-                // 更新提示文字顏色
+                // 更新數字文字顏色（現在是次要顯示）
                 val hintTextColor =
                     ColorManager.getColor("hint_text_color")
                         ?: Color.GRAY
-                hintTextView.setTextColor(hintTextColor)
+                numberTextView.setTextColor(hintTextColor)
 
                 // 更新背景顏色
                 val keyBackgroundColor =
@@ -221,15 +221,15 @@ class T9NumberKey
                 }
 
                 // 更新文字大小
-                val keyTextSize = theme.generalStyle.keyTextSize.takeIf { it > 0 } ?: 22f
-                numberTextView.textSize = keyTextSize
+                val keyTextSize = theme.generalStyle.keyTextSize.takeIf { it > 0 } ?: 18f
+                hintTextView.textSize = keyTextSize  // 注音符號使用主要文字大小
 
                 val hintTextSize = theme.generalStyle.symbolTextSize.takeIf { it > 0 } ?: 10f
-                hintTextView.textSize = hintTextSize
+                numberTextView.textSize = hintTextSize  // 數字使用次要文字大小
             } catch (e: Exception) {
                 // 如果主題色彩獲取失敗，使用默認顏色
-                numberTextView.setTextColor(Color.WHITE)
-                hintTextView.setTextColor(Color.GRAY)
+                hintTextView.setTextColor(Color.WHITE)  // 注音符號為主要顯示
+                numberTextView.setTextColor(Color.GRAY)  // 數字為次要顯示
             }
         }
 

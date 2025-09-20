@@ -53,99 +53,74 @@ engine:
     - uniquifier
 
 speller:
-  alphabet: 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦㄧㄨㄩ1234567890'
-  initials: 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙ'
-  finals: 'ㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦㄧㄨㄩ'
+  alphabet: '1234567890'
   delimiter: " '"
-  max_code_length: 8
+  max_code_length: 4
   auto_select: false
   algebra:
     # 移除無效輸入
     - erase/^$/
 
-    # T9數字映射轉換規則
-    # 處理順序：先處理長序列，再處理短序列，避免衝突
-
-    # 多字符T9組合映射 - 常見注音組合
-    # 例: 123 -> ㄅ+ㄧ+ㄢ (邊), ㄉ+ㄧ+ㄢ (點)
-    - derive/123/ㄅㄧㄢ/
-    - derive/123/ㄉㄧㄢ/
-    - derive/123/ㄅㄞㄢ/
-    - derive/123/ㄉㄚㄦ/
-
-    # 89 -> 我 (ㄨㄛ)
-    - derive/89/ㄨㄛ/
-    - derive/89/ㄨㄤ/
-    - derive/89/ㄏㄠ/
-    - derive/89/ㄒㄧ/
-
-    # 15 -> 的 (ㄉㄜ)
-    - derive/15/ㄉㄜ/
-    - derive/15/ㄉㄟ/
-    - derive/15/ㄅㄨ/
-    - derive/15/ㄚㄨ/
-
-    # 單字符T9映射
+    # T9標準數字到注音映射
     # 1: ㄅㄉㄚ
-    - derive/1/ㄅ/
-    - derive/1/ㄉ/
-    - derive/1/ㄚ/
+    - derive/^1$/ㄅ/
+    - derive/^1$/ㄉ/
+    - derive/^1$/ㄚ/
 
     # 2: ㄍㄐㄞㄧ
-    - derive/2/ㄍ/
-    - derive/2/ㄐ/
-    - derive/2/ㄞ/
-    - derive/2/ㄧ/
+    - derive/^2$/ㄍ/
+    - derive/^2$/ㄐ/
+    - derive/^2$/ㄞ/
+    - derive/^2$/ㄧ/
 
     # 3: ㄓㄗㄢㄦ
-    - derive/3/ㄓ/
-    - derive/3/ㄗ/
-    - derive/3/ㄢ/
-    - derive/3/ㄦ/
+    - derive/^3$/ㄓ/
+    - derive/^3$/ㄗ/
+    - derive/^3$/ㄢ/
+    - derive/^3$/ㄦ/
 
     # 4: ㄆㄊㄛ
-    - derive/4/ㄆ/
-    - derive/4/ㄊ/
-    - derive/4/ㄛ/
+    - derive/^4$/ㄆ/
+    - derive/^4$/ㄊ/
+    - derive/^4$/ㄛ/
 
     # 5: ㄎㄑㄟㄨ
-    - derive/5/ㄎ/
-    - derive/5/ㄑ/
-    - derive/5/ㄟ/
-    - derive/5/ㄨ/
+    - derive/^5$/ㄎ/
+    - derive/^5$/ㄑ/
+    - derive/^5$/ㄟ/
+    - derive/^5$/ㄨ/
 
     # 6: ㄔㄘㄣ
-    - derive/6/ㄔ/
-    - derive/6/ㄘ/
-    - derive/6/ㄣ/
+    - derive/^6$/ㄔ/
+    - derive/^6$/ㄘ/
+    - derive/^6$/ㄣ/
 
     # 7: ㄇㄋㄜㄝ
-    - derive/7/ㄇ/
-    - derive/7/ㄋ/
-    - derive/7/ㄜ/
-    - derive/7/ㄝ/
+    - derive/^7$/ㄇ/
+    - derive/^7$/ㄋ/
+    - derive/^7$/ㄜ/
+    - derive/^7$/ㄝ/
 
     # 8: ㄏㄒㄠㄩ
-    - derive/8/ㄏ/
-    - derive/8/ㄒ/
-    - derive/8/ㄠ/
-    - derive/8/ㄩ/
+    - derive/^8$/ㄏ/
+    - derive/^8$/ㄒ/
+    - derive/^8$/ㄠ/
+    - derive/^8$/ㄩ/
 
     # 9: ㄕㄙㄤㄥ
-    - derive/9/ㄕ/
-    - derive/9/ㄙ/
-    - derive/9/ㄤ/
-    - derive/9/ㄥ/
+    - derive/^9$/ㄕ/
+    - derive/^9$/ㄙ/
+    - derive/^9$/ㄤ/
+    - derive/^9$/ㄥ/
 
     # 0: ㄈㄌㄡㄖ
-    - derive/0/ㄈ/
-    - derive/0/ㄌ/
-    - derive/0/ㄡ/
-    - derive/0/ㄖ/
+    - derive/^0$/ㄈ/
+    - derive/^0$/ㄌ/
+    - derive/^0$/ㄡ/
+    - derive/^0$/ㄖ/
 
-    # 組合規則處理
-    # 確保注音符號組合符合發音規則
-    - xform/^([ㄅ-ㄙ])([ㄧㄨㄩ]?)([ㄚ-ㄥ])([ˉˊˇˋ˙]?)$/$1$2$3$4/
+    # 支援多位數組合 - 直接將數字串作為碼表查詢
+    # 這樣就可以支援 72->你, 54->我 等等
 
 translator:
   dictionary: bopomofo_t9

@@ -7,7 +7,7 @@ package com.osfans.trime.ime.t9
 /**
  * T9輸入狀態數據類
  *
- * 封裝T9輸入過程中的所有狀態信息，包括當前數字序列、候選詞列表等。
+ * 封裝T9輸入過程中的所有狀態信息，包括當前數字序列、候選詞列表、預編輯文字等。
  */
 data class T9InputState(
     /** 當前輸入的數字序列 (如: "123") */
@@ -18,6 +18,10 @@ data class T9InputState(
     val isInputting: Boolean = false,
     /** 當前可能的注音組合列表 (用於調試和顯示) */
     val zhuyinCombinations: List<String> = emptyList(),
+    /** 預編輯文字 - 顯示在預編輯區域的文字 */
+    val preeditText: String = "",
+    /** 注音顯示文字 - 格式化後的注音符號文字 */
+    val zhuyinDisplayText: String = "",
 ) {
     /** 是否有輸入內容 */
     val hasInput: Boolean
@@ -26,6 +30,10 @@ data class T9InputState(
     /** 是否有候選詞 */
     val hasCandidates: Boolean
         get() = candidates.isNotEmpty()
+
+    /** 是否有預編輯文字 */
+    val hasPreeditText: Boolean
+        get() = preeditText.isNotEmpty()
 
     /** 重置到初始狀態 */
     fun reset(): T9InputState = T9InputState()
@@ -65,5 +73,36 @@ data class T9InputState(
         copy(
             candidates = newCandidates,
             zhuyinCombinations = newZhuyinCombinations,
+            preeditText = formatPreeditText(),
+            zhuyinDisplayText = formatZhuyinDisplayText(newZhuyinCombinations),
         )
+
+    /** 更新預編輯文字相關內容 */
+    fun updatePreeditContent(
+        newPreeditText: String = preeditText,
+        newZhuyinDisplayText: String = zhuyinDisplayText,
+    ): T9InputState =
+        copy(
+            preeditText = newPreeditText,
+            zhuyinDisplayText = newZhuyinDisplayText,
+        )
+
+    /** 格式化預編輯文字 */
+    private fun formatPreeditText(): String {
+        return if (digitSequence.isNotEmpty()) {
+            digitSequence.toCharArray().joinToString(" ")
+        } else {
+            ""
+        }
+    }
+
+    /** 格式化注音顯示文字 */
+    private fun formatZhuyinDisplayText(zhuyinList: List<String>): String {
+        return when {
+            zhuyinList.isEmpty() -> ""
+            zhuyinList.size == 1 -> zhuyinList[0]
+            zhuyinList.size <= 3 -> zhuyinList.joinToString(" / ")
+            else -> "${zhuyinList.take(2).joinToString(" / ")}..."
+        }
+    }
 }

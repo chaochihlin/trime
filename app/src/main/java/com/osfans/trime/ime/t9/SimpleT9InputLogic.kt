@@ -28,19 +28,19 @@ class SimpleT9InputLogic(
     private var currentState = T9InputState()
 
     // 狀態變更監聽器
-    private val stateListeners = mutableListOf<(T9InputState) -> Unit>()
+    private val stateListeners = mutableListOf<() -> Unit>()
 
     /**
      * 添加狀態變更監聽器
      */
-    fun addStateListener(listener: (T9InputState) -> Unit) {
+    fun addStateListener(listener: () -> Unit) {
         stateListeners.add(listener)
     }
 
     /**
      * 移除狀態變更監聽器
      */
-    fun removeStateListener(listener: (T9InputState) -> Unit) {
+    fun removeStateListener(listener: () -> Unit) {
         stateListeners.remove(listener)
     }
 
@@ -50,7 +50,7 @@ class SimpleT9InputLogic(
     private fun notifyStateChange() {
         stateListeners.forEach { listener ->
             try {
-                listener(currentState)
+                listener()
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error in state listener")
             }
@@ -66,29 +66,61 @@ class SimpleT9InputLogic(
             return
         }
 
-        Timber.d("$TAG: Processing digit: $digit")
+        Timber.d("$TAG: 將數字 '$digit' 傳遞給 Rime 引擎")
 
-        // 更新狀態 - 添加數字
-        currentState = currentState.addDigit(digit)
+        // 檢查 RIME 引擎就緒狀態和生命週期
+        val isRimeReady = rimeSession.run { isReady }
+        Timber.d("$TAG: RIME 引擎就緒狀態: $isRimeReady")
 
-        // 生成候選詞
-        updateCandidatesAsync()
+        // 檢查 RIME 生命週期狀態
+        val lifecycleState = rimeSession.run { stateFlow.replayCache.lastOrNull() }
+        Timber.d("$TAG: RIME 生命週期狀態: $lifecycleState")
+
+        if (!isRimeReady) {
+            Timber.w("$TAG: RIME 引擎尚未就緒，無法處理按鍵輸入")
+            return
+        }
+
+        coroutineScope.launch {
+            try {
+                Timber.d("$TAG: 準備呼叫 runOnReady...")
+                rimeSession.runOnReady {
+                    Timber.d("$TAG: ✅ 成功進入 runOnReady 回調")
+
+                    // 檢查 RIME 引擎狀態
+                    val currentSchema = selectedSchemaId()
+                    Timber.d("$TAG: RIME 狀態 - 當前方案: '$currentSchema'")
+
+                    // 直接將按鍵事件傳遞給 Rime 引擎
+                    val keyCode = digit.toString().first().code
+                    Timber.d("$TAG: 發送按鍵碼: $keyCode (字符: '${digit.toString().first()}')")
+
+                    val result = processKey(keyCode, 0u)
+                    Timber.d("$TAG: processKey 結果: $result")
+
+                    // 檢查處理後的狀態
+                    val composition = compositionCached
+                    val menu = menuCached
+                    Timber.d("$TAG: 處理後狀態 - preedit: '${composition.preedit}', candidates: ${menu.candidates.size}")
+                }
+                Timber.d("$TAG: runOnReady 呼叫完成")
+            } catch (e: Exception) {
+                Timber.e(e, "$TAG: 處理數字輸入時發生錯誤")
+            }
+        }
     }
 
     /**
      * 刪除最後一個數字
      */
     fun deleteLastDigit() {
-        Timber.d("$TAG: Deleting last digit")
-
-        currentState = currentState.removeLastDigit()
-
-        if (currentState.hasInput) {
-            // 如果還有輸入，重新生成候選詞
-            updateCandidatesAsync()
-        } else {
-            // 如果沒有輸入了，直接通知狀態變更
-            notifyStateChange()
+        Timber.d("$TAG: 將 BackSpace 傳遞給 Rime 引擎")
+        coroutineScope.launch {
+            rimeSession.runOnReady {
+                // Rime 的 processKey 接受 keysym，BackSpace 對應的 keysym 是 0xff08
+                processKey(0xff08, 0u)
+                // RIME 引擎會透過 messageFlow 自動通知 UI 更新
+            }
         }
     }
 

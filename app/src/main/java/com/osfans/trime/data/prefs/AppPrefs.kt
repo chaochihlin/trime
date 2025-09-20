@@ -211,14 +211,11 @@ class AppPrefs(
         shared: SharedPreferences,
     ) : PreferenceDelegateOwner(shared) {
         companion object {
-            const val USER_DATA_DIR = "profile_user_data_dir"
             const val PERIODIC_BACKGROUND_SYNC = "periodic_background_sync"
             const val PERIODIC_BACKGROUND_SYNC_INTERVAL = "periodic_background_sync_interval"
             const val LAST_BACKGROUND_SYNC_STATUS = "last_background_sync_status"
             const val LAST_BACKGROUND_SYNC_TIME = "last_background_sync_time"
         }
-
-        val userDataDir = string(USER_DATA_DIR, DataManager.configDir.path)
         val periodicBackgroundSync = bool(PERIODIC_BACKGROUND_SYNC, false)
         val periodicBackgroundSyncInterval = int(PERIODIC_BACKGROUND_SYNC_INTERVAL, 120)
         val lastBackgroundSyncStatus = bool(LAST_BACKGROUND_SYNC_STATUS, false)

@@ -5,6 +5,7 @@
 package com.osfans.trime.ime.t9
 
 import com.osfans.trime.core.CandidateItem
+import com.osfans.trime.core.RimeMessage
 import com.osfans.trime.daemon.RimeSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +38,32 @@ class T9InputEventHandler(
     }
 
     init {
-        // 設置輸入邏輯狀態監聽器
-        t9InputLogic.addStateListener { state ->
-            updateUIWithState(state)
+        // 設置 RIME 訊息流監聽器
+        coroutineScope.launch {
+            rimeSession.run { messageFlow }.collect { message ->
+                handleRimeMessage(message)
+            }
+        }
+
+        // 監聽 RIME 生命週期狀態變化
+        coroutineScope.launch {
+            rimeSession.run { stateFlow }.collect { state ->
+                Timber.d("$TAG: RIME 生命週期狀態變更: $state")
+                when (state) {
+                    com.osfans.trime.core.RimeLifecycle.State.READY -> {
+                        Timber.i("$TAG: ✅ RIME 引擎已就緒，可以處理輸入")
+                    }
+                    com.osfans.trime.core.RimeLifecycle.State.STARTING -> {
+                        Timber.i("$TAG: 🔄 RIME 引擎正在啟動...")
+                    }
+                    com.osfans.trime.core.RimeLifecycle.State.STOPPING -> {
+                        Timber.i("$TAG: ⏹️ RIME 引擎正在停止...")
+                    }
+                    com.osfans.trime.core.RimeLifecycle.State.STOPPED -> {
+                        Timber.i("$TAG: ❌ RIME 引擎已停止")
+                    }
+                }
+            }
         }
     }
 
@@ -95,32 +119,33 @@ class T9InputEventHandler(
         Timber.d("$TAG: Confirm button pressed")
 
         try {
-            val state = t9InputLogic.getCurrentState()
-
-            if (state.hasCandidates) {
-                // 如果有候選詞，選擇第一個
-                val selectedCandidate = t9InputLogic.selectCandidate(0)
-                if (selectedCandidate != null) {
-                    // 提交選中的候選詞
-                    service.commitText(selectedCandidate)
-                    Timber.d("$TAG: Committed first candidate: $selectedCandidate")
-                }
-            } else if (state.hasInput) {
-                // 如果有輸入但沒有候選詞，清空輸入
-                t9InputLogic.reset()
-            }
-
-            // 收合虛擬鍵盤
             coroutineScope.launch {
-                try {
-                    Timber.d("$TAG: Hiding keyboard after confirm")
-                    service.requestHideSelf(0)
-                } catch (e: Exception) {
-                    Timber.e(e, "$TAG: Error hiding keyboard")
+                rimeSession.runOnReady {
+                    val menu = menuCached
+                    val composition = compositionCached
+
+                    if (menu.candidates.isNotEmpty()) {
+                        // 如果有候選詞，選擇第一個
+                        if (selectCandidate(0)) {
+                            Timber.d("$TAG: 選擇並提交第一個候選詞: ${menu.candidates[0].text}")
+                        }
+                    } else if (!composition.preedit.isNullOrEmpty()) {
+                        // 如果有輸入但沒有候選詞，清空輸入
+                        clearComposition()
+                        Timber.d("$TAG: 清空組合輸入")
+                    }
+
+                    // 收合虛擬鍵盤
+                    try {
+                        Timber.d("$TAG: 隱藏鍵盤")
+                        service.requestHideSelf(0)
+                    } catch (e: Exception) {
+                        Timber.e(e, "$TAG: 隱藏鍵盤時發生錯誤")
+                    }
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error processing confirm press")
+            Timber.e(e, "$TAG: 處理確認鍵時發生錯誤")
         }
     }
 
@@ -154,17 +179,24 @@ class T9InputEventHandler(
      * 處理候選詞選擇事件
      */
     fun onCandidateSelected(index: Int) {
-        Timber.d("$TAG: Candidate selected: $index")
+        Timber.d("$TAG: 選擇候選詞: $index")
 
         try {
-            val selectedCandidate = t9InputLogic.selectCandidate(index)
-            if (selectedCandidate != null) {
-                // 提交選中的候選詞
-                service.commitText(selectedCandidate)
-                Timber.d("$TAG: Committed candidate: $selectedCandidate")
+            coroutineScope.launch {
+                rimeSession.runOnReady {
+                    if (selectCandidate(index)) {
+                        val menu = menuCached
+                        if (index < menu.candidates.size) {
+                            Timber.d("$TAG: 選擇並提交候選詞: ${menu.candidates[index].text}")
+                        }
+
+                        // 在主線程更新UI狀態
+                        clearInputState()
+                    }
+                }
             }
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error selecting candidate: $index")
+            Timber.e(e, "$TAG: 選擇候選詞時發生錯誤: $index")
         }
     }
 
@@ -219,44 +251,44 @@ class T9InputEventHandler(
     }
 
     /**
-     * 根據T9輸入狀態更新UI
+     * 處理 RIME 訊息
      */
-    private fun updateUIWithState(state: T9InputState) {
+    private fun handleRimeMessage(message: RimeMessage<*>) {
         try {
-            coroutineScope.launch {
-                // 更新情境顯示
-                if (state.hasInput) {
-                    // 顯示數字序列和注音組合
-                    val displayText =
-                        buildString {
-                            append(state.digitSequence)
-                            if (state.zhuyinCombinations.isNotEmpty()) {
-                                append(" → ")
-                                append(state.zhuyinCombinations.take(3).joinToString(", "))
-                            }
+            when (message) {
+                is RimeMessage.ResponseMessage -> {
+                    val composition = message.data.context.composition
+                    val menu = message.data.context.menu
+
+                    Timber.d("$TAG: 接收到 RIME 響應訊息 - preedit: '${composition.preedit}', candidates: ${menu.candidates.size}")
+
+                    // 更新情境顯示區 (預編輯字串)
+                    if (!composition.preedit.isNullOrEmpty()) {
+                        contextDisplay.updateInputSequence(composition.preedit)
+                    } else {
+                        contextDisplay.clearInput()
+                    }
+
+                    // 更新候選詞列
+                    if (menu.candidates.isNotEmpty()) {
+                        // 將 Rime 的 Candidate 轉換為 UI 需要的 CandidateItem
+                        val candidateItems = menu.candidates.map { rimeCandidate ->
+                            CandidateItem(text = rimeCandidate.text, comment = rimeCandidate.comment ?: "")
                         }
-                    contextDisplay.updateInputSequence(displayText)
-                } else {
-                    contextDisplay.clearInput()
+                        candidateBar.updateCandidates(candidateItems)
+                        Timber.d("$TAG: 更新候選詞列，共 ${candidateItems.size} 個候選詞: ${candidateItems.take(3).map { it.text }}")
+                    } else {
+                        candidateBar.clearCandidates()
+                        Timber.d("$TAG: 清空候選詞列")
+                    }
                 }
-
-                // 更新候選詞
-                if (state.hasCandidates) {
-                    // 轉換為CandidateItem格式
-                    val candidateItems =
-                        state.candidates.mapIndexed { index, text ->
-                            CandidateItem(text = text, comment = "")
-                        }
-
-                    Timber.d("$TAG: Updating CandidateBar with ${candidateItems.size} candidates: ${state.candidates}")
-                    candidateBar.updateCandidates(candidateItems)
-                } else {
-                    Timber.d("$TAG: No candidates available, clearing CandidateBar")
-                    candidateBar.clearCandidates()
+                else -> {
+                    // 其他類型的訊息，我們暫時不處理
+                    Timber.v("$TAG: 忽略 RIME 訊息類型: ${message.messageType}")
                 }
             }
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error updating UI with state")
+            Timber.e(e, "$TAG: 處理 RIME 訊息時發生錯誤: $message")
         }
     }
 
@@ -279,18 +311,24 @@ class T9InputEventHandler(
      * 處理退格鍵
      */
     fun onBackspacePress() {
-        Timber.d("$TAG: Backspace pressed")
+        Timber.d("$TAG: 按下退格鍵")
 
         try {
-            if (t9InputLogic.hasInput()) {
-                // 如果有T9輸入，刪除最後一個數字
-                t9InputLogic.deleteLastDigit()
-            } else {
-                // 如果沒有T9輸入，發送退格到應用程式
-                service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
+            coroutineScope.launch {
+                rimeSession.runOnReady {
+                    val composition = compositionCached
+
+                    if (!composition.preedit.isNullOrEmpty()) {
+                        // 如果有組合輸入，使用 Rime 的退格處理
+                        t9InputLogic.deleteLastDigit()
+                    } else {
+                        // 如果沒有組合輸入，發送退格到應用程式
+                        service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
+                    }
+                }
             }
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error processing backspace")
+            Timber.e(e, "$TAG: 處理退格鍵時發生錯誤")
         }
     }
 

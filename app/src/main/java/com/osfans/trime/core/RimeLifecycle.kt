@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -25,22 +26,36 @@ class RimeLifecycleImpl : RimeLifecycle {
     override val lifecycleScope: CoroutineScope = RimeLifecycleScope(this)
 
     fun emitState(state: RimeLifecycle.State) {
+        val currentState = internalStateFlow.value
+        Timber.w("🔍 [RimeLifecycle] emitState: 狀態變更 $currentState → $state")
+
+        // 獲取調用堆棧
+        val stackTrace = Thread.currentThread().stackTrace
+        val caller = stackTrace.drop(2).take(3).joinToString(" → ") {
+            "${it.className.substringAfterLast('.')}.${it.methodName}(${it.lineNumber})"
+        }
+        Timber.w("🔍 [RimeLifecycle] emitState 調用者: $caller")
+
         when (state) {
             RimeLifecycle.State.STARTING -> {
                 checkAtState(RimeLifecycle.State.STOPPED)
                 internalStateFlow.value = RimeLifecycle.State.STARTING
+                Timber.w("🔍 [RimeLifecycle] ✅ 狀態已設定為 STARTING")
             }
             RimeLifecycle.State.READY -> {
                 checkAtState(RimeLifecycle.State.STARTING)
                 internalStateFlow.value = RimeLifecycle.State.READY
+                Timber.w("🔍 [RimeLifecycle] ✅ 狀態已設定為 READY")
             }
             RimeLifecycle.State.STOPPING -> {
                 checkAtState(RimeLifecycle.State.READY)
                 internalStateFlow.value = RimeLifecycle.State.STOPPING
+                Timber.w("🔍 [RimeLifecycle] ✅ 狀態已設定為 STOPPING")
             }
             RimeLifecycle.State.STOPPED -> {
                 checkAtState(RimeLifecycle.State.STOPPING)
                 internalStateFlow.value = RimeLifecycle.State.STOPPED
+                Timber.w("🔍 [RimeLifecycle] ✅ 狀態已設定為 STOPPED")
             }
         }
     }

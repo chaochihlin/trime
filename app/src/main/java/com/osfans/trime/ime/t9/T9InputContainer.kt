@@ -77,7 +77,19 @@ class T9InputContainer
             service: TrimeInputMethodService,
         ) {
             try {
-                Timber.d("$TAG: Starting T9InputContainer setup")
+                Timber.w("🔍 [T9InputContainer] setup: T9容器開始初始化")
+
+                // 記憶體狀況檢查
+                val runtime = Runtime.getRuntime()
+                val totalMemory = runtime.totalMemory() / 1024 / 1024
+                val freeMemory = runtime.freeMemory() / 1024 / 1024
+                val usedMemory = totalMemory - freeMemory
+                Timber.w("🔍 [T9InputContainer] setup 前記憶體狀況 - 總計: ${totalMemory}MB, 已用: ${usedMemory}MB, 可用: ${freeMemory}MB")
+
+                // RIME 狀態檢查
+                val rimeReady = rimeSession.run { isReady }
+                val rimeState = rimeSession.run { stateFlow.replayCache.lastOrNull() }
+                Timber.w("🔍 [T9InputContainer] setup 時 RIME 狀態 - 就緒: $rimeReady, 生命週期: $rimeState")
 
                 this.theme = theme
                 this.rimeSession = rimeSession
@@ -95,6 +107,12 @@ class T9InputContainer
 
                 Timber.d("$TAG: Updating T9 themes...")
                 updateThemes()
+
+                // 完成後的狀態檢查
+                val finalRimeReady = rimeSession.run { isReady }
+                val finalRimeState = rimeSession.run { stateFlow.replayCache.lastOrNull() }
+                val finalFreeMemory = runtime.freeMemory() / 1024 / 1024
+                Timber.w("🔍 [T9InputContainer] setup 完成後狀態 - RIME就緒: $finalRimeReady, 生命週期: $finalRimeState, 可用記憶體: ${finalFreeMemory}MB")
 
                 Timber.d("$TAG: T9InputContainer setup completed successfully")
             } catch (e: Exception) {
@@ -166,9 +184,9 @@ class T9InputContainer
                 Timber.d("$TAG: Adding candidate bar to layout...")
                 add(
                     candidateBar,
-                    lParams(dp(200), dp(40)) {
-                        // Stage 13: 固定寬度200dp x 高度40dp，根本解決顯示問題
-                        topOfParent(dp(8)) // Stage 11: 減少topMargin到8dp，確保有空間顯示
+                    lParams(dp(200), dp(56)) {
+                        // 固定寬度200dp x 高度56dp，增加候選詞顯示空間
+                        topOfParent(dp(16)) // 增加topMargin到16dp，提供更多頂部空間
                         centerHorizontally()
                         // 移除constrainedWidth = true 避免被壓縮為0寬度
                     },
@@ -179,7 +197,7 @@ class T9InputContainer
                     contextDisplay,
                     lParams(dp(56), 0) {
                         // Stage 12: 寬度56dp，高度wrap-content
-                        topToBottomOf(candidateBar, dp(8)) // Stage 11: 在CandidateBar下方，保持8dp間距
+                        topToBottomOf(candidateBar, dp(0)) // 緊鄰CandidateBar下方，移除間距
                         bottomOfParent(dp(16)) // Stage 11: 底部邊距16dp
                         startOfParent(dp(16)) // Stage 9: 添加leftMargin=16dp
                     },
@@ -190,7 +208,7 @@ class T9InputContainer
                     confirmButton,
                     lParams(dp(56), dp(56)) {
                         // Stage 12: 56×56dp，更大觸控區域
-                        topToBottomOf(candidateBar, dp(8)) // Stage 11: 在CandidateBar下方，與ContextDisplay對齊
+                        topToBottomOf(candidateBar, dp(0)) // 緊鄰CandidateBar下方，與ContextDisplay對齊
                         bottomOfParent(dp(16)) // Stage 11: 底部邊距16dp
                         endOfParent(dp(16)) // Stage 9: 添加rightMargin=16dp
                     },
@@ -201,7 +219,7 @@ class T9InputContainer
                     t9Keyboard,
                     lParams(0, 0) {
                         // Stage 8A: 佔滿剩餘空間，移除固定寬度
-                        topToBottomOf(candidateBar, dp(8)) // Stage 11: 在CandidateBar下方，與其他組件對齊
+                        topToBottomOf(candidateBar, dp(0)) // 緊鄰CandidateBar下方，與其他組件對齊
                         bottomOfParent(dp(16)) // Stage 9: 添加bottomMargin=16dp
                         startToEndOf(contextDisplay, dp(4)) // Stage 11: 緊鄰ContextDisplay，4dp間距
                         endToStartOf(confirmButton, dp(4)) // Stage 10: 與confirmButton保持4dp間距

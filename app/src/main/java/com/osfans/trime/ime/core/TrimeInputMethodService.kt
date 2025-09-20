@@ -166,7 +166,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     override fun onCreate() {
+        Timber.w("🔍 [TrimeInputMethodService] onCreate: 開始創建輸入法服務")
         rime = RimeDaemon.createSession(javaClass.name)
+        Timber.w("🔍 [TrimeInputMethodService] onCreate: RIME session 創建完成")
         lifecycleScope.launch {
             jobs.consumeEach { it.join() }
         }
@@ -289,6 +291,7 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     override fun onDestroy() {
+        Timber.w("🔍 [TrimeInputMethodService] onDestroy: 開始銷毀輸入法服務")
         InputFeedbackManager.destroy()
         inputView = null
         recreateInputViewPrefs.forEach {
@@ -299,7 +302,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         ColorManager.removeOnChangedListener(onColorChangeListener)
         super.onDestroy()
         unregisterReceiver(rimeIntentReceiver)
+        Timber.w("🔍 [TrimeInputMethodService] onDestroy: 準備銷毀 RIME session")
         RimeDaemon.destroySession(javaClass.name)
+        Timber.w("🔍 [TrimeInputMethodService] onDestroy: 輸入法服務銷毀完成")
     }
 
     private fun handleReturnKey() {

@@ -94,14 +94,8 @@ object DataManager {
 
     // === 向後相容性支援（將在後續版本移除）===
 
-    /** @deprecated 使用 configDir 取代。為了支持使用者自訂路徑暫時保留 */
-    val userDataDir
-        get() =
-            File(
-                prefs.profile.userDataDir
-                    .getValue()
-                    .takeIf { it.isNotEmpty() } ?: configDir.absolutePath,
-            ).also { it.mkdirs() }
+    /** @deprecated 使用 configDir 取代。已移除自訂路徑支援以提升相容性 */
+    val userDataDir = configDir
 
     /** @deprecated 使用 assetsDir 取代 */
     @Deprecated("Use assetsDir instead", ReplaceWith("assetsDir"))

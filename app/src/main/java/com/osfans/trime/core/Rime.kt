@@ -9,7 +9,6 @@ import com.osfans.trime.data.base.DataManager
 import com.osfans.trime.data.schema.SchemaManager
 import com.osfans.trime.util.appContext
 import com.osfans.trime.util.isAsciiPrintable
-import com.osfans.trime.util.isStorageAvailable
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -282,30 +281,55 @@ class Rime :
     }
 
     fun startup(fullCheck: Boolean) {
-        if (lifecycle.currentStateFlow.value != RimeLifecycle.State.STOPPED) {
-            Timber.w("Skip starting rime: not at stopped state!")
+        val currentState = lifecycle.currentStateFlow.value
+        Timber.w("🔍 [Rime] startup: 請求啟動RIME引擎，當前狀態: $currentState, fullCheck: $fullCheck")
+
+        if (currentState != RimeLifecycle.State.STOPPED) {
+            Timber.w("🔍 [Rime] startup: 跳過啟動，當前狀態不是STOPPED: $currentState")
             return
         }
-        if (appContext.isStorageAvailable()) {
-            registerRimeMessageHandler(::handleRimeMessage)
-            lifecycleImpl.emitState(RimeLifecycle.State.STARTING)
+
+        Timber.w("🔍 [Rime] startup: 註冊訊息處理器...")
+        registerRimeMessageHandler(::handleRimeMessage)
+
+        Timber.w("🔍 [Rime] startup: 設定狀態為 STARTING...")
+        lifecycleImpl.emitState(RimeLifecycle.State.STARTING)
+
+        Timber.w("🔍 [Rime] startup: 啟動 dispatcher...")
+        try {
             dispatcher.start(fullCheck)
+            Timber.w("🔍 [Rime] startup: dispatcher.start() 完成")
+        } catch (e: Exception) {
+            Timber.e(e, "🔍 [Rime] startup: dispatcher.start() 失敗")
+            lifecycleImpl.emitState(RimeLifecycle.State.STOPPED)
+            throw e
         }
     }
 
     fun finalize() {
-        if (lifecycle.currentStateFlow.value != RimeLifecycle.State.READY) {
-            Timber.w("Skip stopping rime: not at ready state!")
+        val currentState = lifecycle.currentStateFlow.value
+        Timber.w("🔍 [Rime] finalize: 請求關閉RIME引擎，當前狀態: $currentState")
+
+        // 獲取調用堆棧以追蹤誰調用了 finalize
+        val stackTrace = Thread.currentThread().stackTrace
+        val caller = stackTrace.drop(2).take(5).joinToString("\n") {
+            "    at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})"
+        }
+        Timber.w("🔍 [Rime] finalize 調用堆棧:\n$caller")
+
+        if (currentState != RimeLifecycle.State.READY) {
+            Timber.w("🔍 [Rime] finalize: 跳過關閉，當前狀態不是READY: $currentState")
             return
         }
         lifecycleImpl.emitState(RimeLifecycle.State.STOPPING)
-        Timber.i("Rime finalize()")
+        Timber.w("🔍 [Rime] finalize: 開始關閉RIME引擎...")
         dispatcher.stop().let {
             if (it.isNotEmpty()) {
                 Timber.w("${it.size} job(s) didn't get a chance to run!")
             }
         }
         lifecycleImpl.emitState(RimeLifecycle.State.STOPPED)
+        Timber.w("🔍 [Rime] finalize: RIME引擎已關閉")
         unregisterRimeMessageHandler(::handleRimeMessage)
     }
 
