@@ -18,6 +18,7 @@ import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
+import timber.log.Timber
 
 /**
  * T9數字鍵組件
@@ -38,10 +39,13 @@ class T9NumberKey
         context: Context,
         attrs: AttributeSet? = null,
     ) : LinearLayout(context, attrs) {
+        companion object {
+            private const val TAG = "T9NumberKey"
+        }
         // 注音提示TextView（現在作為主要顯示）
         private val hintTextView =
             TextView(context).apply {
-                textSize = 18f  // 增大注音符號字體
+                textSize = 12f  // 調小注音符號字體適合手錶螢幕
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
                 maxLines = 2
@@ -182,25 +186,19 @@ class T9NumberKey
             this.theme = theme
 
             try {
-                // 更新注音符號文字顏色（現在是主要顯示）
+                // 更新注音符號文字顏色
                 val keyTextColor =
                     ColorManager.getColor("key_text_color")
                         ?: Color.WHITE
                 hintTextView.setTextColor(keyTextColor)
 
-                // 更新數字文字顏色（現在是次要顯示）
-                val hintTextColor =
-                    ColorManager.getColor("hint_text_color")
-                        ?: Color.GRAY
+                // 更新數字文字顏色
+                val hintTextColor = Color.GRAY
                 numberTextView.setTextColor(hintTextColor)
 
                 // 更新背景顏色
-                val keyBackgroundColor =
-                    ColorManager.getColor("key_background_color")
-                        ?: Color.parseColor("#1e1e1e")
-                val keyBorderColor =
-                    ColorManager.getColor("key_border_color")
-                        ?: Color.parseColor("#333333")
+                val keyBackgroundColor = Color.parseColor("#1e1e1e")
+                val keyBorderColor = Color.parseColor("#333333")
 
                 backgroundDrawable.apply {
                     setColor(keyBackgroundColor)
@@ -208,12 +206,8 @@ class T9NumberKey
                 }
 
                 // 更新按壓狀態顏色
-                val pressedBackgroundColor =
-                    ColorManager.getColor("key_pressed_background_color")
-                        ?: Color.parseColor("#3e3e3e")
-                val pressedBorderColor =
-                    ColorManager.getColor("key_pressed_border_color")
-                        ?: Color.parseColor("#555555")
+                val pressedBackgroundColor = Color.parseColor("#3e3e3e")
+                val pressedBorderColor = Color.parseColor("#555555")
 
                 pressedDrawable.apply {
                     setColor(pressedBackgroundColor)
@@ -221,15 +215,17 @@ class T9NumberKey
                 }
 
                 // 更新文字大小
-                val keyTextSize = theme.generalStyle.keyTextSize.takeIf { it > 0 } ?: 18f
-                hintTextView.textSize = keyTextSize  // 注音符號使用主要文字大小
+                val keyTextSize = theme.generalStyle.keyTextSize.takeIf { it > 0 } ?: 12f
+                hintTextView.textSize = keyTextSize
 
                 val hintTextSize = theme.generalStyle.symbolTextSize.takeIf { it > 0 } ?: 10f
-                numberTextView.textSize = hintTextSize  // 數字使用次要文字大小
+                numberTextView.textSize = hintTextSize
+
+                invalidate()
             } catch (e: Exception) {
-                // 如果主題色彩獲取失敗，使用默認顏色
-                hintTextView.setTextColor(Color.WHITE)  // 注音符號為主要顯示
-                numberTextView.setTextColor(Color.GRAY)  // 數字為次要顯示
+                Timber.e(e, "$TAG: Failed to update theme for key $keyNumber")
+                hintTextView.setTextColor(Color.WHITE)
+                numberTextView.setTextColor(Color.GRAY)
             }
         }
 

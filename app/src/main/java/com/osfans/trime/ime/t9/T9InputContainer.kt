@@ -14,6 +14,7 @@ import com.osfans.trime.ime.core.TrimeInputMethodService
 import splitties.dimensions.dp
 import splitties.views.dsl.constraintlayout.bottomOfParent
 import splitties.views.dsl.constraintlayout.centerHorizontally
+import splitties.views.dsl.constraintlayout.centerVertically
 import splitties.views.dsl.constraintlayout.endOfParent
 import splitties.views.dsl.constraintlayout.endToStartOf
 import splitties.views.dsl.constraintlayout.lParams
@@ -21,6 +22,7 @@ import splitties.views.dsl.constraintlayout.startOfParent
 import splitties.views.dsl.constraintlayout.startToEndOf
 import splitties.views.dsl.constraintlayout.topOfParent
 import splitties.views.dsl.constraintlayout.topToBottomOf
+import splitties.views.dsl.core.wrapContent
 import splitties.views.dsl.core.add
 import timber.log.Timber
 
@@ -58,10 +60,8 @@ class T9InputContainer
 
         init {
             id = generateViewId()
-
-            // 🔍 視覺除錯：為T9InputContainer添加明顯的背景色
-            setBackgroundColor(Color.parseColor("#FF4444")) // 紅色背景
-            Timber.d("T9InputContainer: 🔴 T9InputContainer background set to RED for visual debugging")
+            // 維持黃色背景for T9InputContainer視覺識別
+            setBackgroundColor(Color.parseColor("#FFFF44"))
         }
 
         companion object {
@@ -77,47 +77,19 @@ class T9InputContainer
             service: TrimeInputMethodService,
         ) {
             try {
-                Timber.w("🔍 [T9InputContainer] setup: T9容器開始初始化")
-
-                // 記憶體狀況檢查
-                val runtime = Runtime.getRuntime()
-                val totalMemory = runtime.totalMemory() / 1024 / 1024
-                val freeMemory = runtime.freeMemory() / 1024 / 1024
-                val usedMemory = totalMemory - freeMemory
-                Timber.w("🔍 [T9InputContainer] setup 前記憶體狀況 - 總計: ${totalMemory}MB, 已用: ${usedMemory}MB, 可用: ${freeMemory}MB")
-
-                // RIME 狀態檢查
-                val rimeReady = rimeSession.run { isReady }
-                val rimeState = rimeSession.run { stateFlow.replayCache.lastOrNull() }
-                Timber.w("🔍 [T9InputContainer] setup 時 RIME 狀態 - 就緒: $rimeReady, 生命週期: $rimeState")
-
                 this.theme = theme
                 this.rimeSession = rimeSession
                 this.service = service
 
-                Timber.d("$TAG: Creating T9 components...")
-                Timber.d("$TAG: 🎨 Setting visual debugging colors for all T9 components")
                 createComponents()
-
-                Timber.d("$TAG: Setting up T9 layout...")
                 setupLayout()
-
-                Timber.d("$TAG: Setting up T9 event handling...")
                 setupEventHandling()
-
-                Timber.d("$TAG: Updating T9 themes...")
                 updateThemes()
-
-                // 完成後的狀態檢查
-                val finalRimeReady = rimeSession.run { isReady }
-                val finalRimeState = rimeSession.run { stateFlow.replayCache.lastOrNull() }
-                val finalFreeMemory = runtime.freeMemory() / 1024 / 1024
-                Timber.w("🔍 [T9InputContainer] setup 完成後狀態 - RIME就緒: $finalRimeReady, 生命週期: $finalRimeState, 可用記憶體: ${finalFreeMemory}MB")
 
                 Timber.d("$TAG: T9InputContainer setup completed successfully")
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Critical error during T9InputContainer setup")
-                throw e // Re-throw to allow caller to handle
+                throw e
             }
         }
 
@@ -130,10 +102,7 @@ class T9InputContainer
                 candidateBar =
                     T9CandidateBar(context).apply {
                         id = generateViewId()
-                        // 🔍 視覺除錯：藍色背景for候選詞列
-                        setBackgroundColor(Color.parseColor("#4444FF"))
-                        visibility = android.view.View.VISIBLE // Stage 13: 確保可見性
-                        Timber.d("$TAG: 🔵 T9CandidateBar background set to BLUE and visibility VISIBLE")
+                        visibility = android.view.View.VISIBLE
                     }
                 Timber.d("$TAG: T9CandidateBar created successfully")
 
@@ -141,9 +110,6 @@ class T9InputContainer
                 contextDisplay =
                     ContextDisplayArea(context).apply {
                         id = generateViewId()
-                        // 🔍 視覺除錯：綠色背景for情境顯示
-                        setBackgroundColor(Color.parseColor("#44FF44"))
-                        Timber.d("$TAG: 🟢 ContextDisplayArea background set to GREEN")
                     }
                 Timber.d("$TAG: ContextDisplayArea created successfully")
 
@@ -151,9 +117,6 @@ class T9InputContainer
                 t9Keyboard =
                     T9KeyboardView(context).apply {
                         id = generateViewId()
-                        // 🔍 視覺除錯：黃色背景for T9鍵盤
-                        setBackgroundColor(Color.parseColor("#FFFF44"))
-                        Timber.d("$TAG: 🟡 T9KeyboardView background set to YELLOW")
                     }
                 Timber.d("$TAG: T9KeyboardView created successfully")
 
@@ -161,9 +124,6 @@ class T9InputContainer
                 confirmButton =
                     T9ConfirmButton(context).apply {
                         id = generateViewId()
-                        // 🔍 視覺除錯：橘色背景for確認按鈕
-                        setBackgroundColor(Color.parseColor("#FF8844"))
-                        Timber.d("$TAG: 🟠 T9ConfirmButton background set to ORANGE")
                     }
                 Timber.d("$TAG: T9ConfirmButton created successfully")
 
@@ -195,11 +155,10 @@ class T9InputContainer
                 Timber.d("$TAG: Adding context display to layout...")
                 add(
                     contextDisplay,
-                    lParams(dp(56), 0) {
-                        // Stage 12: 寬度56dp，高度wrap-content
-                        topToBottomOf(candidateBar, dp(0)) // 緊鄰CandidateBar下方，移除間距
-                        bottomOfParent(dp(16)) // Stage 11: 底部邊距16dp
-                        startOfParent(dp(16)) // Stage 9: 添加leftMargin=16dp
+                    lParams(dp(56), wrapContent) {
+                        // 寬度56dp，高度wrap-content，垂直置中
+                        centerVertically()
+                        startOfParent(dp(16)) // 添加leftMargin=16dp
                     },
                 )
 
@@ -207,10 +166,9 @@ class T9InputContainer
                 add(
                     confirmButton,
                     lParams(dp(56), dp(56)) {
-                        // Stage 12: 56×56dp，更大觸控區域
-                        topToBottomOf(candidateBar, dp(0)) // 緊鄰CandidateBar下方，與ContextDisplay對齊
-                        bottomOfParent(dp(16)) // Stage 11: 底部邊距16dp
-                        endOfParent(dp(16)) // Stage 9: 添加rightMargin=16dp
+                        // 56×56dp，更大觸控區域，垂直置中
+                        centerVertically()
+                        endOfParent(dp(16)) // 添加rightMargin=16dp
                     },
                 )
 
@@ -218,15 +176,13 @@ class T9InputContainer
                 add(
                     t9Keyboard,
                     lParams(0, 0) {
-                        // Stage 8A: 佔滿剩餘空間，移除固定寬度
-                        topToBottomOf(candidateBar, dp(0)) // 緊鄰CandidateBar下方，與其他組件對齊
+                        // 修改：T9KeyboardView 頂端對齊螢幕垂直中央
+                        topOfParent(dp(144)) // T9KeyboardView佔螢幕60%高度，計算頂部位置：(456px - 18.2px - 273.6px) ÷ 1.1375 = 144dp
                         bottomOfParent(dp(16)) // Stage 9: 添加bottomMargin=16dp
                         startToEndOf(contextDisplay, dp(4)) // Stage 11: 緊鄰ContextDisplay，4dp間距
                         endToStartOf(confirmButton, dp(4)) // Stage 10: 與confirmButton保持4dp間距
                     },
                 )
-
-                Timber.d("$TAG: Layout setup completed successfully")
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error setting up T9 layout")
                 throw e
@@ -238,16 +194,12 @@ class T9InputContainer
          */
         private fun setupEventHandling() {
             try {
-                Timber.d("$TAG: Setting up T9 keyboard event handler...")
                 t9Keyboard.setup(theme, rimeSession, eventHandler)
 
-                Timber.d("$TAG: Setting up confirm button event handler...")
                 confirmButton.setOnClickListener {
-                    Timber.d("$TAG: Confirm button clicked")
                     eventHandler.onConfirmPress()
                 }
 
-                Timber.d("$TAG: Setting up candidate bar click listener...")
                 candidateBar.setOnCandidateClickListener(
                     object : T9CandidateBar.OnCandidateClickListener {
                         override fun onCandidateClick(
@@ -259,11 +211,9 @@ class T9InputContainer
                     },
                 )
 
-                Timber.d("$TAG: Setting up context display state listener...")
                 contextDisplay.setStateChangeListener(
                     object : ContextDisplayArea.StateChangeListener {
                         override fun onPunctuationClick(punctuation: String) {
-                            // 處理標點符號點擊
                             handlePunctuationInput(punctuation)
                         }
 
@@ -272,8 +222,6 @@ class T9InputContainer
                         }
                     },
                 )
-
-                Timber.d("$TAG: Event handling setup completed successfully")
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error setting up T9 event handling")
                 throw e
@@ -284,10 +232,13 @@ class T9InputContainer
          * 更新所有組件的主題
          */
         private fun updateThemes() {
-            contextDisplay.updateTheme(theme)
-            candidateBar.updateTheme(theme)
-            confirmButton.updateTheme(theme) // Stage 8A: 更新確認按鈕主題
-            // t9Keyboard的主題已在setup中設置
+            try {
+                contextDisplay.updateTheme(theme)
+                candidateBar.updateTheme(theme)
+                confirmButton.updateTheme(theme)
+            } catch (e: Exception) {
+                Timber.e(e, "$TAG: Failed to update component themes")
+            }
         }
 
         /**

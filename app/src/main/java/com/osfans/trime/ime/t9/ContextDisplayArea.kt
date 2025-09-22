@@ -254,7 +254,6 @@ class ContextDisplayArea
                 try {
                     val punctuationTextColor =
                         ColorManager.getColor("punctuation_text_color")
-                            ?: Color.GRAY
 
                     punctuationButtons.forEach { button ->
                         button.setTextColor(punctuationTextColor)
@@ -275,7 +274,6 @@ class ContextDisplayArea
             context: Context,
         ) : LinearLayout(context) {
             private val sequenceDisplay = TextView(context)
-            private val titleText = TextView(context)
 
             init {
                 setupLayout()
@@ -287,22 +285,6 @@ class ContextDisplayArea
 
                 // 設置內距
                 setPadding(dp(4), dp(8), dp(4), dp(8))
-
-                // 添加標題
-                titleText.apply {
-                    text = "注音"
-                    textSize = 10f
-                    setTextColor(Color.parseColor("#CCCCCC"))
-                    gravity = Gravity.CENTER
-                }
-
-                addView(
-                    titleText,
-                    LayoutParams(
-                        LayoutParams.MATCH_PARENT,
-                        LayoutParams.WRAP_CONTENT,
-                    ),
-                )
 
                 // 添加序列顯示
                 sequenceDisplay.apply {
@@ -338,20 +320,12 @@ class ContextDisplayArea
                 try {
                     val inputSequenceTextColor =
                         ColorManager.getColor("input_sequence_text_color")
-                            ?: Color.WHITE
-                    val titleTextColor =
-                        ColorManager.getColor("context_title_text_color")
-                            ?: Color.parseColor("#CCCCCC")
-
                     sequenceDisplay.setTextColor(inputSequenceTextColor)
-                    titleText.setTextColor(titleTextColor)
-
                     val sequenceTextSize = theme.generalStyle.keyLongTextSize.takeIf { it > 0 } ?: 14f
                     sequenceDisplay.textSize = sequenceTextSize
                 } catch (e: Exception) {
                     // 使用默認顏色
                     sequenceDisplay.setTextColor(Color.WHITE)
-                    titleText.setTextColor(Color.parseColor("#CCCCCC"))
                 }
             }
         }
