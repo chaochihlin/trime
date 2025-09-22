@@ -19,12 +19,14 @@ import timber.log.Timber
  *
  * @param rimeSession RIME會話實例
  * @param contextDisplay 情境顯示區域
+ * @param preeditArea Preedit顯示區域
  * @param candidateBar 候選詞列
  * @param service 輸入法服務
  */
 class T9InputEventHandler(
     private val rimeSession: RimeSession,
     private val contextDisplay: ContextDisplayArea,
+    private val preeditArea: T9PreeditView,
     private val candidateBar: T9CandidateBar,
     private val service: com.osfans.trime.ime.core.TrimeInputMethodService,
 ) : T9KeyboardView.T9KeyboardActionListener {
@@ -68,16 +70,28 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理數字鍵按下事件
+     * 處理數字鍵短按事件 - 輸入對應的注音符號
+     *
+     * 透過 RIME 引擎處理數字輸入，讓 RIME 根據當前方案決定對應的注音符號
      */
     override fun onNumberKeyPress(number: Int) {
-        Timber.d("$TAG: Number key pressed: $number")
+        Timber.d("$TAG: 短按數字鍵: $number - 觸發注音符號輸入")
 
         try {
-            // 使用新的T9輸入邏輯
-            t9InputLogic.processDigit(number)
+            // 使用 RIME 引擎處理注音輸入
+            coroutineScope.launch {
+                rimeSession.runOnReady {
+                    val keyCode = number.toString().first().code
+                    Timber.d("$TAG: 發送按鍵碼 $keyCode 到 RIME 引擎處理注音輸入")
+
+                    val result = processKey(keyCode, 0u)
+                    Timber.d("$TAG: RIME 處理結果: $result")
+
+                    // RIME 會透過 messageFlow 自動通知 UI 更新候選詞和組合狀態
+                }
+            }
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error processing number key: $number")
+            Timber.e(e, "$TAG: 處理短按數字鍵時發生錯誤: $number")
         }
     }
 
@@ -269,12 +283,16 @@ class T9InputEventHandler(
                         contextDisplay.clearInput()
                     }
 
+                    // 更新Preedit區域 (T9序列和注音符號)
+                    updatePreeditDisplay(composition.preedit)
+
                     // 更新候選詞列
                     if (menu.candidates.isNotEmpty()) {
                         // 將 Rime 的 Candidate 轉換為 UI 需要的 CandidateItem
-                        val candidateItems = menu.candidates.map { rimeCandidate ->
-                            CandidateItem(text = rimeCandidate.text, comment = rimeCandidate.comment ?: "")
-                        }
+                        val candidateItems =
+                            menu.candidates.map { rimeCandidate ->
+                                CandidateItem(text = rimeCandidate.text, comment = rimeCandidate.comment ?: "")
+                            }
                         candidateBar.updateCandidates(candidateItems)
                         Timber.d("$TAG: 更新候選詞列，共 ${candidateItems.size} 個候選詞: ${candidateItems.take(3).map { it.text }}")
                     } else {
@@ -293,12 +311,71 @@ class T9InputEventHandler(
     }
 
     /**
+     * 更新Preedit顯示
+     */
+    private fun updatePreeditDisplay(preeditText: String?) {
+        try {
+            if (preeditText.isNullOrEmpty()) {
+                preeditArea.clear()
+                return
+            }
+
+            // 嘗試從preedit文字中提取T9數字序列
+            val digitSequence = extractT9DigitSequence(preeditText)
+
+            // 將數字序列轉換為注音符號組合
+            val zhuyinCombinations = convertT9ToZhuyin(digitSequence)
+
+            // 更新Preedit顯示
+            preeditArea.updateContent(digitSequence, zhuyinCombinations)
+
+            Timber.d("$TAG: Preedit更新 - 數字序列: '$digitSequence', 注音: $zhuyinCombinations")
+        } catch (e: Exception) {
+            Timber.e(e, "$TAG: 更新Preedit顯示時發生錯誤")
+        }
+    }
+
+    /**
+     * 從preedit文字中提取T9數字序列
+     */
+    private fun extractT9DigitSequence(preeditText: String): String {
+        // 簡單實現：從preedit中提取數字字符
+        return preeditText.filter { it.isDigit() }
+    }
+
+    /**
+     * 將T9數字序列轉換為注音符號組合
+     */
+    private fun convertT9ToZhuyin(digitSequence: String): List<String> {
+        val t9ToZhuyinMap =
+            mapOf(
+                '1' to "ㄅㄉㄚ",
+                '2' to "ㄍㄐㄞㄧ",
+                '3' to "ㄓㄗㄢㄦ",
+                '4' to "ㄆㄊㄛ",
+                '5' to "ㄎㄑㄟㄨ",
+                '6' to "ㄔㄘㄣ",
+                '7' to "ㄇㄋㄜㄝ",
+                '8' to "ㄏㄒㄠㄩ",
+                '9' to "ㄕㄙㄤㄥ",
+                '0' to "ㄈㄌㄡㄖ",
+            )
+
+        return digitSequence.mapNotNull { digit ->
+            t9ToZhuyinMap[digit]
+        }
+    }
+
+    /**
      * 清空輸入狀態
      */
     private fun clearInputState() {
         try {
             // 清理情境顯示
             contextDisplay.clearInput()
+
+            // 清空Preedit區域
+            preeditArea.clear()
 
             // 清空候選詞
             candidateBar.clearCandidates()
@@ -329,6 +406,23 @@ class T9InputEventHandler(
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 處理退格鍵時發生錯誤")
+        }
+    }
+
+    /**
+     * 清除 Preedit 內容
+     */
+    fun clearPreedit() {
+        try {
+            Timber.d("$TAG: 清除 Preedit 內容")
+
+            // 重置 T9 輸入邏輯
+            t9InputLogic.reset()
+
+            // 清空 UI 狀態
+            clearInputState()
+        } catch (e: Exception) {
+            Timber.e(e, "$TAG: Error clearing preedit")
         }
     }
 

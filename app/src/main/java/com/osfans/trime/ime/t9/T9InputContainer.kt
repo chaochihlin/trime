@@ -5,9 +5,9 @@
 package com.osfans.trime.ime.t9
 
 import android.content.Context
-import android.graphics.Color
 import android.util.AttributeSet
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.toColorInt
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.core.TrimeInputMethodService
@@ -22,8 +22,8 @@ import splitties.views.dsl.constraintlayout.startOfParent
 import splitties.views.dsl.constraintlayout.startToEndOf
 import splitties.views.dsl.constraintlayout.topOfParent
 import splitties.views.dsl.constraintlayout.topToBottomOf
-import splitties.views.dsl.core.wrapContent
 import splitties.views.dsl.core.add
+import splitties.views.dsl.core.wrapContent
 import timber.log.Timber
 
 /**
@@ -49,6 +49,7 @@ class T9InputContainer
         // T9組件
         private lateinit var t9Keyboard: T9KeyboardView
         private lateinit var contextDisplay: ContextDisplayArea
+        private lateinit var preeditArea: T9PreeditView
         private lateinit var candidateBar: T9CandidateBar
         private lateinit var confirmButton: T9ConfirmButton // Stage 8A: 移至容器管理
         private lateinit var eventHandler: T9InputEventHandler
@@ -60,8 +61,7 @@ class T9InputContainer
 
         init {
             id = generateViewId()
-            // 維持黃色背景for T9InputContainer視覺識別
-            setBackgroundColor(Color.parseColor("#FFFF44"))
+            setBackgroundColor("#1b224d".toColorInt())
         }
 
         companion object {
@@ -85,8 +85,6 @@ class T9InputContainer
                 setupLayout()
                 setupEventHandling()
                 updateThemes()
-
-                Timber.d("$TAG: T9InputContainer setup completed successfully")
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Critical error during T9InputContainer setup")
                 throw e
@@ -98,38 +96,32 @@ class T9InputContainer
          */
         private fun createComponents() {
             try {
-                Timber.d("$TAG: Creating T9CandidateBar...")
                 candidateBar =
                     T9CandidateBar(context).apply {
                         id = generateViewId()
-                        visibility = android.view.View.VISIBLE
+                        visibility = VISIBLE
                     }
-                Timber.d("$TAG: T9CandidateBar created successfully")
 
-                Timber.d("$TAG: Creating ContextDisplayArea...")
                 contextDisplay =
                     ContextDisplayArea(context).apply {
                         id = generateViewId()
                     }
-                Timber.d("$TAG: ContextDisplayArea created successfully")
 
-                Timber.d("$TAG: Creating T9KeyboardView...")
+                preeditArea =
+                    T9PreeditView(context).apply {
+                        id = generateViewId()
+                        displayMode = T9PreeditView.Companion.DisplayMode.MIXED
+                    }
                 t9Keyboard =
                     T9KeyboardView(context).apply {
                         id = generateViewId()
                     }
-                Timber.d("$TAG: T9KeyboardView created successfully")
 
-                Timber.d("$TAG: Creating T9ConfirmButton...")
                 confirmButton =
                     T9ConfirmButton(context).apply {
                         id = generateViewId()
                     }
-                Timber.d("$TAG: T9ConfirmButton created successfully")
-
-                Timber.d("$TAG: Creating T9InputEventHandler...")
-                eventHandler = T9InputEventHandler(rimeSession, contextDisplay, candidateBar, service)
-                Timber.d("$TAG: T9InputEventHandler created successfully")
+                eventHandler = T9InputEventHandler(rimeSession, contextDisplay, preeditArea, candidateBar, service)
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error creating T9 components")
                 throw e
@@ -141,14 +133,22 @@ class T9InputContainer
          */
         private fun setupLayout() {
             try {
-                Timber.d("$TAG: Adding candidate bar to layout...")
                 add(
                     candidateBar,
                     lParams(dp(200), dp(56)) {
-                        // 固定寬度200dp x 高度56dp，增加候選詞顯示空間
-                        topOfParent(dp(16)) // 增加topMargin到16dp，提供更多頂部空間
+                        // 候選詞列：200dp寬 x 56dp高（位置對調：移至上方）
+                        topOfParent(dp(8)) // 距離頂部4dp
                         centerHorizontally()
-                        // 移除constrainedWidth = true 避免被壓縮為0寬度
+                    },
+                )
+
+                Timber.d("$TAG: Adding preedit area to layout...")
+                add(
+                    preeditArea,
+                    lParams(dp(200), dp(56)) {
+                        // Preedit區域：200dp寬 x 56dp高（等高均分）
+                        topToBottomOf(candidateBar, dp(2)) // 距離候選詞區域4dp
+                        centerHorizontally()
                     },
                 )
 
@@ -176,11 +176,11 @@ class T9InputContainer
                 add(
                     t9Keyboard,
                     lParams(0, 0) {
-                        // 修改：T9KeyboardView 頂端對齊螢幕垂直中央
-                        topOfParent(dp(144)) // T9KeyboardView佔螢幕60%高度，計算頂部位置：(456px - 18.2px - 273.6px) ÷ 1.1375 = 144dp
-                        bottomOfParent(dp(16)) // Stage 9: 添加bottomMargin=16dp
-                        startToEndOf(contextDisplay, dp(4)) // Stage 11: 緊鄰ContextDisplay，4dp間距
-                        endToStartOf(confirmButton, dp(4)) // Stage 10: 與confirmButton保持4dp間距
+                        // 修改：T9KeyboardView 位於 preeditArea 下方
+                        topToBottomOf(preeditArea, dp(8)) // 距離preedit區域8dp
+                        bottomOfParent(dp(16)) // 添加bottomMargin=16dp
+                        startToEndOf(contextDisplay, dp(4)) // 緊鄰ContextDisplay，4dp間距
+                        endToStartOf(confirmButton, dp(4)) // 與confirmButton保持4dp間距
                     },
                 )
             } catch (e: Exception) {
@@ -222,6 +222,11 @@ class T9InputContainer
                         }
                     },
                 )
+
+                // 設置 Preedit 刪除按鈕點擊事件
+                preeditArea.onDeleteClickListener = {
+                    eventHandler.clearPreedit()
+                }
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error setting up T9 event handling")
                 throw e
@@ -234,6 +239,7 @@ class T9InputContainer
         private fun updateThemes() {
             try {
                 contextDisplay.updateTheme(theme)
+                preeditArea.updateTheme(theme)
                 candidateBar.updateTheme(theme)
                 confirmButton.updateTheme(theme)
             } catch (e: Exception) {
@@ -248,6 +254,7 @@ class T9InputContainer
             try {
                 service.commitText(punctuation)
                 contextDisplay.clearInput()
+                preeditArea.clear()
                 candidateBar.clearCandidates()
             } catch (e: Exception) {
                 // 忽略錯誤
@@ -266,6 +273,7 @@ class T9InputContainer
          */
         fun reset() {
             eventHandler.reset()
+            preeditArea.clear()
         }
 
         /**
@@ -297,6 +305,11 @@ class T9InputContainer
          * 取得確認按鈕實例
          */
         fun getConfirmButton(): T9ConfirmButton = confirmButton // Stage 8A: 提供確認按鈕存取
+
+        /**
+         * 取得Preedit區域實例
+         */
+        fun getPreeditArea(): T9PreeditView = preeditArea
 
         /**
          * 取得事件處理器實例

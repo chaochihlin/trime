@@ -41,7 +41,15 @@ style:
   candidate_spacing: 0.3
   candidate_text_size: 20
   candidate_use_cursor: true
-  candidate_view_height: 32
+  candidate_view_height: 48          # 從32調整為48，配合新的Preedit佈局
+
+  # Preedit設定
+  preedit_height: 28
+  preedit_padding: 4
+  preedit_text_size: 14
+  preedit_background_color: 0xff1a1a1a  # 深灰背景
+  preedit_text_color: 0xffffffff        # 白色文字
+  preedit_margin: 4
 
   # 按鍵尺寸 - 手錶優化
   key_height: *watch_key_height

@@ -14,7 +14,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
@@ -42,20 +41,21 @@ class T9NumberKey
         companion object {
             private const val TAG = "T9NumberKey"
         }
+
         // 注音提示TextView（現在作為主要顯示）
         private val hintTextView =
             TextView(context).apply {
-                textSize = 12f  // 調小注音符號字體適合手錶螢幕
+                textSize = 12f // 調小注音符號字體適合手錶螢幕
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
                 maxLines = 2
-                typeface = Typeface.DEFAULT_BOLD  // 加粗注音符號
+                typeface = Typeface.DEFAULT_BOLD // 加粗注音符號
             }
 
         // 數字顯示TextView（現在作為次要顯示）
         private val numberTextView =
             TextView(context).apply {
-                textSize = 10f  // 縮小數字字體
+                textSize = 10f // 縮小數字字體
                 setTextColor(Color.GRAY)
                 gravity = Gravity.CENTER
             }
@@ -65,8 +65,8 @@ class T9NumberKey
             GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(8).toFloat()
-                setColor(Color.parseColor("#1e1e1e"))
-                setStroke(dp(1), Color.parseColor("#333333"))
+                setColor(Color.TRANSPARENT)
+                setStroke(dp(1), Color.WHITE)
             }
 
         // 按壓狀態背景
@@ -74,8 +74,8 @@ class T9NumberKey
             GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(8).toFloat()
-                setColor(Color.parseColor("#3e3e3e"))
-                setStroke(dp(1), Color.parseColor("#555555"))
+                setColor(Color.TRANSPARENT)
+                setStroke(dp(1), Color.WHITE)
             }
 
         var keyNumber: Int = 0
@@ -97,6 +97,7 @@ class T9NumberKey
             setupLayout()
             setupBackground()
             setupTouchHandling()
+            setupMargin()
         }
 
         /**
@@ -117,7 +118,7 @@ class T9NumberKey
                     LayoutParams.WRAP_CONTENT,
                 ).apply {
                     gravity = Gravity.CENTER
-                    weight = 1f  // 給注音符號更多空間
+                    weight = 1f // 給注音符號更多空間
                 },
             )
 
@@ -144,6 +145,20 @@ class T9NumberKey
 
             // 啟用觸覺回饋
             isHapticFeedbackEnabled = true
+        }
+
+        /**
+         * 設置邊距
+         */
+        private fun setupMargin() {
+            val params =
+                layoutParams as? android.view.ViewGroup.MarginLayoutParams
+                    ?: android.view.ViewGroup.MarginLayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+            params.setMargins(dp(1), dp(1), dp(1), dp(1))
+            layoutParams = params
         }
 
         /**
@@ -186,40 +201,28 @@ class T9NumberKey
             this.theme = theme
 
             try {
-                // 更新注音符號文字顏色
-                val keyTextColor =
-                    ColorManager.getColor("key_text_color")
-                        ?: Color.WHITE
-                hintTextView.setTextColor(keyTextColor)
+                // 更新注音符號文字顏色 - 強制設為白色
+                hintTextView.setTextColor(Color.WHITE)
 
                 // 更新數字文字顏色
                 val hintTextColor = Color.GRAY
                 numberTextView.setTextColor(hintTextColor)
 
-                // 更新背景顏色
-                val keyBackgroundColor = Color.parseColor("#1e1e1e")
-                val keyBorderColor = Color.parseColor("#333333")
-
+                // 更新背景顏色 - 透明底色配白色邊框
                 backgroundDrawable.apply {
-                    setColor(keyBackgroundColor)
-                    setStroke(dp(1), keyBorderColor)
+                    setColor(Color.TRANSPARENT)
+                    setStroke(dp(1), Color.WHITE)
                 }
 
-                // 更新按壓狀態顏色
-                val pressedBackgroundColor = Color.parseColor("#3e3e3e")
-                val pressedBorderColor = Color.parseColor("#555555")
-
+                // 更新按壓狀態顏色 - 透明底色配白色邊框
                 pressedDrawable.apply {
-                    setColor(pressedBackgroundColor)
-                    setStroke(dp(1), pressedBorderColor)
+                    setColor(Color.TRANSPARENT)
+                    setStroke(dp(1), Color.WHITE)
                 }
 
-                // 更新文字大小
-                val keyTextSize = theme.generalStyle.keyTextSize.takeIf { it > 0 } ?: 12f
-                hintTextView.textSize = keyTextSize
-
-                val hintTextSize = theme.generalStyle.symbolTextSize.takeIf { it > 0 } ?: 10f
-                numberTextView.textSize = hintTextSize
+                // 固定字體大小，不使用主題設定
+                hintTextView.textSize = 12f // 注音符號
+                numberTextView.textSize = 12f // 數字標籤，改為與注音相同大小
 
                 invalidate()
             } catch (e: Exception) {
