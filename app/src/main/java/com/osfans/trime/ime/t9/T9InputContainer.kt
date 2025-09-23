@@ -61,7 +61,7 @@ class T9InputContainer
 
         init {
             id = generateViewId()
-            setBackgroundColor("#1b224d".toColorInt())
+            setBackgroundColor("#0f1529".toColorInt())
         }
 
         companion object {
@@ -145,10 +145,11 @@ class T9InputContainer
                 Timber.d("$TAG: Adding preedit area to layout...")
                 add(
                     preeditArea,
-                    lParams(dp(200), dp(56)) {
-                        // Preedit區域：200dp寬 x 56dp高（等高均分）
+                    lParams(0, dp(56)) {
+                        // Preedit區域：左右各32dp margin x 56dp高
                         topToBottomOf(candidateBar, dp(2)) // 距離候選詞區域4dp
-                        centerHorizontally()
+                        startOfParent(dp(32)) // 左邊距32dp
+                        endOfParent(dp(32)) // 右邊距32dp
                     },
                 )
 
@@ -225,7 +226,7 @@ class T9InputContainer
 
                 // 設置 Preedit 刪除按鈕點擊事件
                 preeditArea.onDeleteClickListener = {
-                    eventHandler.clearPreedit()
+                    eventHandler.onBackspacePress()
                 }
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error setting up T9 event handling")
@@ -240,7 +241,7 @@ class T9InputContainer
             try {
                 contextDisplay.updateTheme(theme)
                 preeditArea.updateTheme(theme)
-                candidateBar.updateTheme(theme)
+                // candidateBar不再需要updateTheme，因為已移除Theme依賴
                 confirmButton.updateTheme(theme)
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Failed to update component themes")

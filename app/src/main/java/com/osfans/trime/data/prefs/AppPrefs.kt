@@ -9,7 +9,6 @@ import android.content.SharedPreferences
 import androidx.annotation.Keep
 import androidx.preference.PreferenceManager
 import com.osfans.trime.R
-import com.osfans.trime.data.base.DataManager
 import com.osfans.trime.ime.candidates.popup.PopupCandidatesMode
 import com.osfans.trime.ime.composition.PopupPosition
 import com.osfans.trime.ime.core.ComposingTextMode
@@ -216,6 +215,7 @@ class AppPrefs(
             const val LAST_BACKGROUND_SYNC_STATUS = "last_background_sync_status"
             const val LAST_BACKGROUND_SYNC_TIME = "last_background_sync_time"
         }
+
         val periodicBackgroundSync = bool(PERIODIC_BACKGROUND_SYNC, false)
         val periodicBackgroundSyncInterval = int(PERIODIC_BACKGROUND_SYNC_INTERVAL, 120)
         val lastBackgroundSyncStatus = bool(LAST_BACKGROUND_SYNC_STATUS, false)

@@ -100,8 +100,8 @@ class T9PreeditView
             // 內距設置
             setPadding(0, 0, 0, 0)
 
-            // 背景顏色（調試用）
-            setBackgroundColor("#2A2A2A".toColorInt())
+            // 背景顏色（20% 黑色）
+            setBackgroundColor("#33000000".toColorInt()) // 20% 透明度黑色
 
             // 添加文字區域和刪除按鈕
             addView(textView, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
@@ -193,10 +193,10 @@ class T9PreeditView
                         ?: Color.WHITE
                 textView.setTextColor(textColor)
 
-                // 更新背景顏色
+                // 更新背景顏色（使用 20% 黑色）
                 val backgroundColor =
                     ColorManager.getColor("preedit_background_color")
-                        ?: Color.parseColor("#2A2A2A")
+                        ?: Color.parseColor("#33000000") // 20% 透明度黑色
                 setBackgroundColor(backgroundColor)
 
                 // 更新字體
@@ -215,7 +215,7 @@ class T9PreeditView
             } catch (e: Exception) {
                 // 如果主題配置失敗，使用默認樣式
                 textView.setTextColor(Color.WHITE)
-                setBackgroundColor("#2A2A2A".toColorInt())
+                setBackgroundColor("#33000000".toColorInt()) // 20% 透明度黑色
                 textView.typeface = Typeface.DEFAULT
             }
         }

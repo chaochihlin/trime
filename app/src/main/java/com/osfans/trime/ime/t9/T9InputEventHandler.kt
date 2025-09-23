@@ -96,32 +96,29 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理數字鍵長按事件
+     * 處理數字鍵長按事件 - 直接輸入數字字符
+     *
+     * 繞過 RIME 引擎，直接將數字提交到當前輸入目標
      */
     override fun onNumberKeyLongPress(number: Int): Boolean {
-        Timber.d("$TAG: Number key long pressed: $number")
+        Timber.d("$TAG: 長按數字鍵: $number - 直接輸入數字字符")
 
         try {
-            // 長按可能觸發特殊功能，如符號輸入
-            when (number) {
-                1 -> {
-                    // 長按1鍵，輸入標點符號
-                    handlePunctuationInput("，")
-                    return true
-                }
-                0 -> {
-                    // 長按0鍵，輸入空格
-                    handleSpaceInput()
-                    return true
-                }
-                else -> {
-                    // 其他數字鍵長按，暫時與短按相同
-                    onNumberKeyPress(number)
-                    return true
-                }
+            val digitText = number.toString()
+
+            // 直接通過 InputConnection 提交數字字符
+            val inputConnection = service.currentInputConnection
+            if (inputConnection != null) {
+                inputConnection.commitText(digitText, 1)
+                Timber.d("$TAG: ✅ 成功直接輸入數字: $digitText")
+                return true
+            } else {
+                Timber.w("$TAG: ⚠️ InputConnection 為 null，嘗試通過服務提交")
+                service.commitText(digitText)
+                return true
             }
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error processing long press: $number")
+            Timber.e(e, "$TAG: ❌ 處理長按數字鍵時發生錯誤: $number")
             return false
         }
     }

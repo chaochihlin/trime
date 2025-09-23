@@ -6,10 +6,10 @@ package com.osfans.trime.ime.t9
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.util.AttributeSet
-import android.view.MotionEvent
 import android.widget.ImageButton
+import androidx.core.content.ContextCompat
 import com.osfans.trime.R
 import com.osfans.trime.data.theme.ColorManager
 import com.osfans.trime.data.theme.Theme
@@ -17,14 +17,13 @@ import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
 
 /**
- * T9圓形確認按鈕
+ * T9確認按鈕
  *
- * 特殊設計的圓形白底確認按鈕，包含：
- * - 圓形白色背景
- * - 黑色勾勾圖標
- * - 按壓視覺效果
- * - 陰影效果
- * - 觸覺回饋
+ * 簡化的 IconButton 風格，包含：
+ * - 透明背景
+ * - 可主題化圖標
+ * - 漣漪動畫效果
+ * - 觸覺回饋和音效
  *
  * @param context Android上下文
  * @param attrs 屬性集
@@ -35,100 +34,63 @@ class T9ConfirmButton
         context: Context,
         attrs: AttributeSet? = null,
     ) : ImageButton(context, attrs) {
-        // 正常狀態背景
-        private val normalDrawable =
-            GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.WHITE)
-            }
-
-        // 按壓狀態背景
-        private val pressedDrawable =
-            GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#e0e0e0"))
-            }
-
-        // 禁用狀態背景
-        private val disabledDrawable =
-            GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.parseColor("#cccccc"))
-            }
-
         private var theme: Theme? = null
 
         init {
             setupButton()
-            setupTouchHandling()
         }
 
         /**
          * 設置按鈕基本屬性
          */
         private fun setupButton() {
-            // 設置背景
-            background = normalDrawable
-
-            // 設置勾勾圖標 - 使用系統的確認圖標
+            // 設置確認圖標
             try {
-                setImageResource(R.drawable.ic_baseline_check_circle_24) // Stage 12: 使用項目內的checkmark圖標
+                setImageResource(R.drawable.ic_baseline_check_circle_24)
                 scaleType = ScaleType.CENTER
             } catch (e: Exception) {
-                // 如果找不到圖標，使用文字替代
-                setImageDrawable(null)
+                // 如果找不到圖標，保持默認
             }
 
-            // 設置尺寸
-            layoutParams?.let {
-                it.width = dp(50)
-                it.height = dp(50)
+            // 設置尺寸 - IconButton 標準尺寸
+            minimumWidth = dp(48)
+            minimumHeight = dp(48)
+
+            // 設置透明背景，移除白底
+            background = ContextCompat.getDrawable(context, android.R.color.transparent)
+
+            // 設置漣漪效果
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                try {
+                    val colorStateList = ContextCompat.getColorStateList(context, android.R.color.darker_gray)
+                    if (colorStateList != null) {
+                        val ripple = RippleDrawable(colorStateList, null, null)
+                        background = ripple
+                    }
+                } catch (e: Exception) {
+                    // 如果漣漪效果失敗，保持透明背景
+                    background = ContextCompat.getDrawable(context, android.R.color.transparent)
+                }
             }
 
             // 啟用觸覺回饋
             isHapticFeedbackEnabled = true
 
-            // 設置點擊屬性
-            isClickable = true
-            isFocusable = true
-
-            // 設置陰影效果
-            elevation = dp(4).toFloat()
+            // 設置點擊監聽器以添加音效和觸覺回饋
+            setOnClickListener {
+                performConfirmClick()
+            }
         }
 
         /**
-         * 設置觸控處理
+         * 處理確認按鈕點擊
          */
-        private fun setupTouchHandling() {
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        // 按下效果
-                        if (isEnabled) {
-                            background = pressedDrawable
-                            scaleX = 0.9f
-                            scaleY = 0.9f
-                            elevation = dp(2).toFloat()
-
-                            // 觸覺回饋
-                            InputFeedbackManager.keyPressVibrate(this)
-                        }
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        // 釋放效果
-                        background = if (isEnabled) normalDrawable else disabledDrawable
-                        scaleX = 1.0f
-                        scaleY = 1.0f
-                        elevation = dp(4).toFloat()
-
-                        if (event.action == MotionEvent.ACTION_UP && isEnabled) {
-                            performClick()
-                        }
-                        true
-                    }
-                    else -> false
-                }
+        private fun performConfirmClick() {
+            if (isEnabled) {
+                // 觸覺回饋
+                InputFeedbackManager.keyPressVibrate(this)
+                // 音效
+                playKeySound()
             }
         }
 
@@ -139,47 +101,15 @@ class T9ConfirmButton
             this.theme = theme
 
             try {
-                // 更新按鈕背景顏色
-                val confirmButtonColor =
-                    ColorManager.getColor("confirm_button_color")
-                        ?: Color.WHITE
-                val confirmButtonPressedColor =
-                    ColorManager.getColor("confirm_button_pressed_color")
-                        ?: Color.parseColor("#e0e0e0")
-                val confirmButtonDisabledColor =
-                    ColorManager.getColor("confirm_button_disabled_color")
-                        ?: Color.parseColor("#cccccc")
-
-                normalDrawable.setColor(confirmButtonColor)
-                pressedDrawable.setColor(confirmButtonPressedColor)
-                disabledDrawable.setColor(confirmButtonDisabledColor)
-
                 // 更新圖標顏色
                 val iconColor =
                     ColorManager.getColor("confirm_button_icon_color")
-                        ?: Color.BLACK
+                        ?: Color.WHITE // 預設為白色，在深色背景上顯示較好
                 setColorFilter(iconColor)
             } catch (e: Exception) {
-                // 如果主題色彩獲取失敗，使用默認顏色
-                normalDrawable.setColor(Color.WHITE)
-                pressedDrawable.setColor(Color.parseColor("#e0e0e0"))
-                disabledDrawable.setColor(Color.parseColor("#cccccc"))
-                setColorFilter(Color.BLACK)
+                // 如果主題色彩獲取失敗，使用白色
+                setColorFilter(Color.WHITE)
             }
-
-            // 刷新當前狀態
-            updateButtonState()
-        }
-
-        /**
-         * 更新按鈕狀態
-         */
-        private fun updateButtonState() {
-            background =
-                when {
-                    !isEnabled -> disabledDrawable
-                    else -> normalDrawable
-                }
         }
 
         /**
@@ -187,7 +117,6 @@ class T9ConfirmButton
          */
         override fun setEnabled(enabled: Boolean) {
             super.setEnabled(enabled)
-            updateButtonState()
             alpha = if (enabled) 1.0f else 0.6f
         }
 
@@ -207,19 +136,6 @@ class T9ConfirmButton
          */
         fun simulatePress() {
             if (!isEnabled) return
-
-            background = pressedDrawable
-            scaleX = 0.9f
-            scaleY = 0.9f
-            elevation = dp(2).toFloat()
-
-            postDelayed({
-                background = normalDrawable
-                scaleX = 1.0f
-                scaleY = 1.0f
-                elevation = dp(4).toFloat()
-            }, 150)
-
             performClick()
         }
 
@@ -251,9 +167,8 @@ class T9ConfirmButton
         }
 
         override fun performClick(): Boolean {
-            if (isEnabled) {
-                playKeySound()
-            }
+            // 注意：音效和觸覺回饋已在 performConfirmClick() 中處理
+            // 這裡不再重複處理，避免雙重觸發
             return super.performClick()
         }
     }

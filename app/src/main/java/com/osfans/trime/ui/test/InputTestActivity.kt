@@ -25,7 +25,6 @@ class InputTestActivity : Activity() {
 
         inputEditText = findViewById(R.id.input_edit_text)
 
-
         // 自動 focus 到輸入框並顯示鍵盤
         inputEditText.requestFocus()
         inputEditText.postDelayed({
@@ -33,7 +32,6 @@ class InputTestActivity : Activity() {
             imm.showSoftInput(inputEditText, InputMethodManager.SHOW_IMPLICIT)
         }, 200)
     }
-
 
     private fun setupFullscreenWindow() {
         // 方法 1: 請求隱藏標題
@@ -67,6 +65,5 @@ class InputTestActivity : Activity() {
 
         // 方法 4: 確保沒有任何裝飾
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
     }
 }

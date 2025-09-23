@@ -12,9 +12,9 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
-import androidx.core.graphics.toColorInt
 
 /**
  * T9刪除按鈕
@@ -34,18 +34,18 @@ class T9DeleteButton
         context: Context,
         attrs: AttributeSet? = null,
     ) : TextView(context, attrs) {
-        // 正常狀態背景
+        // 正常狀態背景（透明）
         private val normalDrawable =
             GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.WHITE)
+                setColor(Color.TRANSPARENT)
             }
 
-        // 按壓狀態背景
+        // 按壓狀態背景（半透明白色）
         private val pressedDrawable =
             GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor("#e0e0e0".toColorInt())
+                setColor("#40FFFFFF".toColorInt()) // 25% 透明度白色
             }
 
         private var theme: Theme? = null
@@ -65,8 +65,8 @@ class T9DeleteButton
         private fun setupButton() {
             // 設置退格符號
             text = "⌫"
-            textSize = 16f
-            setTextColor("#333333".toColorInt())
+            textSize = 28f
+            setTextColor(Color.WHITE) // 改為白色字體
             typeface = Typeface.DEFAULT
             gravity = Gravity.CENTER
 
@@ -121,17 +121,17 @@ class T9DeleteButton
             this.theme = theme
 
             try {
-                // 保持固定的白色背景和深色文字
-                setTextColor("#333333".toColorInt())
+                // 使用透明背景和白色文字
+                setTextColor(Color.WHITE)
 
                 // 更新背景顏色
-                normalDrawable.setColor(Color.WHITE)
-                pressedDrawable.setColor("#e0e0e0".toColorInt())
+                normalDrawable.setColor(Color.TRANSPARENT)
+                pressedDrawable.setColor("#40FFFFFF".toColorInt())
 
                 invalidate()
             } catch (e: Exception) {
                 // 使用默認顏色
-                setTextColor("#333333".toColorInt())
+                setTextColor(Color.WHITE)
             }
         }
 

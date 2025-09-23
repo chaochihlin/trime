@@ -31,9 +31,10 @@ class RimeLifecycleImpl : RimeLifecycle {
 
         // 獲取調用堆棧
         val stackTrace = Thread.currentThread().stackTrace
-        val caller = stackTrace.drop(2).take(3).joinToString(" → ") {
-            "${it.className.substringAfterLast('.')}.${it.methodName}(${it.lineNumber})"
-        }
+        val caller =
+            stackTrace.drop(2).take(3).joinToString(" → ") {
+                "${it.className.substringAfterLast('.')}.${it.methodName}(${it.lineNumber})"
+            }
         Timber.w("🔍 [RimeLifecycle] emitState 調用者: $caller")
 
         when (state) {

@@ -129,7 +129,7 @@ object RimeDaemon {
                     val currentFreeMemory = runtime.freeMemory() / 1024 / 1024
                     Timber.w(
                         e,
-                        "RIME 引擎啟動失敗: ${e.message}, 當前可用記憶體: ${currentFreeMemory}MB"
+                        "RIME 引擎啟動失敗: ${e.message}, 當前可用記憶體: ${currentFreeMemory}MB",
                     )
 
                     // 針對手錶設備記憶體限制的建議

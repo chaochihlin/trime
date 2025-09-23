@@ -7,7 +7,6 @@ package com.osfans.trime.core
 import com.osfans.trime.BuildConfig
 import com.osfans.trime.data.base.DataManager
 import com.osfans.trime.data.schema.SchemaManager
-import com.osfans.trime.util.appContext
 import com.osfans.trime.util.isAsciiPrintable
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -312,9 +311,10 @@ class Rime :
 
         // 獲取調用堆棧以追蹤誰調用了 finalize
         val stackTrace = Thread.currentThread().stackTrace
-        val caller = stackTrace.drop(2).take(5).joinToString("\n") {
-            "    at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})"
-        }
+        val caller =
+            stackTrace.drop(2).take(5).joinToString("\n") {
+                "    at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})"
+            }
         Timber.w("🔍 [Rime] finalize 調用堆棧:\n$caller")
 
         if (currentState != RimeLifecycle.State.READY) {

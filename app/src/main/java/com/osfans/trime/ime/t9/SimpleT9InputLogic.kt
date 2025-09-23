@@ -58,56 +58,60 @@ class SimpleT9InputLogic(
     }
 
     /**
-     * 處理數字輸入
+     * 處理注音輸入（短按數字鍵）
+     *
+     * 透過 RIME 引擎處理數字按鍵，讓 RIME 根據當前方案決定對應的注音符號
      */
-    fun processDigit(digit: Int) {
+    fun processZhuyinInput(digit: Int) {
         if (digit !in 0..9) {
-            Timber.w("$TAG: Invalid digit: $digit")
+            Timber.w("$TAG: Invalid digit for zhuyin input: $digit")
             return
         }
 
-        Timber.d("$TAG: 將數字 '$digit' 傳遞給 Rime 引擎")
+        Timber.d("$TAG: 處理注音輸入 - 數字 '$digit' 傳遞給 RIME 引擎")
 
-        // 檢查 RIME 引擎就緒狀態和生命週期
+        // 檢查 RIME 引擎就緒狀態
         val isRimeReady = rimeSession.run { isReady }
-        Timber.d("$TAG: RIME 引擎就緒狀態: $isRimeReady")
-
-        // 檢查 RIME 生命週期狀態
-        val lifecycleState = rimeSession.run { stateFlow.replayCache.lastOrNull() }
-        Timber.d("$TAG: RIME 生命週期狀態: $lifecycleState")
-
         if (!isRimeReady) {
-            Timber.w("$TAG: RIME 引擎尚未就緒，無法處理按鍵輸入")
+            Timber.w("$TAG: RIME 引擎尚未就緒，無法處理注音輸入")
             return
         }
 
         coroutineScope.launch {
             try {
-                Timber.d("$TAG: 準備呼叫 runOnReady...")
                 rimeSession.runOnReady {
-                    Timber.d("$TAG: ✅ 成功進入 runOnReady 回調")
-
-                    // 檢查 RIME 引擎狀態
+                    // 檢查當前方案
                     val currentSchema = selectedSchemaId()
-                    Timber.d("$TAG: RIME 狀態 - 當前方案: '$currentSchema'")
+                    Timber.d("$TAG: 注音輸入 - 當前方案: '$currentSchema'")
 
-                    // 直接將按鍵事件傳遞給 Rime 引擎
+                    // 將數字轉換為按鍵碼並傳遞給 RIME
                     val keyCode = digit.toString().first().code
-                    Timber.d("$TAG: 發送按鍵碼: $keyCode (字符: '${digit.toString().first()}')")
+                    Timber.d("$TAG: 發送按鍵碼 $keyCode 給 RIME 處理注音")
 
                     val result = processKey(keyCode, 0u)
-                    Timber.d("$TAG: processKey 結果: $result")
+                    Timber.d("$TAG: RIME 注音處理結果: $result")
 
-                    // 檢查處理後的狀態
+                    // 檢查處理後的組合和候選詞狀態
                     val composition = compositionCached
                     val menu = menuCached
-                    Timber.d("$TAG: 處理後狀態 - preedit: '${composition.preedit}', candidates: ${menu.candidates.size}")
+                    Timber.d("$TAG: 注音處理後 - preedit: '${composition.preedit}', candidates: ${menu.candidates.size}")
+
+                    if (!composition.preedit.isNullOrEmpty() || menu.candidates.isNotEmpty()) {
+                        Timber.d("$TAG: ✅ 注音輸入成功，有預編輯文字或候選詞")
+                    }
                 }
-                Timber.d("$TAG: runOnReady 呼叫完成")
             } catch (e: Exception) {
-                Timber.e(e, "$TAG: 處理數字輸入時發生錯誤")
+                Timber.e(e, "$TAG: 處理注音輸入時發生錯誤: $digit")
             }
         }
+    }
+
+    /**
+     * 處理數字輸入（向後兼容，仍使用注音邏輯）
+     */
+    @Deprecated("使用 processZhuyinInput 進行注音輸入")
+    fun processDigit(digit: Int) {
+        processZhuyinInput(digit)
     }
 
     /**

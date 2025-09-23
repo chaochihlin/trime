@@ -88,21 +88,19 @@ data class T9InputState(
         )
 
     /** 格式化預編輯文字 */
-    private fun formatPreeditText(): String {
-        return if (digitSequence.isNotEmpty()) {
+    private fun formatPreeditText(): String =
+        if (digitSequence.isNotEmpty()) {
             digitSequence.toCharArray().joinToString(" ")
         } else {
             ""
         }
-    }
 
     /** 格式化注音顯示文字 */
-    private fun formatZhuyinDisplayText(zhuyinList: List<String>): String {
-        return when {
+    private fun formatZhuyinDisplayText(zhuyinList: List<String>): String =
+        when {
             zhuyinList.isEmpty() -> ""
             zhuyinList.size == 1 -> zhuyinList[0]
             zhuyinList.size <= 3 -> zhuyinList.joinToString(" / ")
             else -> "${zhuyinList.take(2).joinToString(" / ")}..."
         }
-    }
 }

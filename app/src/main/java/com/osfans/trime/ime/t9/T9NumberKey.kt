@@ -14,7 +14,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
 import timber.log.Timber
@@ -42,6 +41,15 @@ class T9NumberKey
             private const val TAG = "T9NumberKey"
         }
 
+        /**
+         * 按鍵顯示模式
+         */
+        enum class KeyDisplayMode {
+            NORMAL, // 正常狀態
+            ZHUYIN, // 注音輸入模式（短按）
+            DIGIT, // 數字輸入模式（長按）
+        }
+
         // 注音提示TextView（現在作為主要顯示）
         private val hintTextView =
             TextView(context).apply {
@@ -55,8 +63,8 @@ class T9NumberKey
         // 數字顯示TextView（現在作為次要顯示）
         private val numberTextView =
             TextView(context).apply {
-                textSize = 10f // 縮小數字字體
-                setTextColor(Color.GRAY)
+                textSize = 14f // 增大數字字體
+                setTextColor(Color.parseColor("#CCCCCC")) // 更亮的灰色
                 gravity = Gravity.CENTER
             }
 
@@ -66,16 +74,22 @@ class T9NumberKey
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(8).toFloat()
                 setColor(Color.TRANSPARENT)
-                setStroke(dp(1), Color.WHITE)
             }
 
-        // 按壓狀態背景
-        private val pressedDrawable =
+        // 短按（注音模式）按壓狀態背景
+        private val zhuyinPressedDrawable =
             GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(8).toFloat()
-                setColor(Color.TRANSPARENT)
-                setStroke(dp(1), Color.WHITE)
+                setColor(Color.parseColor("#33FFFFFF")) // 淡白色背景表示注音模式
+            }
+
+        // 長按（數字模式）按壓狀態背景
+        private val digitPressedDrawable =
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(8).toFloat()
+                setColor(Color.parseColor("#33FFFF00")) // 淡黃色背景表示數字模式
             }
 
         var keyNumber: Int = 0
@@ -91,8 +105,6 @@ class T9NumberKey
                 hintTextView.visibility = if (value.isNotEmpty()) View.VISIBLE else View.GONE
             }
 
-        private var theme: Theme? = null
-
         init {
             setupLayout()
             setupBackground()
@@ -107,8 +119,8 @@ class T9NumberKey
             orientation = VERTICAL
             gravity = Gravity.CENTER
 
-            // 設置內距
-            setPadding(dp(4), dp(4), dp(4), dp(4))
+            // 設置內距（減少垂直內距讓元素更緊湊）
+            setPadding(dp(4), dp(2), dp(4), dp(2))
 
             // 添加注音符號TextView（現在作為主要顯示，放在上方）
             addView(
@@ -118,7 +130,7 @@ class T9NumberKey
                     LayoutParams.WRAP_CONTENT,
                 ).apply {
                     gravity = Gravity.CENTER
-                    weight = 1f // 給注音符號更多空間
+                    // 移除 weight，讓內容決定高度
                 },
             )
 
@@ -130,7 +142,7 @@ class T9NumberKey
                     LayoutParams.WRAP_CONTENT,
                 ).apply {
                     gravity = Gravity.CENTER
-                    topMargin = dp(2)
+                    // 減少頂部邊距
                 },
             )
         }
@@ -168,21 +180,14 @@ class T9NumberKey
             setOnTouchListener { _, event ->
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        // 按下效果
-                        background = pressedDrawable
-                        scaleX = 0.95f
-                        scaleY = 0.95f
-
-                        // 觸覺回饋
+                        // 短按視覺回饋（注音模式）
+                        updateKeyDisplay(isPressed = true, mode = KeyDisplayMode.ZHUYIN)
                         InputFeedbackManager.keyPressVibrate(this)
-
                         true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         // 釋放效果
-                        background = backgroundDrawable
-                        scaleX = 1.0f
-                        scaleY = 1.0f
+                        updateKeyDisplay(isPressed = false, mode = KeyDisplayMode.NORMAL)
 
                         if (event.action == MotionEvent.ACTION_UP) {
                             performClick()
@@ -192,43 +197,92 @@ class T9NumberKey
                     else -> false
                 }
             }
+
+            // 設置長按監聽器來處理數字模式視覺回饋
+            setOnLongClickListener {
+                // 長按視覺回饋（數字模式）
+                updateKeyDisplay(isPressed = true, mode = KeyDisplayMode.DIGIT)
+                InputFeedbackManager.keyPressVibrate(this, true) // 長按震動
+                false // 返回 false 讓事件繼續傳遞給父級處理器
+            }
         }
 
         /**
-         * 更新主題樣式
+         * 更新按鍵顯示狀態
          */
-        fun updateTheme(theme: Theme) {
-            this.theme = theme
+        fun updateKeyDisplay(
+            isPressed: Boolean,
+            mode: KeyDisplayMode,
+        ) {
+            try {
+                when {
+                    isPressed && mode == KeyDisplayMode.ZHUYIN -> {
+                        // 短按狀態 - 注音模式
+                        background = zhuyinPressedDrawable
+                        scaleX = 0.95f
+                        scaleY = 0.95f
+                        // 突出顯示注音符號
+                        hintTextView.setTextColor(Color.CYAN)
+                        numberTextView.setTextColor(Color.parseColor("#CCCCCC"))
+                    }
+                    isPressed && mode == KeyDisplayMode.DIGIT -> {
+                        // 長按狀態 - 數字模式
+                        background = digitPressedDrawable
+                        scaleX = 0.90f
+                        scaleY = 0.90f
+                        // 突出顯示數字
+                        hintTextView.setTextColor(Color.parseColor("#CCCCCC"))
+                        numberTextView.setTextColor(Color.YELLOW)
+                    }
+                    else -> {
+                        // 正常狀態
+                        background = backgroundDrawable
+                        scaleX = 1.0f
+                        scaleY = 1.0f
+                        // 恢復正常顏色
+                        hintTextView.setTextColor(Color.WHITE)
+                        numberTextView.setTextColor(Color.parseColor("#CCCCCC"))
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "$TAG: 更新按鍵顯示狀態時發生錯誤")
+            }
+        }
 
+        /**
+         * 更新樣式
+         */
+        fun updateStyle() {
             try {
                 // 更新注音符號文字顏色 - 強制設為白色
                 hintTextView.setTextColor(Color.WHITE)
 
-                // 更新數字文字顏色
-                val hintTextColor = Color.GRAY
+                // 更新數字文字顏色（更亮的灰色）
+                val hintTextColor = Color.parseColor("#CCCCCC")
                 numberTextView.setTextColor(hintTextColor)
 
-                // 更新背景顏色 - 透明底色配白色邊框
+                // 更新背景顏色 - 透明底色
                 backgroundDrawable.apply {
                     setColor(Color.TRANSPARENT)
-                    setStroke(dp(1), Color.WHITE)
                 }
 
-                // 更新按壓狀態顏色 - 透明底色配白色邊框
-                pressedDrawable.apply {
+                // 更新按壓狀態顏色 - 透明底色
+                zhuyinPressedDrawable.apply {
                     setColor(Color.TRANSPARENT)
-                    setStroke(dp(1), Color.WHITE)
+                }
+                digitPressedDrawable.apply {
+                    setColor(Color.TRANSPARENT)
                 }
 
                 // 固定字體大小，不使用主題設定
                 hintTextView.textSize = 12f // 注音符號
-                numberTextView.textSize = 12f // 數字標籤，改為與注音相同大小
+                numberTextView.textSize = 14f // 數字標籤，稍大更清晰
 
                 invalidate()
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Failed to update theme for key $keyNumber")
                 hintTextView.setTextColor(Color.WHITE)
-                numberTextView.setTextColor(Color.GRAY)
+                numberTextView.setTextColor(Color.parseColor("#CCCCCC"))
             }
         }
 
@@ -258,7 +312,7 @@ class T9NumberKey
          * 模擬按鍵按下效果（用於測試）
          */
         fun simulatePress() {
-            background = pressedDrawable
+            background = zhuyinPressedDrawable
             scaleX = 0.95f
             scaleY = 0.95f
 
