@@ -182,7 +182,14 @@ class T9KeyboardView
                     if (key.id == View.NO_ID) {
                         key.id = View.generateViewId()
                     }
-                    addView(key, LayoutParams(0, 0))
+                    // 為底部按鈕使用wrap_content，其他使用0(match_constraint)
+                    val layoutParams =
+                        if (key == zeroKey || key == languageKey) {
+                            LayoutParams(LayoutParams.WRAP_CONTENT, 0)
+                        } else {
+                            LayoutParams(0, 0)
+                        }
+                    addView(key, layoutParams)
                 }
             }
 
@@ -261,16 +268,26 @@ class T9KeyboardView
             set.connect(numberKeys[8].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
             set.connect(numberKeys[8].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
 
-            // Row 4 (0, Language)
+            // Row 4 (0, Language) - 使用wrap-content寬度，水平居中排列
             set.connect(zeroKey.id, ConstraintSet.TOP, hGuideline75, ConstraintSet.BOTTOM)
             set.connect(zeroKey.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-            set.connect(zeroKey.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-            set.connect(zeroKey.id, ConstraintSet.END, vGuideline50, ConstraintSet.START) // 這裡改為佔據兩列寬度
 
             set.connect(languageKey.id, ConstraintSet.TOP, hGuideline75, ConstraintSet.BOTTOM)
             set.connect(languageKey.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-            set.connect(languageKey.id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(languageKey.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+
+            // 創建水平鏈，實現居中效果
+            set.createHorizontalChain(
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.LEFT,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.RIGHT,
+                intArrayOf(zeroKey.id, languageKey.id),
+                null,
+                ConstraintSet.CHAIN_PACKED,
+            )
+
+            // 設置按鈕間距
+            set.setMargin(languageKey.id, ConstraintSet.START, 8)
 
             // 最後，套用所有約束
             try {
@@ -290,7 +307,6 @@ class T9KeyboardView
                 try {
                     numberKeys.forEach { it.updateStyle() }
                     zeroKey.updateStyle()
-                    languageKey.updateTheme(theme)
                 } catch (e: Exception) {
                     Timber.e(e, "$TAG: Failed to update theme styles")
                 }

@@ -525,6 +525,9 @@ class InputView(
         if (!restarting) {
             windowManager.attachWindow(KeyboardWindow)
         }
+
+        // 如果是T9模式，載入原輸入框內容
+        loadExistingTextForT9Input()
     }
 
     override fun handleRimeMessage(it: RimeMessage<*>) {
@@ -585,6 +588,41 @@ class InputView(
      */
     fun resetInputState() {
         t9InputContainer?.reset()
+    }
+
+    /**
+     * 為T9輸入法載入原輸入框的現有內容
+     */
+    private fun loadExistingTextForT9Input() {
+        try {
+            // 只有在T9模式下才執行
+            val container = t9InputContainer ?: return
+
+            // 獲取當前輸入連接
+            val inputConnection = service.currentInputConnection ?: return
+
+            // 嘗試獲取輸入框中的現有文字
+            val extractedText =
+                inputConnection.getExtractedText(
+                    android.view.inputmethod.ExtractedTextRequest().apply {
+                        flags = android.view.inputmethod.InputConnection.GET_TEXT_WITH_STYLES
+                        hintMaxChars = 1000 // 最多讀取1000個字符
+                    },
+                    0,
+                )
+
+            val existingText = extractedText?.text?.toString() ?: ""
+
+            if (existingText.isNotEmpty()) {
+                // 將現有文字載入到T9的文字輸入框中
+                container.setTextInputContent(existingText)
+                Timber.d("InputView: 載入現有文字到T9輸入框: '$existingText'")
+            } else {
+                Timber.d("InputView: 原輸入框沒有現有文字")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "InputView: 載入T9輸入框內容時發生錯誤")
+        }
     }
 
     override fun onDetachedFromWindow() {

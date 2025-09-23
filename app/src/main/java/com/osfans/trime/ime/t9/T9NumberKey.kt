@@ -39,6 +39,7 @@ class T9NumberKey
     ) : LinearLayout(context, attrs) {
         companion object {
             private const val TAG = "T9NumberKey"
+            private const val TEXT_SIZE = 16f // 統一文字大小
         }
 
         /**
@@ -53,19 +54,20 @@ class T9NumberKey
         // 注音提示TextView（現在作為主要顯示）
         private val hintTextView =
             TextView(context).apply {
-                textSize = 12f // 調小注音符號字體適合手錶螢幕
+                textSize = TEXT_SIZE // 統一字體大小
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
-                maxLines = 2
+                maxLines = 1 // 設定為單行
                 typeface = Typeface.DEFAULT_BOLD // 加粗注音符號
             }
 
         // 數字顯示TextView（現在作為次要顯示）
         private val numberTextView =
             TextView(context).apply {
-                textSize = 14f // 增大數字字體
+                textSize = TEXT_SIZE // 統一字體大小
                 setTextColor(Color.parseColor("#CCCCCC")) // 更亮的灰色
                 gravity = Gravity.CENTER
+                maxLines = 1 // 設定為單行
             }
 
         // 背景Drawable
@@ -275,8 +277,8 @@ class T9NumberKey
                 }
 
                 // 固定字體大小，不使用主題設定
-                hintTextView.textSize = 12f // 注音符號
-                numberTextView.textSize = 14f // 數字標籤，稍大更清晰
+                hintTextView.textSize = TEXT_SIZE // 注音符號
+                numberTextView.textSize = TEXT_SIZE // 數字標籤
 
                 invalidate()
             } catch (e: Exception) {

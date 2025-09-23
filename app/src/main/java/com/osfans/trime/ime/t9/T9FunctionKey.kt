@@ -12,8 +12,6 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
 import android.widget.Button
-import com.osfans.trime.data.theme.ColorManager
-import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
 
@@ -53,8 +51,6 @@ class T9FunctionKey
                 setStroke(dp(1), Color.parseColor("#666666"))
             }
 
-        private var theme: Theme? = null
-
         init {
             setupButton()
             setupTouchHandling()
@@ -64,11 +60,11 @@ class T9FunctionKey
          * 設置按鈕基本屬性
          */
         private fun setupButton() {
-            // 設置背景
-            background = normalDrawable
+            // 移除背景
+            background = null
 
             // 設置文字樣式
-            textSize = 12f
+            textSize = 16f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             typeface = Typeface.DEFAULT
@@ -96,7 +92,6 @@ class T9FunctionKey
                     MotionEvent.ACTION_DOWN -> {
                         // 按下效果
                         if (isEnabled) {
-                            background = pressedDrawable
                             scaleX = 0.95f
                             scaleY = 0.95f
 
@@ -107,7 +102,6 @@ class T9FunctionKey
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         // 釋放效果
-                        background = normalDrawable
                         scaleX = 1.0f
                         scaleY = 1.0f
 
@@ -118,54 +112,6 @@ class T9FunctionKey
                     }
                     else -> false
                 }
-            }
-        }
-
-        /**
-         * 更新主題樣式
-         */
-        fun updateTheme(theme: Theme) {
-            this.theme = theme
-
-            try {
-                // 更新文字顏色
-                val functionKeyTextColor =
-                    ColorManager.getColor("function_key_text_color")
-                        ?: Color.WHITE
-                setTextColor(functionKeyTextColor)
-
-                // 更新背景顏色
-                val functionKeyBackgroundColor =
-                    ColorManager.getColor("function_key_background_color")
-                        ?: Color.parseColor("#2e2e2e")
-                val functionKeyBorderColor =
-                    ColorManager.getColor("function_key_border_color")
-                        ?: Color.parseColor("#444444")
-
-                normalDrawable.apply {
-                    setColor(functionKeyBackgroundColor)
-                    setStroke(dp(1), functionKeyBorderColor)
-                }
-
-                // 更新按壓狀態顏色
-                val pressedBackgroundColor =
-                    ColorManager.getColor("function_key_pressed_background_color")
-                        ?: Color.parseColor("#4e4e4e")
-                val pressedBorderColor =
-                    ColorManager.getColor("function_key_pressed_border_color")
-                        ?: Color.parseColor("#666666")
-
-                pressedDrawable.apply {
-                    setColor(pressedBackgroundColor)
-                    setStroke(dp(1), pressedBorderColor)
-                }
-
-                // 更新文字大小
-                val functionKeyTextSize = theme.generalStyle.keyLongTextSize.takeIf { it > 0 } ?: 12f
-                textSize = functionKeyTextSize
-            } catch (e: Exception) {
-                // 如果主題色彩獲取失敗，使用默認顏色
-                setTextColor(Color.WHITE)
             }
         }
 
@@ -197,12 +143,10 @@ class T9FunctionKey
         fun simulatePress() {
             if (!isEnabled) return
 
-            background = pressedDrawable
             scaleX = 0.95f
             scaleY = 0.95f
 
             postDelayed({
-                background = normalDrawable
                 scaleX = 1.0f
                 scaleY = 1.0f
             }, 100)

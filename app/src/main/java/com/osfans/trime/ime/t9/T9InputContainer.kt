@@ -49,7 +49,7 @@ class T9InputContainer
         // T9組件
         private lateinit var t9Keyboard: T9KeyboardView
         private lateinit var contextDisplay: ContextDisplayArea
-        private lateinit var preeditArea: T9PreeditView
+        private lateinit var textInputArea: T9TextInputView
         private lateinit var candidateBar: T9CandidateBar
         private lateinit var confirmButton: T9ConfirmButton // Stage 8A: 移至容器管理
         private lateinit var eventHandler: T9InputEventHandler
@@ -107,10 +107,9 @@ class T9InputContainer
                         id = generateViewId()
                     }
 
-                preeditArea =
-                    T9PreeditView(context).apply {
+                textInputArea =
+                    T9TextInputView(context).apply {
                         id = generateViewId()
-                        displayMode = T9PreeditView.Companion.DisplayMode.MIXED
                     }
                 t9Keyboard =
                     T9KeyboardView(context).apply {
@@ -121,7 +120,7 @@ class T9InputContainer
                     T9ConfirmButton(context).apply {
                         id = generateViewId()
                     }
-                eventHandler = T9InputEventHandler(rimeSession, contextDisplay, preeditArea, candidateBar, service)
+                eventHandler = T9InputEventHandler(rimeSession, contextDisplay, textInputArea, candidateBar, service)
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error creating T9 components")
                 throw e
@@ -142,11 +141,11 @@ class T9InputContainer
                     },
                 )
 
-                Timber.d("$TAG: Adding preedit area to layout...")
+                Timber.d("$TAG: Adding text input area to layout...")
                 add(
-                    preeditArea,
+                    textInputArea,
                     lParams(0, dp(56)) {
-                        // Preedit區域：左右各32dp margin x 56dp高
+                        // 文字輸入區域：左右各32dp margin x 56dp高
                         topToBottomOf(candidateBar, dp(2)) // 距離候選詞區域4dp
                         startOfParent(dp(32)) // 左邊距32dp
                         endOfParent(dp(32)) // 右邊距32dp
@@ -156,8 +155,8 @@ class T9InputContainer
                 Timber.d("$TAG: Adding context display to layout...")
                 add(
                     contextDisplay,
-                    lParams(dp(56), wrapContent) {
-                        // 寬度56dp，高度wrap-content，垂直置中
+                    lParams(dp(64), wrapContent) {
+                        // 寬度64dp，高度wrap-content，垂直置中
                         centerVertically()
                         startOfParent(dp(16)) // 添加leftMargin=16dp
                     },
@@ -166,8 +165,8 @@ class T9InputContainer
                 Timber.d("$TAG: Adding confirm button to layout...")
                 add(
                     confirmButton,
-                    lParams(dp(56), dp(56)) {
-                        // 56×56dp，更大觸控區域，垂直置中
+                    lParams(dp(64), dp(64)) {
+                        // 64×64dp，更大觸控區域，垂直置中
                         centerVertically()
                         endOfParent(dp(16)) // 添加rightMargin=16dp
                     },
@@ -177,11 +176,11 @@ class T9InputContainer
                 add(
                     t9Keyboard,
                     lParams(0, 0) {
-                        // 修改：T9KeyboardView 位於 preeditArea 下方
-                        topToBottomOf(preeditArea, dp(8)) // 距離preedit區域8dp
+                        // 修改：T9KeyboardView 位於 textInputArea 下方
+                        topToBottomOf(textInputArea, dp(8)) // 距離文字輸入區域8dp
                         bottomOfParent(dp(16)) // 添加bottomMargin=16dp
-                        startToEndOf(contextDisplay, dp(4)) // 緊鄰ContextDisplay，4dp間距
-                        endToStartOf(confirmButton, dp(4)) // 與confirmButton保持4dp間距
+                        startToEndOf(contextDisplay, dp(2)) // 緊鄰ContextDisplay，2dp間距
+                        endToStartOf(confirmButton, dp(2)) // 與confirmButton保持2dp間距
                     },
                 )
             } catch (e: Exception) {
@@ -224,8 +223,8 @@ class T9InputContainer
                     },
                 )
 
-                // 設置 Preedit 刪除按鈕點擊事件
-                preeditArea.onDeleteClickListener = {
+                // 設置文字輸入框刪除按鈕點擊事件
+                textInputArea.onDeleteClickListener = {
                     eventHandler.onBackspacePress()
                 }
             } catch (e: Exception) {
@@ -240,7 +239,7 @@ class T9InputContainer
         private fun updateThemes() {
             try {
                 contextDisplay.updateTheme(theme)
-                preeditArea.updateTheme(theme)
+                textInputArea.updateTheme(theme)
                 // candidateBar不再需要updateTheme，因為已移除Theme依賴
                 confirmButton.updateTheme(theme)
             } catch (e: Exception) {
@@ -255,7 +254,7 @@ class T9InputContainer
             try {
                 service.commitText(punctuation)
                 contextDisplay.clearInput()
-                preeditArea.clear()
+                textInputArea.clear()
                 candidateBar.clearCandidates()
             } catch (e: Exception) {
                 // 忽略錯誤
@@ -274,7 +273,7 @@ class T9InputContainer
          */
         fun reset() {
             eventHandler.reset()
-            preeditArea.clear()
+            textInputArea.clear()
         }
 
         /**
@@ -308,9 +307,9 @@ class T9InputContainer
         fun getConfirmButton(): T9ConfirmButton = confirmButton // Stage 8A: 提供確認按鈕存取
 
         /**
-         * 取得Preedit區域實例
+         * 取得文字輸入區域實例
          */
-        fun getPreeditArea(): T9PreeditView = preeditArea
+        fun getTextInputArea(): T9TextInputView = textInputArea
 
         /**
          * 取得事件處理器實例
@@ -326,4 +325,23 @@ class T9InputContainer
          * 檢查是否有候選詞
          */
         fun hasCandidates(): Boolean = candidateBar.getCandidateCount() > 0
+
+        /**
+         * 設置文字輸入框內容（用於從原輸入框載入內容）
+         */
+        fun setTextInputContent(text: String) {
+            textInputArea.setText(text)
+        }
+
+        /**
+         * 獲取文字輸入框內容
+         */
+        fun getTextInputContent(): String = textInputArea.getText()
+
+        /**
+         * 追加候選詞到文字輸入框
+         */
+        fun appendCandidateToInput(candidateText: String) {
+            textInputArea.appendCandidate(candidateText)
+        }
     }

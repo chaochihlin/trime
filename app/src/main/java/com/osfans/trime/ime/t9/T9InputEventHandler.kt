@@ -19,14 +19,14 @@ import timber.log.Timber
  *
  * @param rimeSession RIME會話實例
  * @param contextDisplay 情境顯示區域
- * @param preeditArea Preedit顯示區域
+ * @param textInputArea 文字輸入區域
  * @param candidateBar 候選詞列
  * @param service 輸入法服務
  */
 class T9InputEventHandler(
     private val rimeSession: RimeSession,
     private val contextDisplay: ContextDisplayArea,
-    private val preeditArea: T9PreeditView,
+    private val textInputArea: T9TextInputView,
     private val candidateBar: T9CandidateBar,
     private val service: com.osfans.trime.ime.core.TrimeInputMethodService,
 ) : T9KeyboardView.T9KeyboardActionListener {
@@ -124,36 +124,38 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理確認鍵按下事件
+     * 處理確認鍵按下事件 - 新邏輯：提交文字輸入框內容
      */
     override fun onConfirmPress() {
         Timber.d("$TAG: Confirm button pressed")
 
         try {
+            // 獲取文字輸入框內容
+            val textContent = textInputArea.getText()
+
+            if (textContent.isNotEmpty()) {
+                // 提交文字輸入框內容到目標應用程式
+                service.commitText(textContent)
+                Timber.d("$TAG: 提交文字內容: $textContent")
+
+                // 清空文字輸入框
+                textInputArea.clear()
+            }
+
+            // 清除所有輸入狀態
             coroutineScope.launch {
                 rimeSession.runOnReady {
-                    val menu = menuCached
-                    val composition = compositionCached
-
-                    if (menu.candidates.isNotEmpty()) {
-                        // 如果有候選詞，選擇第一個
-                        if (selectCandidate(0)) {
-                            Timber.d("$TAG: 選擇並提交第一個候選詞: ${menu.candidates[0].text}")
-                        }
-                    } else if (!composition.preedit.isNullOrEmpty()) {
-                        // 如果有輸入但沒有候選詞，清空輸入
-                        clearComposition()
-                        Timber.d("$TAG: 清空組合輸入")
-                    }
-
-                    // 收合虛擬鍵盤
-                    try {
-                        Timber.d("$TAG: 隱藏鍵盤")
-                        service.requestHideSelf(0)
-                    } catch (e: Exception) {
-                        Timber.e(e, "$TAG: 隱藏鍵盤時發生錯誤")
-                    }
+                    clearComposition()
                 }
+            }
+            clearInputState()
+
+            // 收合虛擬鍵盤
+            try {
+                Timber.d("$TAG: 隱藏鍵盤")
+                service.requestHideSelf(0)
+            } catch (e: Exception) {
+                Timber.e(e, "$TAG: 隱藏鍵盤時發生錯誤")
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 處理確認鍵時發生錯誤")
@@ -187,7 +189,7 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理候選詞選擇事件
+     * 處理候選詞選擇事件 - 本地累積模式
      */
     fun onCandidateSelected(index: Int) {
         Timber.d("$TAG: 選擇候選詞: $index")
@@ -195,14 +197,19 @@ class T9InputEventHandler(
         try {
             coroutineScope.launch {
                 rimeSession.runOnReady {
-                    if (selectCandidate(index)) {
-                        val menu = menuCached
-                        if (index < menu.candidates.size) {
-                            Timber.d("$TAG: 選擇並提交候選詞: ${menu.candidates[index].text}")
-                        }
+                    val menu = menuCached
+                    if (index < menu.candidates.size) {
+                        val selectedCandidate = menu.candidates[index]
+                        Timber.d("$TAG: 選擇候選詞: ${selectedCandidate.text}")
 
-                        // 在主線程更新UI狀態
-                        clearInputState()
+                        // 新邏輯：直接將候選詞追加到文字輸入框中
+                        textInputArea.appendCandidate(selectedCandidate.text)
+
+                        // 清除RIME狀態並準備下一次輸入
+                        clearComposition()
+
+                        // 清除UI狀態（但保留textInputArea內容）
+                        clearInputStateExceptText()
                     }
                 }
             }
@@ -280,8 +287,7 @@ class T9InputEventHandler(
                         contextDisplay.clearInput()
                     }
 
-                    // 更新Preedit區域 (T9序列和注音符號)
-                    updatePreeditDisplay(composition.preedit)
+                    // 注意：新模式下不再更新Preedit，而是由候選詞選擇直接累積到textInputArea
 
                     // 更新候選詞列
                     if (menu.candidates.isNotEmpty()) {
@@ -313,7 +319,7 @@ class T9InputEventHandler(
     private fun updatePreeditDisplay(preeditText: String?) {
         try {
             if (preeditText.isNullOrEmpty()) {
-                preeditArea.clear()
+                // 注意：新模式下不再更新Preedit區域
                 return
             }
 
@@ -324,7 +330,7 @@ class T9InputEventHandler(
             val zhuyinCombinations = convertT9ToZhuyin(digitSequence)
 
             // 更新Preedit顯示
-            preeditArea.updateContent(digitSequence, zhuyinCombinations)
+            // 注意：新模式下不再更新Preedit區域
 
             Timber.d("$TAG: Preedit更新 - 數字序列: '$digitSequence', 注音: $zhuyinCombinations")
         } catch (e: Exception) {
@@ -371,8 +377,8 @@ class T9InputEventHandler(
             // 清理情境顯示
             contextDisplay.clearInput()
 
-            // 清空Preedit區域
-            preeditArea.clear()
+            // 清空文字輸入區域
+            textInputArea.clear()
 
             // 清空候選詞
             candidateBar.clearCandidates()
@@ -382,22 +388,49 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理退格鍵
+     * 清空輸入狀態但保留文字輸入框內容
+     */
+    private fun clearInputStateExceptText() {
+        try {
+            // 清理情境顯示
+            contextDisplay.clearInput()
+
+            // 清空候選詞
+            candidateBar.clearCandidates()
+
+            // 注意：不清空 textInputArea，保留用戶累積的文字
+        } catch (e: Exception) {
+            Timber.e(e, "$TAG: Error clearing input state except text")
+        }
+    }
+
+    /**
+     * 處理退格鍵 - 新邏輯：優先處理文字輸入框內容
      */
     fun onBackspacePress() {
         Timber.d("$TAG: 按下退格鍵")
 
         try {
-            coroutineScope.launch {
-                rimeSession.runOnReady {
-                    val composition = compositionCached
+            // 優先檢查文字輸入框是否有內容
+            if (textInputArea.hasContent()) {
+                // 如果文字輸入框有內容，刪除最後一個字符
+                textInputArea.deleteLastCharacter()
+                Timber.d("$TAG: 從文字輸入框刪除最後一個字符")
+            } else {
+                // 如果文字輸入框沒有內容，檢查RIME狀態
+                coroutineScope.launch {
+                    rimeSession.runOnReady {
+                        val composition = compositionCached
 
-                    if (!composition.preedit.isNullOrEmpty()) {
-                        // 如果有組合輸入，使用 Rime 的退格處理
-                        t9InputLogic.deleteLastDigit()
-                    } else {
-                        // 如果沒有組合輸入，發送退格到應用程式
-                        service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
+                        if (!composition.preedit.isNullOrEmpty()) {
+                            // 如果有組合輸入，使用 Rime 的退格處理
+                            t9InputLogic.deleteLastDigit()
+                            Timber.d("$TAG: 使用RIME處理退格")
+                        } else {
+                            // 如果沒有組合輸入，發送退格到應用程式
+                            service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
+                            Timber.d("$TAG: 發送退格鍵到應用程式")
+                        }
                     }
                 }
             }
@@ -407,11 +440,11 @@ class T9InputEventHandler(
     }
 
     /**
-     * 清除 Preedit 內容
+     * 清除文字輸入內容
      */
-    fun clearPreedit() {
+    fun clearTextInput() {
         try {
-            Timber.d("$TAG: 清除 Preedit 內容")
+            Timber.d("$TAG: 清除文字輸入內容")
 
             // 重置 T9 輸入邏輯
             t9InputLogic.reset()
@@ -419,7 +452,7 @@ class T9InputEventHandler(
             // 清空 UI 狀態
             clearInputState()
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error clearing preedit")
+            Timber.e(e, "$TAG: Error clearing text input")
         }
     }
 

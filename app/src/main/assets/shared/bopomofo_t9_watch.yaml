@@ -189,9 +189,9 @@ preset_keyboards:
         width: 20
       - click: "{}"
         width: 20
-      - click: switch_schema
-        label: "ZH"
-        long_label: "ZH(TW)"
+      - click: { send: F4 }
+        label: "中/英"
+        long_label: "切換"
         width: 25
       - click: "{}"
         width: 15
