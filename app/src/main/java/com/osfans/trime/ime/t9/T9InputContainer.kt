@@ -134,9 +134,9 @@ class T9InputContainer
             try {
                 add(
                     candidateBar,
-                    lParams(dp(200), dp(56)) {
-                        // 候選詞列：200dp寬 x 56dp高（位置對調：移至上方）
-                        topOfParent(dp(8)) // 距離頂部4dp
+                    lParams(dp(140), dp(56)) {
+                        // 候選詞列：140dp寬 x 56dp高（縮小寬度以適應圓形頂部）
+                        topOfParent(dp(24)) // 距離頂部24dp（避開圓形切角）
                         centerHorizontally()
                     },
                 )

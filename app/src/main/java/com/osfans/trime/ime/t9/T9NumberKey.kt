@@ -42,6 +42,9 @@ class T9NumberKey
             private const val TEXT_SIZE = 16f // 統一文字大小
         }
 
+        // 追蹤是否剛完成長按，用於阻止長按後的點擊事件
+        private var longPressHandled = false
+
         /**
          * 按鍵顯示模式
          */
@@ -176,7 +179,9 @@ class T9NumberKey
         }
 
         /**
-         * 設置觸控處理
+         * 設置觸控處理（簡化版本，移除滑動手勢偵測）
+         *
+         * 聲調由 RIME 引擎自動推測，不需要手動輸入
          */
         private fun setupTouchHandling() {
             setOnTouchListener { _, event ->
@@ -185,28 +190,25 @@ class T9NumberKey
                         // 短按視覺回饋（注音模式）
                         updateKeyDisplay(isPressed = true, mode = KeyDisplayMode.ZHUYIN)
                         InputFeedbackManager.keyPressVibrate(this)
-                        true
+                        // 返回 false 讓事件繼續傳遞，以支援長按偵測
+                        false
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         // 釋放效果
                         updateKeyDisplay(isPressed = false, mode = KeyDisplayMode.NORMAL)
-
-                        if (event.action == MotionEvent.ACTION_UP) {
-                            performClick()
+                        // 延遲重置長按標記，確保 performClick 能先檢查
+                        if (longPressHandled) {
+                            postDelayed({ longPressHandled = false }, 50)
                         }
-                        true
+                        // 返回 false 讓系統處理點擊事件
+                        false
                     }
                     else -> false
                 }
             }
 
-            // 設置長按監聽器來處理數字模式視覺回饋
-            setOnLongClickListener {
-                // 長按視覺回饋（數字模式）
-                updateKeyDisplay(isPressed = true, mode = KeyDisplayMode.DIGIT)
-                InputFeedbackManager.keyPressVibrate(this, true) // 長按震動
-                false // 返回 false 讓事件繼續傳遞給父級處理器
-            }
+            // 注意：長按監聽器由 T9KeyboardView 設置，這裡不再設置
+            // 以免覆蓋外部的長按處理邏輯
         }
 
         /**
@@ -328,7 +330,20 @@ class T9NumberKey
         }
 
         override fun performClick(): Boolean {
+            // 如果剛處理完長按，跳過這次點擊
+            if (longPressHandled) {
+                Timber.d("$TAG: 跳過長按後的點擊事件 (key=$keyNumber)")
+                longPressHandled = false
+                return true
+            }
             playKeySound()
             return super.performClick()
+        }
+
+        /**
+         * 標記長按已處理，用於阻止後續的點擊事件
+         */
+        fun markLongPressHandled() {
+            longPressHandled = true
         }
     }

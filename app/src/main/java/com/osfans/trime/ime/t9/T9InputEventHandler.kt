@@ -106,22 +106,18 @@ class T9InputEventHandler(
         try {
             val digitText = number.toString()
 
-            // 直接通過 InputConnection 提交數字字符
-            val inputConnection = service.currentInputConnection
-            if (inputConnection != null) {
-                inputConnection.commitText(digitText, 1)
-                Timber.d("$TAG: ✅ 成功直接輸入數字: $digitText")
-                return true
-            } else {
-                Timber.w("$TAG: ⚠️ InputConnection 為 null，嘗試通過服務提交")
-                service.commitText(digitText)
-                return true
-            }
+            // 將數字追加到文字輸入框中（與候選字選擇行為一致）
+            textInputArea.appendCandidate(digitText)
+            Timber.d("$TAG: ✅ 成功輸入數字到文字輸入框: $digitText")
+            return true
         } catch (e: Exception) {
             Timber.e(e, "$TAG: ❌ 處理長按數字鍵時發生錯誤: $number")
             return false
         }
     }
+
+    // 注意：滑動手勢已移除，聲調由 RIME 引擎自動推測
+    // 原有的 onSwipeUp/Down/Left/Right 和 sendToneInput 方法已刪除
 
     /**
      * 處理確認鍵按下事件 - 新邏輯：提交文字輸入框內容
@@ -134,6 +130,20 @@ class T9InputEventHandler(
             val textContent = textInputArea.getText()
 
             if (textContent.isNotEmpty()) {
+                // FIX: 防止重複輸入問題
+                // 因為 T9 輸入框在啟動時會載入原輸入框的內容，所以提交時需要先清除原內容
+                // 否則會導致內容重複 (例如: 原本是"A", T9載入"A", 用戶輸入"B"變成"AB", 提交後變成"AAB")
+                val ic = service.currentInputConnection
+                if (ic != null) {
+                    // 嘗試獲取游標前的文字（最多1000個字符）
+                    // 假設游標在文字末尾，這將刪除所有現有文字
+                    val beforeCursor = ic.getTextBeforeCursor(1000, 0)
+                    if (!beforeCursor.isNullOrEmpty()) {
+                        Timber.d("$TAG: 刪除游標前 ${beforeCursor.length} 個字符以防止重複")
+                        ic.deleteSurroundingText(beforeCursor.length, 0)
+                    }
+                }
+
                 // 提交文字輸入框內容到目標應用程式
                 service.commitText(textContent)
                 Timber.d("$TAG: 提交文字內容: $textContent")
@@ -202,14 +212,21 @@ class T9InputEventHandler(
                         val selectedCandidate = menu.candidates[index]
                         Timber.d("$TAG: 選擇候選詞: ${selectedCandidate.text}")
 
-                        // 新邏輯：直接將候選詞追加到文字輸入框中
-                        textInputArea.appendCandidate(selectedCandidate.text)
+                        // CRITICAL FIX: 必須在主執行緒更新 UI，確保狀態同步
+                        // 解決選擇候選詞後立即按退格導致的競爭條件問題
+                        kotlinx.coroutines.withContext(Dispatchers.Main) {
+                            // 新邏輯：直接將候選詞追加到文字輸入框中
+                            textInputArea.appendCandidate(selectedCandidate.text)
+                            Timber.d("$TAG: 已追加候選詞到輸入框 (Main Thread)")
+                        }
 
                         // 清除RIME狀態並準備下一次輸入
                         clearComposition()
 
                         // 清除UI狀態（但保留textInputArea內容）
-                        clearInputStateExceptText()
+                        kotlinx.coroutines.withContext(Dispatchers.Main) {
+                            clearInputStateExceptText()
+                        }
                     }
                 }
             }
@@ -282,8 +299,29 @@ class T9InputEventHandler(
 
                     // 更新情境顯示區 (預編輯字串)
                     if (!composition.preedit.isNullOrEmpty()) {
-                        contextDisplay.updateInputSequence(composition.preedit)
+                        // 檢查是否為純數字序列（T9原始輸入）
+                        // 過濾掉游標字符 (Code 8248: ‸) 和其他非數字字符
+                        val rawPreedit = composition.preedit ?: ""
+                        val cleanPreedit = rawPreedit.filter { it.isDigit() }
+
+                        // DEBUG LOGGING
+                        Timber.d("$TAG: [DEBUG] Raw preedit: '$rawPreedit', Clean preedit: '$cleanPreedit'")
+
+                        val isAllDigits = cleanPreedit.isNotEmpty() // 只要有數字就視為有效
+                        Timber.d("$TAG: [DEBUG] isAllDigits (after clean): $isAllDigits")
+
+                        if (isAllDigits) {
+                            // 如果是純數字，轉換為注音提示顯示
+                            val zhuyinHints = convertT9ToZhuyin(cleanPreedit).joinToString(" ")
+                            Timber.d("$TAG: [DEBUG] Converted to hints: $zhuyinHints")
+                            contextDisplay.updateInputSequence(zhuyinHints)
+                        } else {
+                            // 否則直接顯示（可能是已經格式化過的內容）
+                            Timber.d("$TAG: [DEBUG] Showing raw preedit")
+                            contextDisplay.updateInputSequence(rawPreedit)
+                        }
                     } else {
+                        Timber.d("$TAG: [DEBUG] Preedit is empty, clearing input")
                         contextDisplay.clearInput()
                     }
 

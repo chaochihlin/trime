@@ -80,6 +80,8 @@ class T9KeyboardView
             fun onConfirmPress()
 
             fun onLanguageSwitch()
+
+            // 注意：滑動手勢已移除，聲調由 RIME 引擎自動推測
         }
 
         private var actionListener: T9KeyboardActionListener? = null
@@ -93,10 +95,25 @@ class T9KeyboardView
                     id = generateViewId()
                     keyNumber = index + 1
                     keyHints = getHintsForNumber(index + 1)
+
+                    // Set click listener for normal presses
                     setOnClickListener { actionListener?.onNumberKeyPress(index + 1) }
+
+                    // Set long click listener
                     setOnLongClickListener {
-                        actionListener?.onNumberKeyLongPress(index + 1) ?: false
+                        Timber.d("$TAG: 長按數字鍵 ${index + 1}")
+                        // 長按視覺回饋（數字模式）
+                        updateKeyDisplay(isPressed = true, mode = T9NumberKey.KeyDisplayMode.DIGIT)
+                        val result = actionListener?.onNumberKeyLongPress(index + 1) ?: false
+                        Timber.d("$TAG: 長按處理結果: $result")
+                        if (result) {
+                            // 標記長按已處理，阻止後續的點擊事件
+                            markLongPressHandled()
+                        }
+                        result
                     }
+
+                    // 注意：滑動手勢已移除，聲調由 RIME 引擎自動推測
                 }
             }
 
@@ -108,7 +125,14 @@ class T9KeyboardView
                 keyHints = getHintsForNumber(0)
                 setOnClickListener { actionListener?.onNumberKeyPress(0) }
                 setOnLongClickListener {
-                    actionListener?.onNumberKeyLongPress(0) ?: false
+                    Timber.d("$TAG: 長按數字鍵 0")
+                    updateKeyDisplay(isPressed = true, mode = T9NumberKey.KeyDisplayMode.DIGIT)
+                    val result = actionListener?.onNumberKeyLongPress(0) ?: false
+                    Timber.d("$TAG: 長按處理結果: $result")
+                    if (result) {
+                        markLongPressHandled()
+                    }
+                    result
                 }
             }
 
@@ -220,21 +244,24 @@ class T9KeyboardView
 
             // --- 3. 將按鍵約束到輔助線 ---
 
-            // Row 1 (Keys 0, 1, 2)
-            set.connect(numberKeys[0].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            // Row 1 (Keys 0, 1, 2) - Note: numberKeys index 0 is Key 1
+            // Key 1: Top-Left (Needs significant margin)
+            set.connect(numberKeys[0].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 32)
             set.connect(numberKeys[0].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
-            set.connect(numberKeys[0].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+            set.connect(numberKeys[0].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 32)
             set.connect(numberKeys[0].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
 
-            set.connect(numberKeys[1].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            // Key 2: Top-Center (Needs top margin)
+            set.connect(numberKeys[1].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 8)
             set.connect(numberKeys[1].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
             set.connect(numberKeys[1].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
             set.connect(numberKeys[1].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
 
-            set.connect(numberKeys[2].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            // Key 3: Top-Right (Needs significant margin)
+            set.connect(numberKeys[2].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 32)
             set.connect(numberKeys[2].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
             set.connect(numberKeys[2].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[2].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+            set.connect(numberKeys[2].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 32)
 
             // Row 2 (Keys 3, 4, 5)
             set.connect(numberKeys[3].id, ConstraintSet.TOP, hGuideline25, ConstraintSet.BOTTOM)
@@ -252,21 +279,24 @@ class T9KeyboardView
             set.connect(numberKeys[5].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
             set.connect(numberKeys[5].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
 
-            // Row 3 (Keys 6, 7, 8)
+            // Row 3 (Keys 6, 7, 8) - Note: numberKeys index 6 is Key 7
+            // Key 7: Bottom-Left (Needs side margin)
             set.connect(numberKeys[6].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
             set.connect(numberKeys[6].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
-            set.connect(numberKeys[6].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+            set.connect(numberKeys[6].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 16)
             set.connect(numberKeys[6].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
 
+            // Key 8: Bottom-Center (Fine)
             set.connect(numberKeys[7].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
             set.connect(numberKeys[7].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
             set.connect(numberKeys[7].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
             set.connect(numberKeys[7].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
 
+            // Key 9: Bottom-Right (Needs side margin)
             set.connect(numberKeys[8].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
             set.connect(numberKeys[8].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
             set.connect(numberKeys[8].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[8].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+            set.connect(numberKeys[8].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 16)
 
             // Row 4 (0, Language) - 使用wrap-content寬度，水平居中排列
             set.connect(zeroKey.id, ConstraintSet.TOP, hGuideline75, ConstraintSet.BOTTOM)

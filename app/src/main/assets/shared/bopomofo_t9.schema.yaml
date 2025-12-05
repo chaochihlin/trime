@@ -1,6 +1,6 @@
 # Rime schema
 # encoding: utf-8
-
+---
 schema:
   schema_id: bopomofo_t9
   name: T9注音
@@ -24,11 +24,11 @@ trime:
 switches:
   - name: ascii_mode
     reset: 0
-    states: [ 中文, 英文 ]
+    states: [中文, 英文]
   - name: full_shape
-    states: [ 半角, 全角 ]
+    states: [半角, 全角]
   - name: ascii_punct
-    states: [ 。，, ．， ]
+    states: [。，, ．，]
 
 engine:
   processors:
@@ -55,72 +55,66 @@ engine:
 speller:
   alphabet: '1234567890'
   delimiter: " '"
-  max_code_length: 4
+  max_code_length: 8
   auto_select: false
   algebra:
-    # 移除無效輸入
-    - erase/^$/
-
-    # T9標準數字到注音映射
+    # 1. 移除聲調
+    - xform/ˊ//
+    - xform/ˇ//
+    - xform/ˋ//
+    - xform/˙//
+    
+    # 2. 注音符號映射到數字鍵
     # 1: ㄅㄉㄚ
-    - derive/^1$/ㄅ/
-    - derive/^1$/ㄉ/
-    - derive/^1$/ㄚ/
-
+    - xform/ㄅ/1/
+    - xform/ㄉ/1/
+    - xform/ㄚ/1/
     # 2: ㄍㄐㄞㄧ
-    - derive/^2$/ㄍ/
-    - derive/^2$/ㄐ/
-    - derive/^2$/ㄞ/
-    - derive/^2$/ㄧ/
-
+    - xform/ㄍ/2/
+    - xform/ㄐ/2/
+    - xform/ㄞ/2/
+    - xform/ㄧ/2/
     # 3: ㄓㄗㄢㄦ
-    - derive/^3$/ㄓ/
-    - derive/^3$/ㄗ/
-    - derive/^3$/ㄢ/
-    - derive/^3$/ㄦ/
-
+    - xform/ㄓ/3/
+    - xform/ㄗ/3/
+    - xform/ㄢ/3/
+    - xform/ㄦ/3/
     # 4: ㄆㄊㄛ
-    - derive/^4$/ㄆ/
-    - derive/^4$/ㄊ/
-    - derive/^4$/ㄛ/
-
+    - xform/ㄆ/4/
+    - xform/ㄊ/4/
+    - xform/ㄛ/4/
     # 5: ㄎㄑㄟㄨ
-    - derive/^5$/ㄎ/
-    - derive/^5$/ㄑ/
-    - derive/^5$/ㄟ/
-    - derive/^5$/ㄨ/
-
+    - xform/ㄎ/5/
+    - xform/ㄑ/5/
+    - xform/ㄟ/5/
+    - xform/ㄨ/5/
     # 6: ㄔㄘㄣ
-    - derive/^6$/ㄔ/
-    - derive/^6$/ㄘ/
-    - derive/^6$/ㄣ/
-
+    - xform/ㄔ/6/
+    - xform/ㄘ/6/
+    - xform/ㄣ/6/
     # 7: ㄇㄋㄜㄝ
-    - derive/^7$/ㄇ/
-    - derive/^7$/ㄋ/
-    - derive/^7$/ㄜ/
-    - derive/^7$/ㄝ/
-
+    - xform/ㄇ/7/
+    - xform/ㄋ/7/
+    - xform/ㄜ/7/
+    - xform/ㄝ/7/
     # 8: ㄏㄒㄠㄩ
-    - derive/^8$/ㄏ/
-    - derive/^8$/ㄒ/
-    - derive/^8$/ㄠ/
-    - derive/^8$/ㄩ/
-
+    - xform/ㄏ/8/
+    - xform/ㄒ/8/
+    - xform/ㄠ/8/
+    - xform/ㄩ/8/
     # 9: ㄕㄙㄤㄥ
-    - derive/^9$/ㄕ/
-    - derive/^9$/ㄙ/
-    - derive/^9$/ㄤ/
-    - derive/^9$/ㄥ/
-
+    - xform/ㄕ/9/
+    - xform/ㄙ/9/
+    - xform/ㄤ/9/
+    - xform/ㄥ/9/
     # 0: ㄈㄌㄡㄖ
-    - derive/^0$/ㄈ/
-    - derive/^0$/ㄌ/
-    - derive/^0$/ㄡ/
-    - derive/^0$/ㄖ/
-
-    # 支援多位數組合 - 直接將數字串作為碼表查詢
-    # 這樣就可以支援 72->你, 54->我 等等
+    - xform/ㄈ/0/
+    - xform/ㄌ/0/
+    - xform/ㄡ/0/
+    - xform/ㄖ/0/
+    
+    # 3. 移除空格
+    - xform/ //
 
 translator:
   dictionary: bopomofo_t9
@@ -161,8 +155,8 @@ punctuator:
 key_binder:
   import_preset: default
   bindings:
-    - { when: has_menu, accept: minus, send: minus }
-    - { when: has_menu, accept: equal, send: equal }
+    - {when: has_menu, accept: minus, send: minus}
+    - {when: has_menu, accept: equal, send: equal}
 
 recognizer:
   import_preset: default

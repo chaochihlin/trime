@@ -192,6 +192,12 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
             setEnabledSchemata(arrayOf("bopomofo_t9"))
             selectSchema("bopomofo_t9")
         }
+
+        // 強制觸發完整 RIME 部署以編譯所有 Schema
+        postRimeJob {
+            Timber.w("🔍 [TrimeInputMethodService] 觸發完整 RIME 部署...")
+            RimeDaemon.restartRime(fullCheck = true)
+        }
         ThemeManager.addOnChangedListener(onThemeChangeListener)
         ColorManager.addOnChangedListener(onColorChangeListener)
         super.onCreate()
