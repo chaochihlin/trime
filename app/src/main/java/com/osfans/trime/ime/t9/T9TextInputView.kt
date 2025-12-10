@@ -102,9 +102,8 @@ class T9TextInputView
          * 設置事件監聽器
          */
         private fun setupListeners() {
-            // 設置刪除按鈕點擊事件
+            // 設置刪除按鈕點擊事件 - 只通知外部，由外部決定是否刪除
             deleteButton.setOnClickListener {
-                deleteLastCharacter()
                 onDeleteClickListener?.invoke()
             }
 

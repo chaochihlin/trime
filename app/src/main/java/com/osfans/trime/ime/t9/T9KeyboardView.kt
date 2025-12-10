@@ -243,27 +243,25 @@ class T9KeyboardView
             set.setGuidelinePercent(hGuideline75, 0.75f) // 第三行結束
 
             // --- 3. 將按鍵約束到輔助線 ---
+            // 統一所有按鍵的約束，不設置額外邊距，讓按鍵均分空間
 
-            // Row 1 (Keys 0, 1, 2) - Note: numberKeys index 0 is Key 1
-            // Key 1: Top-Left (Needs significant margin)
-            set.connect(numberKeys[0].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 32)
+            // Row 1 (Keys 1, 2, 3)
+            set.connect(numberKeys[0].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
             set.connect(numberKeys[0].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
-            set.connect(numberKeys[0].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 32)
+            set.connect(numberKeys[0].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
             set.connect(numberKeys[0].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
 
-            // Key 2: Top-Center (Needs top margin)
-            set.connect(numberKeys[1].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 8)
+            set.connect(numberKeys[1].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
             set.connect(numberKeys[1].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
             set.connect(numberKeys[1].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
             set.connect(numberKeys[1].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
 
-            // Key 3: Top-Right (Needs significant margin)
-            set.connect(numberKeys[2].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, 32)
+            set.connect(numberKeys[2].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
             set.connect(numberKeys[2].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
             set.connect(numberKeys[2].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[2].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 32)
+            set.connect(numberKeys[2].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
 
-            // Row 2 (Keys 3, 4, 5)
+            // Row 2 (Keys 4, 5, 6)
             set.connect(numberKeys[3].id, ConstraintSet.TOP, hGuideline25, ConstraintSet.BOTTOM)
             set.connect(numberKeys[3].id, ConstraintSet.BOTTOM, hGuideline50, ConstraintSet.TOP)
             set.connect(numberKeys[3].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
@@ -279,24 +277,21 @@ class T9KeyboardView
             set.connect(numberKeys[5].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
             set.connect(numberKeys[5].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
 
-            // Row 3 (Keys 6, 7, 8) - Note: numberKeys index 6 is Key 7
-            // Key 7: Bottom-Left (Needs side margin)
+            // Row 3 (Keys 7, 8, 9)
             set.connect(numberKeys[6].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
             set.connect(numberKeys[6].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
-            set.connect(numberKeys[6].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, 16)
+            set.connect(numberKeys[6].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
             set.connect(numberKeys[6].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
 
-            // Key 8: Bottom-Center (Fine)
             set.connect(numberKeys[7].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
             set.connect(numberKeys[7].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
             set.connect(numberKeys[7].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
             set.connect(numberKeys[7].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
 
-            // Key 9: Bottom-Right (Needs side margin)
             set.connect(numberKeys[8].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
             set.connect(numberKeys[8].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
             set.connect(numberKeys[8].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[8].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, 16)
+            set.connect(numberKeys[8].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
 
             // Row 4 (0, Language) - 使用wrap-content寬度，水平居中排列
             set.connect(zeroKey.id, ConstraintSet.TOP, hGuideline75, ConstraintSet.BOTTOM)

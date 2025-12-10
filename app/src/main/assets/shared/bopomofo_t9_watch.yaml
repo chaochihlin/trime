@@ -280,7 +280,7 @@ context_display:
 
 # 候選詞設定
 candidate_config:
-  page_size: 5              # 每頁候選詞數量
+  page_size: 8              # 每頁候選詞數量（從5增加到8）
   horizontal_scroll: true   # 水平滾動
   auto_select: false        # 自動選擇
 

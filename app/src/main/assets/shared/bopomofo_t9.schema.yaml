@@ -63,7 +63,7 @@ speller:
     - xform/ˇ//
     - xform/ˋ//
     - xform/˙//
-    
+
     # 2. 注音符號映射到數字鍵
     # 1: ㄅㄉㄚ
     - xform/ㄅ/1/
@@ -112,20 +112,25 @@ speller:
     - xform/ㄌ/0/
     - xform/ㄡ/0/
     - xform/ㄖ/0/
-    
+
     # 3. 移除空格
     - xform/ //
+
+    # 4. T9 簡碼：讓多位數編碼產生首位數簡碼
+    # 這樣輸入單個數字時，所有以該數字開頭的字都會出現在候選詞中
+    # 例如：輸入 8 時，除了精確匹配的「於」(8)，還會顯示「好」(88)、「和」(83) 等
+    - abbrev/^([0-9]).+$/$1/
 
 translator:
   dictionary: bopomofo_t9
   spelling_hints: 8
   enable_completion: true
-  sentence_over_completion: true
+  sentence_over_completion: false
   strict_spelling: false
 
   # T9專用設定
   initial_quality: 1.2
-  max_homophones: 7
+  max_homophones: 12
   max_homographs: 1
 
   # 輸入顯示格式 - 手錶T9專用優化

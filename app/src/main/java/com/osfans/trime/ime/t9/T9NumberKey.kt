@@ -39,7 +39,8 @@ class T9NumberKey
     ) : LinearLayout(context, attrs) {
         companion object {
             private const val TAG = "T9NumberKey"
-            private const val TEXT_SIZE = 16f // 統一文字大小
+            private const val ZHUYIN_TEXT_SIZE = 13f // 注音符號文字大小 (適合顯示4個注音)
+            private const val NUMBER_TEXT_SIZE = 14f // 數字標籤文字大小
         }
 
         // 追蹤是否剛完成長按，用於阻止長按後的點擊事件
@@ -57,7 +58,7 @@ class T9NumberKey
         // 注音提示TextView（現在作為主要顯示）
         private val hintTextView =
             TextView(context).apply {
-                textSize = TEXT_SIZE // 統一字體大小
+                textSize = ZHUYIN_TEXT_SIZE // 注音符號使用 14sp
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
                 maxLines = 1 // 設定為單行
@@ -67,7 +68,7 @@ class T9NumberKey
         // 數字顯示TextView（現在作為次要顯示）
         private val numberTextView =
             TextView(context).apply {
-                textSize = TEXT_SIZE // 統一字體大小
+                textSize = NUMBER_TEXT_SIZE // 數字標籤使用 12sp
                 setTextColor(Color.parseColor("#CCCCCC")) // 更亮的灰色
                 gravity = Gravity.CENTER
                 maxLines = 1 // 設定為單行
@@ -114,7 +115,7 @@ class T9NumberKey
             setupLayout()
             setupBackground()
             setupTouchHandling()
-            setupMargin()
+            // 移除 setupMargin()，讓父容器的 ConstraintLayout 控制按鍵大小
         }
 
         /**
@@ -124,8 +125,8 @@ class T9NumberKey
             orientation = VERTICAL
             gravity = Gravity.CENTER
 
-            // 設置內距（減少垂直內距讓元素更緊湊）
-            setPadding(dp(4), dp(2), dp(4), dp(2))
+            // 減少水平內距以騰出更多空間給注音顯示
+            setPadding(dp(2), dp(2), dp(2), dp(2))
 
             // 添加注音符號TextView（現在作為主要顯示，放在上方）
             addView(
@@ -279,8 +280,8 @@ class T9NumberKey
                 }
 
                 // 固定字體大小，不使用主題設定
-                hintTextView.textSize = TEXT_SIZE // 注音符號
-                numberTextView.textSize = TEXT_SIZE // 數字標籤
+                hintTextView.textSize = ZHUYIN_TEXT_SIZE // 注音符號
+                numberTextView.textSize = NUMBER_TEXT_SIZE // 數字標籤
 
                 invalidate()
             } catch (e: Exception) {

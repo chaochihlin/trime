@@ -87,7 +87,7 @@ object T9RimeHelper {
         val candidates = mutableSetOf<String>() // 使用Set避免重複
 
         try {
-            for (zhuyin in zhuyinCombinations.take(5)) { // 限制處理數量
+            for (zhuyin in zhuyinCombinations.take(8)) { // 限制處理數量（從5增加到8）
                 val rimeCode = zhuyinToRimeCode(zhuyin)
                 if (rimeCode.isEmpty()) continue
 
@@ -109,13 +109,13 @@ object T9RimeHelper {
                 }
 
                 // 如果已經有足夠候選詞，可以提前結束
-                if (candidates.size >= 8) break
+                if (candidates.size >= 12) break
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: Error getting candidates from RIME")
         }
 
-        val result = candidates.take(8) // 限制候選詞數量
+        val result = candidates.take(12) // 限制候選詞數量（從8增加到12）
         Timber.d("$TAG: Final candidates: $result")
         return result
     }

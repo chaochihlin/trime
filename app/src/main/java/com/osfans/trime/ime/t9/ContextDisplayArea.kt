@@ -23,11 +23,13 @@ import splitties.dimensions.dp
  * 左側垂直區域，用於動態顯示不同狀態的內容：
  * - 待輸入狀態：顯示標點符號 (，。？)
  * - 輸入中狀態：顯示當前注音序列
+ * - 注音選擇狀態：顯示可選的注音符號列表（新增）
  *
  * 功能特性：
  * - 狀態自動切換
  * - 流暢的切換動畫
  * - 點擊標點符號直接輸入
+ * - 滑動+點擊選擇注音符號（新增）
  * - 圓形螢幕優化佈局
  *
  * @param context Android上下文
@@ -40,8 +42,9 @@ class ContextDisplayArea
         attrs: AttributeSet? = null,
     ) : FrameLayout(context, attrs) {
         enum class State {
-            IDLE, // 待輸入狀態
-            INPUT, // 輸入中狀態
+            IDLE, // 待輸入狀態：顯示標點符號
+            INPUT, // 輸入中狀態：顯示注音序列（保留向後兼容）
+            ZHUYIN_SELECT, // 注音選擇狀態：顯示可滾動注音列表（新增）
         }
 
         // 狀態切換監聽器
@@ -61,9 +64,16 @@ class ContextDisplayArea
         // 輸入中狀態視圖
         private val inputStateView = InputStateView(context)
 
+        // 注音選擇器視圖（新增）
+        private val zhuyinSelectorView = ZhuyinSelectorView(context)
+
+        // 注音選擇監聽器
+        private var zhuyinSelectionListener: ZhuyinSelectionListener? = null
+
         companion object {
             // 預設標點符號
             private val DEFAULT_PUNCTUATIONS = listOf("，", "。", "？")
+            private const val TAG = "ContextDisplayArea"
         }
 
         init {
@@ -75,10 +85,10 @@ class ContextDisplayArea
          * 設置佈局
          */
         private fun setupLayout() {
-            // 設置容器屬性
-            layoutParams = LayoutParams(dp(60), LayoutParams.MATCH_PARENT)
+            // 設置容器屬性（寬度從 60dp 增加到 64dp 以適應注音選擇器）
+            layoutParams = LayoutParams(dp(64), LayoutParams.MATCH_PARENT)
 
-            // 添加兩個狀態視圖
+            // 添加三個狀態視圖
             addView(
                 idleStateView,
                 LayoutParams(
@@ -95,10 +105,40 @@ class ContextDisplayArea
                 ),
             )
 
+            // 添加注音選擇器視圖（新增）
+            addView(
+                zhuyinSelectorView,
+                LayoutParams(
+                    LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT,
+                ),
+            )
+            zhuyinSelectorView.visibility = View.GONE
+
             // 設置標點符號點擊監聽器
             idleStateView.setOnPunctuationClickListener { punctuation ->
                 stateChangeListener?.onPunctuationClick(punctuation)
             }
+
+            // 設置注音選擇器監聽器（新增）
+            zhuyinSelectorView.setSelectionListener(
+                object : ZhuyinSelectionListener {
+                    override fun onZhuyinSelected(
+                        digit: Int,
+                        zhuyinIndex: Int,
+                        zhuyin: String,
+                    ) {
+                        zhuyinSelectionListener?.onZhuyinSelected(digit, zhuyinIndex, zhuyin)
+                    }
+
+                    override fun onZhuyinPreviewChanged(
+                        digit: Int,
+                        zhuyinIndex: Int,
+                    ) {
+                        zhuyinSelectionListener?.onZhuyinPreviewChanged(digit, zhuyinIndex)
+                    }
+                },
+            )
         }
 
         /**
@@ -114,6 +154,7 @@ class ContextDisplayArea
                 State.IDLE -> {
                     idleStateView.visibility = View.VISIBLE
                     inputStateView.visibility = View.GONE
+                    zhuyinSelectorView.visibility = View.GONE
                     idleStateView.alpha = 0f
                     idleStateView
                         .animate()
@@ -124,8 +165,20 @@ class ContextDisplayArea
                 State.INPUT -> {
                     idleStateView.visibility = View.GONE
                     inputStateView.visibility = View.VISIBLE
+                    zhuyinSelectorView.visibility = View.GONE
                     inputStateView.alpha = 0f
                     inputStateView
+                        .animate()
+                        .alpha(1f)
+                        .setDuration(200)
+                        .start()
+                }
+                State.ZHUYIN_SELECT -> {
+                    idleStateView.visibility = View.GONE
+                    inputStateView.visibility = View.GONE
+                    zhuyinSelectorView.visibility = View.VISIBLE
+                    zhuyinSelectorView.alpha = 0f
+                    zhuyinSelectorView
                         .animate()
                         .alpha(1f)
                         .setDuration(200)
@@ -174,6 +227,74 @@ class ContextDisplayArea
          * 取得當前狀態
          */
         fun getCurrentState(): State = currentState
+
+        // ==================== 注音選擇器 API（新增）====================
+
+        /**
+         * 顯示注音選擇器
+         *
+         * 切換到 ZHUYIN_SELECT 狀態，並顯示指定數字鍵對應的注音選項。
+         *
+         * @param digit 數字鍵 (0-9)
+         * @param preselectedIndex 預選的注音索引，預設為 0
+         */
+        fun showZhuyinSelector(
+            digit: Int,
+            preselectedIndex: Int = 0,
+        ) {
+            zhuyinSelectorView.showZhuyinForDigit(digit, preselectedIndex)
+            switchToState(State.ZHUYIN_SELECT)
+        }
+
+        /**
+         * 取得當前選中的注音符號
+         */
+        fun getSelectedZhuyin(): String = zhuyinSelectorView.getSelectedZhuyin()
+
+        /**
+         * 取得當前選中的注音索引
+         */
+        fun getSelectedZhuyinIndex(): Int = zhuyinSelectorView.getSelectedIndex()
+
+        /**
+         * 取得當前顯示的數字鍵
+         */
+        fun getCurrentDigit(): Int = zhuyinSelectorView.getCurrentDigit()
+
+        /**
+         * 設置注音選擇監聽器
+         */
+        fun setZhuyinSelectionListener(listener: ZhuyinSelectionListener) {
+            this.zhuyinSelectionListener = listener
+        }
+
+        /**
+         * 清空注音選擇器並返回待機狀態
+         */
+        fun clearZhuyinSelector() {
+            zhuyinSelectorView.clear()
+            switchToState(State.IDLE)
+        }
+
+        /**
+         * 顯示注音組合列表（新 API）
+         *
+         * 用於顯示從 RIME 候選詞提取的注音組合。
+         *
+         * @param combinations 注音組合列表，如 ["ㄏㄠ", "ㄏㄞ", "ㄒㄧ"]
+         * @param preselectedIndex 預選索引，預設 0
+         */
+        fun showZhuyinCombinations(
+            combinations: List<String>,
+            preselectedIndex: Int = 0,
+        ) {
+            if (combinations.isEmpty()) return
+
+            zhuyinSelectorView.showCombinations(combinations, preselectedIndex)
+            switchToState(State.ZHUYIN_SELECT)
+        }
+
+        // ==================== 內部類別 ====================
 
         /**
          * 待輸入狀態視圖

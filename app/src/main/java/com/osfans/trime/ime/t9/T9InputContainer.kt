@@ -219,6 +219,29 @@ class T9InputContainer
 
                         override fun onStateChanged(newState: ContextDisplayArea.State) {
                             // 狀態變化處理（如果需要）
+                            Timber.d("$TAG: ContextDisplayArea 狀態變更: $newState")
+                        }
+                    },
+                )
+
+                // 設置注音選擇監聽器（新增）
+                contextDisplay.setZhuyinSelectionListener(
+                    object : ZhuyinSelectionListener {
+                        override fun onZhuyinSelected(
+                            digit: Int,
+                            zhuyinIndex: Int,
+                            zhuyin: String,
+                        ) {
+                            Timber.d("$TAG: 注音選擇確認 - digit=$digit, index=$zhuyinIndex, zhuyin=$zhuyin")
+                            eventHandler.onZhuyinSelected(digit, zhuyinIndex, zhuyin)
+                        }
+
+                        override fun onZhuyinPreviewChanged(
+                            digit: Int,
+                            zhuyinIndex: Int,
+                        ) {
+                            Timber.d("$TAG: 注音預覽變更 - digit=$digit, index=$zhuyinIndex")
+                            // 可選：預覽變更時的處理（目前僅記錄日誌）
                         }
                     },
                 )
@@ -249,15 +272,19 @@ class T9InputContainer
 
         /**
          * 處理標點符號輸入
+         *
+         * 將標點符號追加到文字輸入區（與候選字選擇行為一致）
          */
         private fun handlePunctuationInput(punctuation: String) {
             try {
-                service.commitText(punctuation)
+                // 將標點符號追加到文字輸入區
+                textInputArea.appendCandidate(punctuation)
+
+                // 清空輸入狀態（但保留文字輸入區內容）
                 contextDisplay.clearInput()
-                textInputArea.clear()
                 candidateBar.clearCandidates()
             } catch (e: Exception) {
-                // 忽略錯誤
+                Timber.e(e, "$TAG: 處理標點符號輸入時發生錯誤: $punctuation")
             }
         }
 

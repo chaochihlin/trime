@@ -526,8 +526,11 @@ class InputView(
             windowManager.attachWindow(KeyboardWindow)
         }
 
-        // 如果是T9模式，載入原輸入框內容
+        // 如果是T9模式，載入原輸入框內容並設定焦點
         loadExistingTextForT9Input()
+
+        // T9模式下，立即將焦點轉移到T9文字輸入框
+        t9InputContainer?.getTextInputArea()?.requestInputFocus()
     }
 
     override fun handleRimeMessage(it: RimeMessage<*>) {

@@ -35,6 +35,16 @@ class T9InputEventHandler(
     // T9輸入邏輯控制器
     private val t9InputLogic = SimpleT9InputLogic(rimeSession)
 
+    // 追蹤目前輸入的數字序列（用於判斷顯示個別注音或組合注音）
+    private val digitSequence = StringBuilder()
+
+    // ==================== 前端過濾機制（方案 E）====================
+    // 緩存完整的候選詞列表，用於前端過濾
+    private var cachedCandidates: List<CandidateItem> = emptyList()
+
+    // 當前選中的注音過濾條件（null 表示顯示全部）
+    private var currentZhuyinFilter: String? = null
+
     companion object {
         private const val TAG = "T9InputEventHandler"
     }
@@ -72,13 +82,20 @@ class T9InputEventHandler(
     /**
      * 處理數字鍵短按事件 - 輸入對應的注音符號
      *
-     * 透過 RIME 引擎處理數字輸入，讓 RIME 根據當前方案決定對應的注音符號
+     * 透過 RIME 引擎處理數字輸入，讓 RIME 根據當前方案決定對應的注音符號。
+     * 注音選擇器將在 RIME 回應後，根據按鍵次數決定顯示方式：
+     * - 第一次按鍵：顯示該數字對應的個別注音符號
+     * - 第二次以上：顯示從候選詞提取的注音組合
      */
     override fun onNumberKeyPress(number: Int) {
         Timber.d("$TAG: 短按數字鍵: $number - 觸發注音符號輸入")
 
         try {
-            // 使用 RIME 引擎處理注音輸入
+            // 追蹤數字序列
+            digitSequence.append(number)
+            Timber.d("$TAG: 目前數字序列: $digitSequence (長度: ${digitSequence.length})")
+
+            // 發送按鍵到 RIME 引擎，注音選擇器將在 handleRimeMessage 中更新
             coroutineScope.launch {
                 rimeSession.runOnReady {
                     val keyCode = number.toString().first().code
@@ -87,12 +104,71 @@ class T9InputEventHandler(
                     val result = processKey(keyCode, 0u)
                     Timber.d("$TAG: RIME 處理結果: $result")
 
-                    // RIME 會透過 messageFlow 自動通知 UI 更新候選詞和組合狀態
+                    // RIME 會透過 messageFlow 自動通知 UI 更新候選詞和注音選擇器
                 }
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 處理短按數字鍵時發生錯誤: $number")
         }
+    }
+
+    /**
+     * 處理注音選擇事件（來自 ContextDisplayArea 的注音選擇器）
+     *
+     * 【方案 A：純視覺提示】
+     * 由於 RIME script_translator 的精確匹配優先行為，
+     * 當只有一個候選詞時無法進行有效過濾。
+     *
+     * 因此採用純視覺提示方案：
+     * 1. 點擊注音時只做視覺標記（ZhuyinSelectorView 已處理）
+     * 2. 不改變候選詞顯示
+     * 3. 提供視覺反饋讓用戶知道選擇了哪個注音
+     *
+     * @param digit 對應的數字鍵 (0-9)，組合模式下為 -1
+     * @param zhuyinIndex 選擇的注音在列表中的索引
+     * @param zhuyin 選擇的注音符號或組合
+     */
+    fun onZhuyinSelected(
+        digit: Int,
+        zhuyinIndex: Int,
+        zhuyin: String,
+    ) {
+        Timber.d("$TAG: 注音選擇（純視覺提示）- digit=$digit, index=$zhuyinIndex, zhuyin='$zhuyin'")
+
+        if (zhuyin.isEmpty()) {
+            Timber.w("$TAG: 注音為空，忽略選擇")
+            return
+        }
+
+        // 記錄選擇（僅用於日誌和未來擴展）
+        currentZhuyinFilter = zhuyin
+        Timber.d("$TAG: 用戶選擇注音: '$zhuyin'（僅視覺提示，不影響候選詞）")
+
+        // 嘗試前端過濾（如果有多個候選詞）
+        if (cachedCandidates.size > 1) {
+            val filteredCandidates = T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(cachedCandidates, zhuyin)
+            Timber.d("$TAG: 過濾結果: ${filteredCandidates.size} / ${cachedCandidates.size} 個候選詞")
+
+            if (filteredCandidates.isNotEmpty() && filteredCandidates.size < cachedCandidates.size) {
+                // 只有當過濾有效果時才更新
+                candidateBar.updateCandidates(filteredCandidates)
+                Timber.d("$TAG: 已更新候選詞列為過濾結果: ${filteredCandidates.take(3).map { it.text }}")
+            }
+        } else {
+            Timber.d("$TAG: 候選詞數量不足，僅提供視覺提示")
+        }
+    }
+
+    /**
+     * 將注音字串轉換為 T9 數字序列
+     *
+     * @param zhuyin 注音字串，如 "ㄏㄠ"
+     * @return T9 數字序列，如 "88"
+     */
+    private fun zhuyinToT9Digits(zhuyin: String): String {
+        return zhuyin.mapNotNull { char ->
+            T9ZhuyinMapper.getDigitForZhuyin(char.toString())?.toString()
+        }.joinToString("")
     }
 
     /**
@@ -297,48 +373,105 @@ class T9InputEventHandler(
 
                     Timber.d("$TAG: 接收到 RIME 響應訊息 - preedit: '${composition.preedit}', candidates: ${menu.candidates.size}")
 
-                    // 更新情境顯示區 (預編輯字串)
-                    if (!composition.preedit.isNullOrEmpty()) {
-                        // 檢查是否為純數字序列（T9原始輸入）
-                        // 過濾掉游標字符 (Code 8248: ‸) 和其他非數字字符
-                        val rawPreedit = composition.preedit ?: ""
-                        val cleanPreedit = rawPreedit.filter { it.isDigit() }
+                    // 注意：新模式下情境顯示區由注音選擇器控制，不再顯示 preedit
 
-                        // DEBUG LOGGING
-                        Timber.d("$TAG: [DEBUG] Raw preedit: '$rawPreedit', Clean preedit: '$cleanPreedit'")
-
-                        val isAllDigits = cleanPreedit.isNotEmpty() // 只要有數字就視為有效
-                        Timber.d("$TAG: [DEBUG] isAllDigits (after clean): $isAllDigits")
-
-                        if (isAllDigits) {
-                            // 如果是純數字，轉換為注音提示顯示
-                            val zhuyinHints = convertT9ToZhuyin(cleanPreedit).joinToString(" ")
-                            Timber.d("$TAG: [DEBUG] Converted to hints: $zhuyinHints")
-                            contextDisplay.updateInputSequence(zhuyinHints)
-                        } else {
-                            // 否則直接顯示（可能是已經格式化過的內容）
-                            Timber.d("$TAG: [DEBUG] Showing raw preedit")
-                            contextDisplay.updateInputSequence(rawPreedit)
-                        }
-                    } else {
-                        Timber.d("$TAG: [DEBUG] Preedit is empty, clearing input")
-                        contextDisplay.clearInput()
-                    }
-
-                    // 注意：新模式下不再更新Preedit，而是由候選詞選擇直接累積到textInputArea
-
-                    // 更新候選詞列
+                    // 更新候選詞列和注音選擇器
                     if (menu.candidates.isNotEmpty()) {
                         // 將 Rime 的 Candidate 轉換為 UI 需要的 CandidateItem
-                        val candidateItems =
+                        var candidateItems =
                             menu.candidates.map { rimeCandidate ->
                                 CandidateItem(text = rimeCandidate.text, comment = rimeCandidate.comment ?: "")
                             }
+
+                        // 根據按鍵次數決定顯示方式
+                        val currentDigitCount = digitSequence.length
+                        Timber.d("$TAG: 目前數字序列長度: $currentDigitCount")
+
+                        // 【方案 2】單鍵輸入時補充缺少的單韻母/單介音字
+                        if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
+                            val firstDigit = digitSequence[0].toString().toIntOrNull()
+                            if (firstDigit != null) {
+                                val originalCount = candidateItems.size
+                                candidateItems = T9ZhuyinMapper.supplementCandidates(candidateItems, firstDigit)
+                                if (candidateItems.size > originalCount) {
+                                    Timber.d("$TAG: 補充了 ${candidateItems.size - originalCount} 個單韻母/單介音字")
+                                }
+                            }
+                        }
+
+                        // 【方案 E】緩存完整候選詞列表，用於前端過濾
+                        cachedCandidates = candidateItems
+                        currentZhuyinFilter = null // 重置過濾條件
+                        Timber.d("$TAG: 緩存 ${candidateItems.size} 個候選詞")
+
+                        if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
+                            // 第一次按鍵：顯示該數字對應的個別注音符號
+                            val firstDigit = digitSequence[0].toString().toIntOrNull()
+                            if (firstDigit != null) {
+                                val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
+                                Timber.d("$TAG: 第一次按鍵，顯示個別注音: $individualZhuyins")
+                                contextDisplay.showZhuyinCombinations(individualZhuyins)
+                            }
+                        } else {
+                            // 第二次以上：根據數字序列計算所有有效的注音組合
+                            val zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                            if (zhuyinCombinations.isNotEmpty()) {
+                                Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
+                                contextDisplay.showZhuyinCombinations(zhuyinCombinations)
+                            } else {
+                                // 若無有效組合，則從候選詞提取（備援方案）
+                                val fallbackCombinations = T9ZhuyinMapper.extractUniqueZhuyinCombinations(candidateItems)
+                                Timber.d("$TAG: 無有效組合，從候選詞提取: $fallbackCombinations")
+                                contextDisplay.showZhuyinCombinations(fallbackCombinations)
+                            }
+                        }
+
                         candidateBar.updateCandidates(candidateItems)
                         Timber.d("$TAG: 更新候選詞列，共 ${candidateItems.size} 個候選詞: ${candidateItems.take(3).map { it.text }}")
                     } else {
-                        candidateBar.clearCandidates()
-                        Timber.d("$TAG: 清空候選詞列")
+                        // RIME 返回 0 個候選詞，但仍需處理 UI 顯示
+                        currentZhuyinFilter = null
+
+                        if (digitSequence.isNotEmpty()) {
+                            val currentDigitCount = digitSequence.length
+                            if (currentDigitCount == 1) {
+                                // 單鍵：顯示該數字對應的個別注音符號
+                                val firstDigit = digitSequence[0].toString().toIntOrNull()
+                                if (firstDigit != null) {
+                                    val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
+                                    Timber.d("$TAG: RIME 無候選詞，但根據數字 '$firstDigit' 顯示注音: $individualZhuyins")
+                                    contextDisplay.showZhuyinCombinations(individualZhuyins)
+
+                                    // 【關鍵修復】即使 RIME 無候選詞，也使用前端補充
+                                    val supplementedCandidates = T9ZhuyinMapper.supplementCandidates(emptyList(), firstDigit)
+                                    if (supplementedCandidates.isNotEmpty()) {
+                                        cachedCandidates = supplementedCandidates
+                                        candidateBar.updateCandidates(supplementedCandidates)
+                                        Timber.d("$TAG: 前端補充了 ${supplementedCandidates.size} 個候選詞: ${supplementedCandidates.take(3).map { it.text }}")
+                                    } else {
+                                        cachedCandidates = emptyList()
+                                        candidateBar.clearCandidates()
+                                    }
+                                }
+                            } else {
+                                // 多鍵：計算有效注音組合
+                                val zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                                if (zhuyinCombinations.isNotEmpty()) {
+                                    Timber.d("$TAG: RIME 無候選詞，根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
+                                    contextDisplay.showZhuyinCombinations(zhuyinCombinations)
+                                } else {
+                                    contextDisplay.clearInput()
+                                    Timber.d("$TAG: RIME 無候選詞，且無有效注音組合")
+                                }
+                                cachedCandidates = emptyList()
+                                candidateBar.clearCandidates()
+                            }
+                        } else {
+                            cachedCandidates = emptyList()
+                            candidateBar.clearCandidates()
+                            contextDisplay.clearInput()
+                            Timber.d("$TAG: 清空候選詞列和注音選擇器")
+                        }
                     }
                 }
                 else -> {
@@ -420,6 +553,15 @@ class T9InputEventHandler(
 
             // 清空候選詞
             candidateBar.clearCandidates()
+
+            // 重置數字序列
+            digitSequence.clear()
+
+            // 【方案 E】清空緩存
+            cachedCandidates = emptyList()
+            currentZhuyinFilter = null
+
+            Timber.d("$TAG: 清空輸入狀態，數字序列和緩存已重置")
         } catch (e: Exception) {
             Timber.e(e, "$TAG: Error clearing input state")
         }
@@ -436,6 +578,15 @@ class T9InputEventHandler(
             // 清空候選詞
             candidateBar.clearCandidates()
 
+            // 重置數字序列（準備下一次輸入）
+            digitSequence.clear()
+
+            // 【方案 E】清空緩存
+            cachedCandidates = emptyList()
+            currentZhuyinFilter = null
+
+            Timber.d("$TAG: 清空輸入狀態（保留文字），數字序列和緩存已重置")
+
             // 注意：不清空 textInputArea，保留用戶累積的文字
         } catch (e: Exception) {
             Timber.e(e, "$TAG: Error clearing input state except text")
@@ -443,37 +594,65 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理退格鍵 - 新邏輯：優先處理文字輸入框內容
+     * 處理退格鍵 - 新邏輯：
+     * 1. 有注音列表或候選字時 → 一次清除全部輸入狀態（回到標點符號 UI）
+     * 2. 左側是標點符號且文字輸入框有內容時 → 刪除最後一個字
+     * 3. 都沒有時 → 發送 DEL 到應用程式
      */
     fun onBackspacePress() {
         Timber.d("$TAG: 按下退格鍵")
 
         try {
-            // 優先檢查文字輸入框是否有內容
-            if (textInputArea.hasContent()) {
-                // 如果文字輸入框有內容，刪除最後一個字符
+            // 檢查是否在輸入中狀態（左側顯示注音列表或有候選字）
+            val isInputting = contextDisplay.getCurrentState() != ContextDisplayArea.State.IDLE
+            val hasCandidates = candidateBar.getCandidateCount() > 0
+
+            Timber.d("$TAG: 狀態檢查 - isInputting: $isInputting, hasCandidates: $hasCandidates")
+
+            if (isInputting || hasCandidates) {
+                // 情境 1：清除注音列表 + 候選字，回到標點符號 UI
+                Timber.d("$TAG: 清除輸入狀態（注音列表 + 候選字）")
+                clearInputStateAndRime()
+            } else if (textInputArea.hasContent()) {
+                // 情境 2：刪除文字輸入框的最後一個字
                 textInputArea.deleteLastCharacter()
                 Timber.d("$TAG: 從文字輸入框刪除最後一個字符")
             } else {
-                // 如果文字輸入框沒有內容，檢查RIME狀態
-                coroutineScope.launch {
-                    rimeSession.runOnReady {
-                        val composition = compositionCached
-
-                        if (!composition.preedit.isNullOrEmpty()) {
-                            // 如果有組合輸入，使用 Rime 的退格處理
-                            t9InputLogic.deleteLastDigit()
-                            Timber.d("$TAG: 使用RIME處理退格")
-                        } else {
-                            // 如果沒有組合輸入，發送退格到應用程式
-                            service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
-                            Timber.d("$TAG: 發送退格鍵到應用程式")
-                        }
-                    }
-                }
+                // 情境 3：發送退格到應用程式
+                service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
+                Timber.d("$TAG: 發送退格鍵到應用程式")
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 處理退格鍵時發生錯誤")
+        }
+    }
+
+    /**
+     * 清除輸入狀態並重置 RIME 引擎
+     * 用於一次性清除所有輸入中狀態
+     */
+    private fun clearInputStateAndRime() {
+        try {
+            // 清除 UI 狀態（注音列表回到標點符號、清空候選字）
+            contextDisplay.clearInput()
+            candidateBar.clearCandidates()
+
+            // 重置 T9 輸入邏輯
+            t9InputLogic.reset()
+
+            // 重置數字序列
+            digitSequence.clear()
+            Timber.d("$TAG: 清除輸入狀態並重置 RIME，數字序列已重置")
+
+            // 清除 RIME 引擎的組合輸入
+            coroutineScope.launch {
+                rimeSession.runOnReady {
+                    clearComposition()
+                    Timber.d("$TAG: RIME 組合輸入已清除")
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "$TAG: 清除輸入狀態時發生錯誤")
         }
     }
 
@@ -486,6 +665,9 @@ class T9InputEventHandler(
 
             // 重置 T9 輸入邏輯
             t9InputLogic.reset()
+
+            // 重置數字序列
+            digitSequence.clear()
 
             // 清空 UI 狀態
             clearInputState()
@@ -500,6 +682,8 @@ class T9InputEventHandler(
     fun reset() {
         try {
             t9InputLogic.reset()
+            digitSequence.clear()
+            Timber.d("$TAG: 處理器已重置，數字序列已清空")
         } catch (e: Exception) {
             Timber.e(e, "$TAG: Error resetting handler")
         }
