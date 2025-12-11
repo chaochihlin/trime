@@ -48,10 +48,11 @@ class T9WhiteCandidateAdapter : BaseQuickAdapter<CandidateItem, T9WhiteCandidate
                 scaleMode = AutoScaleTextView.Mode.Proportional
                 minimumWidth = dp(44) // 增大最小寬度
                 setPaddingDp(8, 0, 8, 0)
-                layoutParams = ViewGroup.MarginLayoutParams(wrapContent, matchParent).apply {
-                    marginStart = dp(2)
-                    marginEnd = dp(2)
-                }
+                layoutParams =
+                    ViewGroup.MarginLayoutParams(wrapContent, matchParent).apply {
+                        marginStart = dp(2)
+                        marginEnd = dp(2)
+                    }
                 // 添加半透明底色以顯示點擊範圍
                 setBackgroundColor("#40FFFFFF".toColorInt())
             }

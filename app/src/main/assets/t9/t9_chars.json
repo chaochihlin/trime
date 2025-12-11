@@ -1,0 +1,178 @@
+{
+  "version": "1.0",
+  "description": "T9 數字鍵常用字映射表",
+  "digitChars": {
+    "1": [
+      {"text": "不", "comment": "注音:ㄅㄨˋ"},
+      {"text": "的", "comment": "注音:ㄉㄜ˙"},
+      {"text": "大", "comment": "注音:ㄉㄚˋ"},
+      {"text": "到", "comment": "注音:ㄉㄠˋ"},
+      {"text": "但", "comment": "注音:ㄉㄢˋ"},
+      {"text": "阿", "comment": "注音:ㄚ"},
+      {"text": "啊", "comment": "注音:ㄚ"}
+    ],
+    "2": [
+      {"text": "個", "comment": "注音:ㄍㄜ˙"},
+      {"text": "國", "comment": "注音:ㄍㄨㄛˊ"},
+      {"text": "過", "comment": "注音:ㄍㄨㄛˋ"},
+      {"text": "就", "comment": "注音:ㄐㄧㄡˋ"},
+      {"text": "經", "comment": "注音:ㄐㄧㄥ"},
+      {"text": "愛", "comment": "注音:ㄞˋ"},
+      {"text": "一", "comment": "注音:ㄧ"},
+      {"text": "以", "comment": "注音:ㄧˇ"},
+      {"text": "也", "comment": "注音:ㄧㄝˇ"},
+      {"text": "要", "comment": "注音:ㄧㄠˋ"}
+    ],
+    "3": [
+      {"text": "這", "comment": "注音:ㄓㄜˋ"},
+      {"text": "中", "comment": "注音:ㄓㄨㄥ"},
+      {"text": "之", "comment": "注音:ㄓ"},
+      {"text": "在", "comment": "注音:ㄗㄞˋ"},
+      {"text": "自", "comment": "注音:ㄗˋ"},
+      {"text": "子", "comment": "注音:ㄗˇ"},
+      {"text": "安", "comment": "注音:ㄢ"},
+      {"text": "而", "comment": "注音:ㄦˊ"},
+      {"text": "二", "comment": "注音:ㄦˋ"}
+    ],
+    "4": [
+      {"text": "他", "comment": "注音:ㄊㄚ"},
+      {"text": "她", "comment": "注音:ㄊㄚ"},
+      {"text": "天", "comment": "注音:ㄊㄧㄢ"},
+      {"text": "同", "comment": "注音:ㄊㄨㄥˊ"},
+      {"text": "喔", "comment": "注音:ㄛ"},
+      {"text": "哦", "comment": "注音:ㄛ"}
+    ],
+    "5": [
+      {"text": "可", "comment": "注音:ㄎㄜˇ"},
+      {"text": "看", "comment": "注音:ㄎㄢˋ"},
+      {"text": "開", "comment": "注音:ㄎㄞ"},
+      {"text": "去", "comment": "注音:ㄑㄩˋ"},
+      {"text": "起", "comment": "注音:ㄑㄧˇ"},
+      {"text": "其", "comment": "注音:ㄑㄧˊ"},
+      {"text": "前", "comment": "注音:ㄑㄧㄢˊ"},
+      {"text": "欸", "comment": "注音:ㄟ"},
+      {"text": "五", "comment": "注音:ㄨˇ"},
+      {"text": "我", "comment": "注音:ㄨㄛˇ"},
+      {"text": "為", "comment": "注音:ㄨㄟˋ"}
+    ],
+    "6": [
+      {"text": "出", "comment": "注音:ㄔㄨ"},
+      {"text": "成", "comment": "注音:ㄔㄥˊ"},
+      {"text": "從", "comment": "注音:ㄘㄨㄥˊ"},
+      {"text": "恩", "comment": "注音:ㄣ"}
+    ],
+    "7": [
+      {"text": "們", "comment": "注音:ㄇㄣ˙"},
+      {"text": "沒", "comment": "注音:ㄇㄟˊ"},
+      {"text": "面", "comment": "注音:ㄇㄧㄢˋ"},
+      {"text": "那", "comment": "注音:ㄋㄚˋ"},
+      {"text": "能", "comment": "注音:ㄋㄥˊ"},
+      {"text": "你", "comment": "注音:ㄋㄧˇ"},
+      {"text": "年", "comment": "注音:ㄋㄧㄢˊ"},
+      {"text": "餓", "comment": "注音:ㄜˋ"},
+      {"text": "鵝", "comment": "注音:ㄜˊ"}
+    ],
+    "8": [
+      {"text": "和", "comment": "注音:ㄏㄜˊ"},
+      {"text": "好", "comment": "注音:ㄏㄠˇ"},
+      {"text": "很", "comment": "注音:ㄏㄣˇ"},
+      {"text": "恨", "comment": "注音:ㄏㄣˋ"},
+      {"text": "狠", "comment": "注音:ㄏㄣˇ"},
+      {"text": "會", "comment": "注音:ㄏㄨㄟˋ"},
+      {"text": "後", "comment": "注音:ㄏㄡˋ"},
+      {"text": "還", "comment": "注音:ㄏㄞˊ"},
+      {"text": "下", "comment": "注音:ㄒㄧㄚˋ"},
+      {"text": "小", "comment": "注音:ㄒㄧㄠˇ"},
+      {"text": "想", "comment": "注音:ㄒㄧㄤˇ"},
+      {"text": "現", "comment": "注音:ㄒㄧㄢˋ"},
+      {"text": "新", "comment": "注音:ㄒㄧㄣ"},
+      {"text": "心", "comment": "注音:ㄒㄧㄣ"},
+      {"text": "信", "comment": "注音:ㄒㄧㄣˋ"},
+      {"text": "些", "comment": "注音:ㄒㄧㄝ"},
+      {"text": "學", "comment": "注音:ㄒㄩㄝˊ"},
+      {"text": "行", "comment": "注音:ㄒㄧㄥˊ"},
+      {"text": "奧", "comment": "注音:ㄠˋ"},
+      {"text": "於", "comment": "注音:ㄩˊ"},
+      {"text": "魚", "comment": "注音:ㄩˊ"}
+    ],
+    "9": [
+      {"text": "是", "comment": "注音:ㄕˋ"},
+      {"text": "說", "comment": "注音:ㄕㄨㄛ"},
+      {"text": "上", "comment": "注音:ㄕㄤˋ"},
+      {"text": "時", "comment": "注音:ㄕˊ"},
+      {"text": "生", "comment": "注音:ㄕㄥ"},
+      {"text": "事", "comment": "注音:ㄕˋ"},
+      {"text": "所", "comment": "注音:ㄙㄨㄛˇ"},
+      {"text": "三", "comment": "注音:ㄙㄢ"},
+      {"text": "思", "comment": "注音:ㄙ"},
+      {"text": "四", "comment": "注音:ㄙˋ"}
+    ],
+    "0": [
+      {"text": "發", "comment": "注音:ㄈㄚ"},
+      {"text": "法", "comment": "注音:ㄈㄚˇ"},
+      {"text": "分", "comment": "注音:ㄈㄣ"},
+      {"text": "來", "comment": "注音:ㄌㄞˊ"},
+      {"text": "了", "comment": "注音:ㄌㄜ˙"},
+      {"text": "裡", "comment": "注音:ㄌㄧˇ"},
+      {"text": "歐", "comment": "注音:ㄡ"},
+      {"text": "人", "comment": "注音:ㄖㄣˊ"},
+      {"text": "如", "comment": "注音:ㄖㄨˊ"},
+      {"text": "然", "comment": "注音:ㄖㄢˊ"}
+    ]
+  },
+  "singleVowels": {
+    "ㄚ": [
+      {"text": "阿", "comment": "注音:ㄚ"},
+      {"text": "啊", "comment": "注音:ㄚ"}
+    ],
+    "ㄛ": [
+      {"text": "喔", "comment": "注音:ㄛ"},
+      {"text": "哦", "comment": "注音:ㄛ"}
+    ],
+    "ㄜ": [
+      {"text": "餓", "comment": "注音:ㄜ"},
+      {"text": "鵝", "comment": "注音:ㄜ"}
+    ],
+    "ㄞ": [
+      {"text": "愛", "comment": "注音:ㄞ"},
+      {"text": "哀", "comment": "注音:ㄞ"}
+    ],
+    "ㄟ": [
+      {"text": "欸", "comment": "注音:ㄟ"}
+    ],
+    "ㄠ": [
+      {"text": "奧", "comment": "注音:ㄠ"},
+      {"text": "凹", "comment": "注音:ㄠ"}
+    ],
+    "ㄡ": [
+      {"text": "歐", "comment": "注音:ㄡ"},
+      {"text": "偶", "comment": "注音:ㄡ"}
+    ],
+    "ㄢ": [
+      {"text": "安", "comment": "注音:ㄢ"},
+      {"text": "暗", "comment": "注音:ㄢ"}
+    ],
+    "ㄣ": [
+      {"text": "恩", "comment": "注音:ㄣ"}
+    ],
+    "ㄤ": [
+      {"text": "骯", "comment": "注音:ㄤ"}
+    ],
+    "ㄦ": [
+      {"text": "而", "comment": "注音:ㄦ"},
+      {"text": "二", "comment": "注音:ㄦ"}
+    ],
+    "ㄧ": [
+      {"text": "一", "comment": "注音:ㄧ"},
+      {"text": "以", "comment": "注音:ㄧ"}
+    ],
+    "ㄨ": [
+      {"text": "五", "comment": "注音:ㄨ"},
+      {"text": "物", "comment": "注音:ㄨ"}
+    ],
+    "ㄩ": [
+      {"text": "於", "comment": "注音:ㄩ"},
+      {"text": "魚", "comment": "注音:ㄩ"}
+    ]
+  }
+}

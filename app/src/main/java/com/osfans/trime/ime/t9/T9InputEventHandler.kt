@@ -165,11 +165,11 @@ class T9InputEventHandler(
      * @param zhuyin 注音字串，如 "ㄏㄠ"
      * @return T9 數字序列，如 "88"
      */
-    private fun zhuyinToT9Digits(zhuyin: String): String {
-        return zhuyin.mapNotNull { char ->
-            T9ZhuyinMapper.getDigitForZhuyin(char.toString())?.toString()
-        }.joinToString("")
-    }
+    private fun zhuyinToT9Digits(zhuyin: String): String =
+        zhuyin
+            .mapNotNull { char ->
+                T9ZhuyinMapper.getDigitForZhuyin(char.toString())?.toString()
+            }.joinToString("")
 
     /**
      * 處理數字鍵長按事件 - 直接輸入數字字符
@@ -454,7 +454,11 @@ class T9InputEventHandler(
                                     if (supplementedCandidates.isNotEmpty()) {
                                         cachedCandidates = supplementedCandidates
                                         candidateBar.updateCandidates(supplementedCandidates)
-                                        Timber.d("$TAG: 前端補充了 ${supplementedCandidates.size} 個候選詞: ${supplementedCandidates.take(3).map { it.text }}")
+                                        Timber.d(
+                                            "$TAG: 前端補充了 ${supplementedCandidates.size} 個候選詞: ${supplementedCandidates.take(
+                                                3,
+                                            ).map { it.text }}",
+                                        )
                                     } else {
                                         cachedCandidates = emptyList()
                                         candidateBar.clearCandidates()

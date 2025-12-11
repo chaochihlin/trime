@@ -96,6 +96,9 @@ class T9InputContainer
          */
         private fun createComponents() {
             try {
+                // 初始化 T9 字詞資料載入器
+                T9CharDataLoader.init(context)
+
                 candidateBar =
                     T9CandidateBar(context).apply {
                         id = generateViewId()
