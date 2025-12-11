@@ -499,8 +499,11 @@ object T9ZhuyinMapper {
             ),
             // 數字 8: ㄏㄒㄠㄩ
             8 to listOf(
-                CandidateItem("和", "注音:ㄏㄢˋ"),
+                CandidateItem("和", "注音:ㄏㄜˊ"),
                 CandidateItem("好", "注音:ㄏㄠˇ"),
+                CandidateItem("很", "注音:ㄏㄣˇ"),
+                CandidateItem("恨", "注音:ㄏㄣˋ"),
+                CandidateItem("狠", "注音:ㄏㄣˇ"),
                 CandidateItem("會", "注音:ㄏㄨㄟˋ"),
                 CandidateItem("後", "注音:ㄏㄡˋ"),
                 CandidateItem("還", "注音:ㄏㄞˊ"),
@@ -508,6 +511,9 @@ object T9ZhuyinMapper {
                 CandidateItem("小", "注音:ㄒㄧㄠˇ"),
                 CandidateItem("想", "注音:ㄒㄧㄤˇ"),
                 CandidateItem("現", "注音:ㄒㄧㄢˋ"),
+                CandidateItem("新", "注音:ㄒㄧㄣ"),
+                CandidateItem("心", "注音:ㄒㄧㄣ"),
+                CandidateItem("信", "注音:ㄒㄧㄣˋ"),
                 CandidateItem("些", "注音:ㄒㄧㄝ"),
                 CandidateItem("學", "注音:ㄒㄩㄝˊ"),
                 CandidateItem("行", "注音:ㄒㄧㄥˊ"),
@@ -588,6 +594,55 @@ object T9ZhuyinMapper {
                 // 避免重複添加
                 if (char.text !in existingTexts) {
                     supplemented.add(char)
+                }
+            }
+        }
+
+        return supplemented
+    }
+
+    /**
+     * 多鍵輸入時補充候選詞
+     *
+     * 根據數字序列計算有效的注音組合，然後從 T9_DIGIT_CHARS 中找出匹配的候選詞。
+     * 這解決了多鍵輸入時 RIME 可能不返回某些注音組合候選詞的問題。
+     *
+     * @param candidates RIME 返回的候選詞列表
+     * @param digitSequence 數字序列，如 "86"
+     * @return 補充後的候選詞列表
+     */
+    fun supplementMultiKeyCandidates(
+        candidates: List<CandidateItem>,
+        digitSequence: String,
+    ): List<CandidateItem> {
+        if (digitSequence.length < 2) return candidates
+
+        // 計算有效的注音組合
+        val validCombinations = mapToZhuyinCombinations(digitSequence)
+        if (validCombinations.isEmpty()) return candidates
+
+        // 找出候選詞中已存在的文字（用於去重）
+        val existingTexts = candidates.map { it.text }.toMutableSet()
+
+        val supplemented = candidates.toMutableList()
+
+        // 從 T9_DIGIT_CHARS 的所有數字中收集候選詞
+        for (digit in digitSequence.mapNotNull { it.toString().toIntOrNull() }.toSet()) {
+            T9_DIGIT_CHARS[digit]?.forEach { candidateItem ->
+                // 跳過已存在的
+                if (candidateItem.text in existingTexts) return@forEach
+
+                // 檢查候選詞的注音是否匹配任一有效組合
+                val candidateZhuyin = extractZhuyinFromComment(candidateItem.comment)
+                if (candidateZhuyin != null) {
+                    // 檢查是否匹配任一有效注音組合（前綴匹配）
+                    val matches = validCombinations.any { validZhuyin ->
+                        candidateZhuyin.startsWith(validZhuyin) || validZhuyin.startsWith(candidateZhuyin)
+                    }
+                    if (matches) {
+                        supplemented.add(candidateItem)
+                        existingTexts.add(candidateItem.text)
+                    }
                 }
             }
         }

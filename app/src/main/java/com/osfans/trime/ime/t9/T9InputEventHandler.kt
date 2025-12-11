@@ -276,35 +276,34 @@ class T9InputEventHandler(
 
     /**
      * 處理候選詞選擇事件 - 本地累積模式
+     *
+     * 使用 cachedCandidates（UI 顯示的候選詞）而非 menuCached（RIME 原生緩存），
+     * 因為候選詞可能經過前端補充或過濾，兩者內容不一致。
      */
     fun onCandidateSelected(index: Int) {
-        Timber.d("$TAG: 選擇候選詞: $index")
+        Timber.d("$TAG: 選擇候選詞: $index, 緩存大小: ${cachedCandidates.size}")
 
         try {
-            coroutineScope.launch {
-                rimeSession.runOnReady {
-                    val menu = menuCached
-                    if (index < menu.candidates.size) {
-                        val selectedCandidate = menu.candidates[index]
-                        Timber.d("$TAG: 選擇候選詞: ${selectedCandidate.text}")
+            // 使用 cachedCandidates 而非 menuCached，避免前端補充/過濾後的不一致問題
+            if (index < cachedCandidates.size) {
+                val selectedCandidate = cachedCandidates[index]
+                Timber.d("$TAG: 選擇候選詞: ${selectedCandidate.text}")
 
-                        // CRITICAL FIX: 必須在主執行緒更新 UI，確保狀態同步
-                        // 解決選擇候選詞後立即按退格導致的競爭條件問題
-                        kotlinx.coroutines.withContext(Dispatchers.Main) {
-                            // 新邏輯：直接將候選詞追加到文字輸入框中
-                            textInputArea.appendCandidate(selectedCandidate.text)
-                            Timber.d("$TAG: 已追加候選詞到輸入框 (Main Thread)")
-                        }
+                // 直接將候選詞追加到文字輸入框中
+                textInputArea.appendCandidate(selectedCandidate.text)
+                Timber.d("$TAG: 已追加候選詞到輸入框")
 
-                        // 清除RIME狀態並準備下一次輸入
+                // 清除 RIME 狀態並準備下一次輸入
+                coroutineScope.launch {
+                    rimeSession.runOnReady {
                         clearComposition()
-
-                        // 清除UI狀態（但保留textInputArea內容）
-                        kotlinx.coroutines.withContext(Dispatchers.Main) {
-                            clearInputStateExceptText()
-                        }
                     }
                 }
+
+                // 清除 UI 狀態（但保留 textInputArea 內容）
+                clearInputStateExceptText()
+            } else {
+                Timber.w("$TAG: 無效的候選詞索引: $index, 緩存大小: ${cachedCandidates.size}")
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 選擇候選詞時發生錯誤: $index")
@@ -387,15 +386,23 @@ class T9InputEventHandler(
                         val currentDigitCount = digitSequence.length
                         Timber.d("$TAG: 目前數字序列長度: $currentDigitCount")
 
-                        // 【方案 2】單鍵輸入時補充缺少的單韻母/單介音字
+                        // 【方案 2】補充候選詞
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
+                            // 單鍵輸入：補充該數字對應的常用字
                             val firstDigit = digitSequence[0].toString().toIntOrNull()
                             if (firstDigit != null) {
                                 val originalCount = candidateItems.size
                                 candidateItems = T9ZhuyinMapper.supplementCandidates(candidateItems, firstDigit)
                                 if (candidateItems.size > originalCount) {
-                                    Timber.d("$TAG: 補充了 ${candidateItems.size - originalCount} 個單韻母/單介音字")
+                                    Timber.d("$TAG: 單鍵補充了 ${candidateItems.size - originalCount} 個候選詞")
                                 }
+                            }
+                        } else if (currentDigitCount >= 2) {
+                            // 多鍵輸入：根據有效注音組合補充候選詞
+                            val originalCount = candidateItems.size
+                            candidateItems = T9ZhuyinMapper.supplementMultiKeyCandidates(candidateItems, digitSequence.toString())
+                            if (candidateItems.size > originalCount) {
+                                Timber.d("$TAG: 多鍵補充了 ${candidateItems.size - originalCount} 個候選詞")
                             }
                         }
 

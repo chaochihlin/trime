@@ -7,6 +7,7 @@ package com.osfans.trime.ime.t9
 import android.content.Context
 import android.graphics.Color
 import android.view.ViewGroup
+import androidx.core.graphics.toColorInt
 import androidx.core.view.updateLayoutParams
 import com.chad.library.adapter4.BaseQuickAdapter
 import com.osfans.trime.core.CandidateItem
@@ -40,14 +41,19 @@ class T9WhiteCandidateAdapter : BaseQuickAdapter<CandidateItem, T9WhiteCandidate
     ): T9WhiteCandidateViewHolder {
         val textView =
             AutoScaleTextView(context).apply {
-                textSize = 16f
+                textSize = 20f // 增大字體以改善點擊
                 setTextColor(Color.WHITE)
                 isSingleLine = true
                 gravity = gravityCenter
                 scaleMode = AutoScaleTextView.Mode.Proportional
-                minimumWidth = dp(40)
+                minimumWidth = dp(44) // 增大最小寬度
                 setPaddingDp(8, 0, 8, 0)
-                layoutParams = ViewGroup.MarginLayoutParams(wrapContent, matchParent)
+                layoutParams = ViewGroup.MarginLayoutParams(wrapContent, matchParent).apply {
+                    marginStart = dp(2)
+                    marginEnd = dp(2)
+                }
+                // 添加半透明底色以顯示點擊範圍
+                setBackgroundColor("#40FFFFFF".toColorInt())
             }
         return T9WhiteCandidateViewHolder(textView)
     }

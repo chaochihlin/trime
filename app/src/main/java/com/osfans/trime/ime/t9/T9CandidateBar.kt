@@ -73,7 +73,8 @@ class T9CandidateBar
             candidateAdapter =
                 T9WhiteCandidateAdapter().apply {
                     setOnItemClickListener { _, _, position ->
-                        onCandidateClickListener?.onCandidateClick(position, items[position])
+                        val item = items.getOrNull(position) ?: return@setOnItemClickListener
+                        onCandidateClickListener?.onCandidateClick(position, item)
                     }
                 }
             adapter = candidateAdapter
