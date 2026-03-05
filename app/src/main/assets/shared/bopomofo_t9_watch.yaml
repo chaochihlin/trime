@@ -88,8 +88,8 @@ preset_color_schemes:
     author: "Trime Watch Team"
 
     # 背景色彩
-    back_color: 0xff000000           # 純黑背景
-    keyboard_back_color: 0xff000000   # 鍵盤背景
+    back_color: 0xff1B224D           # 深藍背景
+    keyboard_back_color: 0xff1B224D   # 鍵盤背景
     key_back_color: 0xff1e1e1e       # 按鍵背景 - 深灰
 
     # 文字色彩

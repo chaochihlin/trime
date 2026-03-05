@@ -61,7 +61,7 @@ class T9InputContainer
 
         init {
             id = generateViewId()
-            setBackgroundColor("#0f1529".toColorInt())
+            setBackgroundColor("#1B224D".toColorInt())
         }
 
         companion object {
