@@ -45,6 +45,15 @@ class T9InputEventHandler(
     // 當前選中的注音過濾條件（null 表示顯示全部）
     private var currentZhuyinFilter: String? = null
 
+    // 當前聲調過濾（null 表示不過濾）
+    private var currentToneFilter: String? = null
+
+    // 目前顯示在候選詞列的實際候選詞（經過過濾後的結果）
+    private var displayedCandidates: List<CandidateItem> = emptyList()
+
+    // 聲調變更監聽器（用於通知 UI 更新高亮狀態）
+    var onToneFilterChanged: ((String?) -> Unit)? = null
+
     companion object {
         private const val TAG = "T9InputEventHandler"
     }
@@ -140,22 +149,15 @@ class T9InputEventHandler(
             return
         }
 
-        // 記錄選擇（僅用於日誌和未來擴展）
+        // 設定注音過濾條件
         currentZhuyinFilter = zhuyin
-        Timber.d("$TAG: 用戶選擇注音: '$zhuyin'（僅視覺提示，不影響候選詞）")
+        Timber.d("$TAG: 設定注音過濾: '$zhuyin', 候選詞數: ${cachedCandidates.size}, 聲調過濾: '$currentToneFilter'")
 
-        // 嘗試前端過濾（如果有多個候選詞）
-        if (cachedCandidates.size > 1) {
-            val filteredCandidates = T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(cachedCandidates, zhuyin)
-            Timber.d("$TAG: 過濾結果: ${filteredCandidates.size} / ${cachedCandidates.size} 個候選詞")
-
-            if (filteredCandidates.isNotEmpty() && filteredCandidates.size < cachedCandidates.size) {
-                // 只有當過濾有效果時才更新
-                candidateBar.updateCandidates(filteredCandidates)
-                Timber.d("$TAG: 已更新候選詞列為過濾結果: ${filteredCandidates.take(3).map { it.text }}")
-            }
+        // 套用過濾（包含注音 + 聲調的 AND 邏輯）
+        if (cachedCandidates.isNotEmpty()) {
+            applyFilters()
         } else {
-            Timber.d("$TAG: 候選詞數量不足，僅提供視覺提示")
+            Timber.d("$TAG: 無候選詞，僅提供視覺提示")
         }
     }
 
@@ -281,12 +283,12 @@ class T9InputEventHandler(
      * 因為候選詞可能經過前端補充或過濾，兩者內容不一致。
      */
     fun onCandidateSelected(index: Int) {
-        Timber.d("$TAG: 選擇候選詞: $index, 緩存大小: ${cachedCandidates.size}")
+        Timber.d("$TAG: 選擇候選詞: $index, 顯示大小: ${displayedCandidates.size}, 緩存大小: ${cachedCandidates.size}")
 
         try {
-            // 使用 cachedCandidates 而非 menuCached，避免前端補充/過濾後的不一致問題
-            if (index < cachedCandidates.size) {
-                val selectedCandidate = cachedCandidates[index]
+            // 使用 displayedCandidates（經過濾後的實際顯示列表），確保選到的是用戶看到的候選詞
+            if (index < displayedCandidates.size) {
+                val selectedCandidate = displayedCandidates[index]
                 Timber.d("$TAG: 選擇候選詞: ${selectedCandidate.text}")
 
                 // 直接將候選詞追加到文字輸入框中
@@ -303,7 +305,7 @@ class T9InputEventHandler(
                 // 清除 UI 狀態（但保留 textInputArea 內容）
                 clearInputStateExceptText()
             } else {
-                Timber.w("$TAG: 無效的候選詞索引: $index, 緩存大小: ${cachedCandidates.size}")
+                Timber.w("$TAG: 無效的候選詞索引: $index, 顯示大小: ${displayedCandidates.size}")
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 選擇候選詞時發生錯誤: $index")
@@ -409,6 +411,8 @@ class T9InputEventHandler(
                         // 【方案 E】緩存完整候選詞列表，用於前端過濾
                         cachedCandidates = candidateItems
                         currentZhuyinFilter = null // 重置過濾條件
+                        currentToneFilter = null // 重置聲調過濾
+                        onToneFilterChanged?.invoke(null)
                         Timber.d("$TAG: 緩存 ${candidateItems.size} 個候選詞")
 
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
@@ -433,6 +437,7 @@ class T9InputEventHandler(
                             }
                         }
 
+                        displayedCandidates = candidateItems
                         candidateBar.updateCandidates(candidateItems)
                         Timber.d("$TAG: 更新候選詞列，共 ${candidateItems.size} 個候選詞: ${candidateItems.take(3).map { it.text }}")
                     } else {
@@ -453,6 +458,7 @@ class T9InputEventHandler(
                                     val supplementedCandidates = T9ZhuyinMapper.supplementCandidates(emptyList(), firstDigit)
                                     if (supplementedCandidates.isNotEmpty()) {
                                         cachedCandidates = supplementedCandidates
+                                        displayedCandidates = supplementedCandidates
                                         candidateBar.updateCandidates(supplementedCandidates)
                                         Timber.d(
                                             "$TAG: 前端補充了 ${supplementedCandidates.size} 個候選詞: ${supplementedCandidates.take(
@@ -461,6 +467,7 @@ class T9InputEventHandler(
                                         )
                                     } else {
                                         cachedCandidates = emptyList()
+                                        displayedCandidates = emptyList()
                                         candidateBar.clearCandidates()
                                     }
                                 }
@@ -475,10 +482,12 @@ class T9InputEventHandler(
                                     Timber.d("$TAG: RIME 無候選詞，且無有效注音組合")
                                 }
                                 cachedCandidates = emptyList()
+                                displayedCandidates = emptyList()
                                 candidateBar.clearCandidates()
                             }
                         } else {
                             cachedCandidates = emptyList()
+                            displayedCandidates = emptyList()
                             candidateBar.clearCandidates()
                             contextDisplay.clearInput()
                             Timber.d("$TAG: 清空候選詞列和注音選擇器")
@@ -570,7 +579,10 @@ class T9InputEventHandler(
 
             // 【方案 E】清空緩存
             cachedCandidates = emptyList()
+            displayedCandidates = emptyList()
             currentZhuyinFilter = null
+            currentToneFilter = null
+            onToneFilterChanged?.invoke(null)
 
             Timber.d("$TAG: 清空輸入狀態，數字序列和緩存已重置")
         } catch (e: Exception) {
@@ -594,7 +606,10 @@ class T9InputEventHandler(
 
             // 【方案 E】清空緩存
             cachedCandidates = emptyList()
+            displayedCandidates = emptyList()
             currentZhuyinFilter = null
+            currentToneFilter = null
+            onToneFilterChanged?.invoke(null)
 
             Timber.d("$TAG: 清空輸入狀態（保留文字），數字序列和緩存已重置")
 
@@ -605,25 +620,89 @@ class T9InputEventHandler(
     }
 
     /**
-     * 處理退格鍵 - 新邏輯：
-     * 1. 有注音列表或候選字時 → 一次清除全部輸入狀態（回到標點符號 UI）
-     * 2. 左側是標點符號且文字輸入框有內容時 → 刪除最後一個字
+     * 處理聲調鍵按下事件（toggle 邏輯）
+     *
+     * @param tone 聲調符號（"ˊ", "ˇ", "ˋ", "˙"）
+     */
+    fun onToneKeyPress(tone: String) {
+        Timber.d("$TAG: 聲調鍵按下: '$tone', 目前過濾: '$currentToneFilter'")
+
+        // 無候選詞時忽略
+        if (cachedCandidates.isEmpty()) {
+            Timber.d("$TAG: 無候選詞，忽略聲調鍵")
+            return
+        }
+
+        // Toggle 邏輯：再按同一聲調鍵取消過濾
+        if (currentToneFilter == tone) {
+            currentToneFilter = null
+            Timber.d("$TAG: 取消聲調過濾")
+            // 恢復完整候選詞（可能仍有注音過濾）
+            applyFilters()
+            onToneFilterChanged?.invoke(null)
+            return
+        }
+
+        // 切換到新聲調
+        currentToneFilter = tone
+        Timber.d("$TAG: 設定聲調過濾: '$tone'")
+        applyFilters()
+        onToneFilterChanged?.invoke(tone)
+    }
+
+    /**
+     * 套用所有過濾條件（注音 + 聲調）到候選詞
+     *
+     * 過濾策略：嚴格 AND 邏輯，注音過濾 → 聲調過濾。
+     * 當過濾結果為空時，仍然顯示空結果（不回退到未過濾狀態），
+     * 確保用戶選擇的過濾條件得到忠實執行。
+     */
+    private fun applyFilters() {
+        var filtered = cachedCandidates
+
+        // 先套用注音過濾（嚴格模式：空結果也套用）
+        if (currentZhuyinFilter != null) {
+            val zhuyinFiltered = T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(filtered, currentZhuyinFilter!!)
+            Timber.d("$TAG: 注音過濾 '$currentZhuyinFilter': ${filtered.size} → ${zhuyinFiltered.size}")
+            filtered = zhuyinFiltered
+        }
+
+        // 再套用聲調過濾（嚴格模式：空結果也套用）
+        if (currentToneFilter != null) {
+            val toneFiltered = T9ZhuyinMapper.filterCandidatesByTone(filtered, currentToneFilter!!)
+            Timber.d("$TAG: 聲調過濾 '$currentToneFilter': ${filtered.size} → ${toneFiltered.size}")
+            filtered = toneFiltered
+        }
+
+        displayedCandidates = filtered
+        candidateBar.updateCandidates(filtered)
+    }
+
+    /**
+     * 處理退格鍵 - 逐一刪除邏輯：
+     * 1. 有數字序列時 → 刪除最後一個數字，重新計算候選詞
+     * 2. 沒有數字序列但有文字輸入框內容時 → 刪除最後一個字
      * 3. 都沒有時 → 發送 DEL 到應用程式
      */
     fun onBackspacePress() {
-        Timber.d("$TAG: 按下退格鍵")
+        Timber.d("$TAG: 按下退格鍵，目前數字序列: '$digitSequence'")
 
         try {
-            // 檢查是否在輸入中狀態（左側顯示注音列表或有候選字）
-            val isInputting = contextDisplay.getCurrentState() != ContextDisplayArea.State.IDLE
-            val hasCandidates = candidateBar.getCandidateCount() > 0
+            if (digitSequence.isNotEmpty()) {
+                // 情境 1：刪除最後一個數字
+                val removedDigit = digitSequence.last()
+                digitSequence.deleteAt(digitSequence.length - 1)
+                Timber.d("$TAG: 刪除數字 '$removedDigit'，剩餘序列: '$digitSequence'")
 
-            Timber.d("$TAG: 狀態檢查 - isInputting: $isInputting, hasCandidates: $hasCandidates")
-
-            if (isInputting || hasCandidates) {
-                // 情境 1：清除注音列表 + 候選字，回到標點符號 UI
-                Timber.d("$TAG: 清除輸入狀態（注音列表 + 候選字）")
-                clearInputStateAndRime()
+                if (digitSequence.isEmpty()) {
+                    // 數字已全部刪除，清除所有狀態
+                    Timber.d("$TAG: 數字序列已清空，清除輸入狀態")
+                    clearInputStateAndRime()
+                } else {
+                    // 還有剩餘數字，重新發送到 RIME 引擎以更新候選詞
+                    Timber.d("$TAG: 重新發送數字序列到 RIME: '$digitSequence'")
+                    resendDigitSequenceToRime()
+                }
             } else if (textInputArea.hasContent()) {
                 // 情境 2：刪除文字輸入框的最後一個字
                 textInputArea.deleteLastCharacter()
@@ -635,6 +714,30 @@ class T9InputEventHandler(
             }
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 處理退格鍵時發生錯誤")
+        }
+    }
+
+    /**
+     * 重新發送當前數字序列到 RIME 引擎
+     * 用於退格後重新計算候選詞
+     */
+    private fun resendDigitSequenceToRime() {
+        // 複製當前數字序列以避免協程執行期間的競態條件
+        val sequenceCopy = digitSequence.toString()
+        coroutineScope.launch {
+            rimeSession.runOnReady {
+                // 先清除 RIME 的當前輸入
+                clearComposition()
+                Timber.d("$TAG: 已清除 RIME 組合輸入")
+
+                // 逐一發送數字序列中的每個數字
+                for (digit in sequenceCopy) {
+                    val keyCode = digit.code
+                    val result = processKey(keyCode, 0u)
+                    Timber.d("$TAG: 重新發送數字 '$digit' (keyCode=$keyCode)，結果: $result")
+                }
+                // RIME 會透過 messageFlow 自動通知 UI 更新候選詞和注音選擇器
+            }
         }
     }
 

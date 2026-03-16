@@ -5,12 +5,18 @@
 package com.osfans.trime.ime.t9
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
 import android.util.AttributeSet
+import android.view.Gravity
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.core.TrimeInputMethodService
+import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
 import splitties.views.dsl.constraintlayout.bottomOfParent
 import splitties.views.dsl.constraintlayout.centerHorizontally
@@ -51,8 +57,13 @@ class T9InputContainer
         private lateinit var contextDisplay: ContextDisplayArea
         private lateinit var textInputArea: T9TextInputView
         private lateinit var candidateBar: T9CandidateBar
-        private lateinit var confirmButton: T9ConfirmButton // Stage 8A: 移至容器管理
+        private lateinit var confirmButton: T9ConfirmButton
+        private lateinit var rightPanel: LinearLayout // 右側面板：聲調鍵 + 確認鍵
         private lateinit var eventHandler: T9InputEventHandler
+
+        // 聲調鍵 TextView（key = 聲調符號，value = TextView）
+        private val toneKeys = mutableMapOf<String, TextView>()
+        private val TONE_SYMBOLS = listOf("ˊ", "ˇ", "ˋ", "˙")
 
         // 配置參數
         private lateinit var theme: Theme
@@ -123,6 +134,10 @@ class T9InputContainer
                     T9ConfirmButton(context).apply {
                         id = generateViewId()
                     }
+
+                // 建立右側面板：聲調鍵 + 確認鍵垂直排列
+                rightPanel = createRightPanel()
+
                 eventHandler = T9InputEventHandler(rimeSession, contextDisplay, textInputArea, candidateBar, service)
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Error creating T9 components")
@@ -165,13 +180,13 @@ class T9InputContainer
                     },
                 )
 
-                Timber.d("$TAG: Adding confirm button to layout...")
+                Timber.d("$TAG: Adding right panel to layout...")
                 add(
-                    confirmButton,
-                    lParams(dp(64), dp(64)) {
-                        // 64×64dp，更大觸控區域，垂直置中
+                    rightPanel,
+                    lParams(dp(56), wrapContent) {
+                        // 56dp寬，高度 wrap_content，垂直置中，內移以避開圓形邊緣
                         centerVertically()
-                        endOfParent(dp(16)) // 添加rightMargin=16dp
+                        endOfParent(dp(24))
                     },
                 )
 
@@ -183,7 +198,7 @@ class T9InputContainer
                         topToBottomOf(textInputArea, dp(8)) // 距離文字輸入區域8dp
                         bottomOfParent(dp(16)) // 添加bottomMargin=16dp
                         startToEndOf(contextDisplay, dp(2)) // 緊鄰ContextDisplay，2dp間距
-                        endToStartOf(confirmButton, dp(2)) // 與confirmButton保持2dp間距
+                        endToStartOf(rightPanel, dp(2)) // 與右側面板保持2dp間距
                     },
                 )
             } catch (e: Exception) {
@@ -249,6 +264,20 @@ class T9InputContainer
                     },
                 )
 
+                // 設置聲調鍵點擊事件
+                for ((tone, toneView) in toneKeys) {
+                    toneView.setOnClickListener {
+                        InputFeedbackManager.keyPressVibrate(toneView)
+                        InputFeedbackManager.keyPressSound()
+                        eventHandler.onToneKeyPress(tone)
+                    }
+                }
+
+                // 設置聲調過濾變更回呼（更新高亮狀態）
+                eventHandler.onToneFilterChanged = { activeTone ->
+                    setActiveTone(activeTone)
+                }
+
                 // 設置文字輸入框刪除按鈕點擊事件
                 textInputArea.onDeleteClickListener = {
                     eventHandler.onBackspacePress()
@@ -270,6 +299,65 @@ class T9InputContainer
                 confirmButton.updateTheme(theme)
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Failed to update component themes")
+            }
+        }
+
+        /**
+         * 建立右側面板：聲調鍵（ˊ ˇ）+ 確認鍵（✓）+ 聲調鍵（ˋ ˙）
+         */
+        private fun createRightPanel(): LinearLayout {
+            return LinearLayout(context).apply {
+                id = generateViewId()
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER_HORIZONTAL
+
+                // ˊ
+                addView(createToneKey("ˊ"), LinearLayout.LayoutParams(dp(56), dp(30)))
+                // ˇ
+                addView(createToneKey("ˇ"), LinearLayout.LayoutParams(dp(56), dp(30)))
+                // 確認鍵
+                addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(38)))
+                // ˋ
+                addView(createToneKey("ˋ"), LinearLayout.LayoutParams(dp(56), dp(30)))
+                // ˙
+                addView(createToneKey("˙"), LinearLayout.LayoutParams(dp(56), dp(30)))
+            }
+        }
+
+        /**
+         * 建立單個聲調鍵 TextView
+         */
+        private fun createToneKey(tone: String): TextView {
+            return TextView(context).apply {
+                text = tone
+                textSize = 30f
+                setTextColor(Color.WHITE)
+                setTypeface(null, Typeface.BOLD)
+                gravity = Gravity.CENTER
+                isClickable = true
+                isFocusable = true
+                isHapticFeedbackEnabled = true
+                // 儲存到 map 以便後續更新高亮
+                toneKeys[tone] = this
+            }
+        }
+
+        /**
+         * 更新聲調鍵高亮狀態
+         *
+         * @param activeTone 當前選中的聲調（null 表示無選中）
+         */
+        private fun setActiveTone(activeTone: String?) {
+            for ((tone, toneView) in toneKeys) {
+                if (tone == activeTone) {
+                    // 選中狀態：Cyan 背景、粗體
+                    toneView.setBackgroundColor("#00BCD4".toColorInt())
+                    toneView.setTypeface(null, Typeface.BOLD)
+                } else {
+                    // 未選中：透明背景、普通文字
+                    toneView.setBackgroundColor(Color.TRANSPARENT)
+                    toneView.setTypeface(null, Typeface.NORMAL)
+                }
             }
         }
 
@@ -313,7 +401,10 @@ class T9InputContainer
             t9Keyboard.setKeyboardEnabled(enabled)
             candidateBar.setCandidateBarEnabled(enabled)
             contextDisplay.isEnabled = enabled
-            confirmButton.isEnabled = enabled // Stage 8A: 控制確認按鈕啟用狀態
+            confirmButton.isEnabled = enabled
+            for ((_, toneView) in toneKeys) {
+                toneView.isEnabled = enabled
+            }
         }
 
         /**

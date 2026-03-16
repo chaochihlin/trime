@@ -471,14 +471,10 @@ object T9ZhuyinMapper {
                 // 跳過已存在的
                 if (candidateItem.text in existingTexts) continue
 
-                // 檢查候選詞的注音是否匹配任一有效組合
+                // 檢查候選詞的注音是否精確匹配任一有效組合
                 val candidateZhuyin = extractZhuyinFromComment(candidateItem.comment)
                 if (candidateZhuyin != null) {
-                    // 檢查是否匹配任一有效注音組合（前綴匹配）
-                    val matches =
-                        validCombinations.any { validZhuyin ->
-                            candidateZhuyin.startsWith(validZhuyin) || validZhuyin.startsWith(candidateZhuyin)
-                        }
+                    val matches = validCombinations.any { validZhuyin -> candidateZhuyin == validZhuyin }
                     if (matches) {
                         supplemented.add(candidateItem)
                         existingTexts.add(candidateItem.text)
@@ -488,6 +484,49 @@ object T9ZhuyinMapper {
         }
 
         return supplemented
+    }
+
+    // ==================== 聲調過濾功能 ====================
+
+    /**
+     * 從候選詞 comment 提取聲調符號
+     *
+     * @param comment 格式為 "注音:ㄏㄠˇ" 或空
+     * @return 聲調符號（"ˊ", "ˇ", "ˋ", "˙"），一聲返回 null
+     */
+    fun extractToneFromComment(comment: String?): String? {
+        if (comment.isNullOrBlank()) return null
+
+        val prefix = "注音:"
+        val zhuyinPart =
+            if (comment.startsWith(prefix)) {
+                comment.substring(prefix.length)
+            } else {
+                comment
+            }
+
+        if (zhuyinPart.isEmpty()) return null
+
+        // 檢查最後一個字符是否為聲調符號
+        val lastChar = zhuyinPart.last()
+        return if (lastChar in TONE_MARKS) lastChar.toString() else null
+    }
+
+    /**
+     * 根據聲調過濾候選詞
+     *
+     * @param candidates 完整的候選詞列表
+     * @param tone 聲調符號（"ˊ", "ˇ", "ˋ", "˙"），null 表示一聲（無聲調標記）
+     * @return 過濾後的候選詞列表
+     */
+    fun filterCandidatesByTone(
+        candidates: List<CandidateItem>,
+        tone: String,
+    ): List<CandidateItem> {
+        return candidates.filter { candidate ->
+            val candidateTone = extractToneFromComment(candidate.comment)
+            candidateTone == tone
+        }
     }
 
     /**
