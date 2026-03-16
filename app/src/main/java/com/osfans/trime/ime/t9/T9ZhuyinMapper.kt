@@ -75,6 +75,40 @@ object T9ZhuyinMapper {
             "ㄦ",
         ) // 韻母
 
+    // 介音與韻母的搭配規則
+    // key = 介音, value = 該介音可搭配的韻母集合
+    private val MEDIAL_FINAL_RULES: Map<String, Set<String>> =
+        mapOf(
+            // ㄧ（齊齒呼）：可接 ㄚㄝㄠㄡㄢㄣㄤㄥ，不可接 ㄛㄜㄞㄟㄦ
+            "ㄧ" to setOf("ㄚ", "ㄝ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ"),
+            // ㄨ（合口呼）：可接 ㄚㄛㄞㄟㄢㄣㄤㄥ，不可接 ㄜㄝㄠㄡㄦ
+            "ㄨ" to setOf("ㄚ", "ㄛ", "ㄞ", "ㄟ", "ㄢ", "ㄣ", "ㄤ", "ㄥ"),
+            // ㄩ（撮口呼）：只能接 ㄝㄢㄣㄥ
+            "ㄩ" to setOf("ㄝ", "ㄢ", "ㄣ", "ㄥ"),
+        )
+
+    // 聲母與介音的搭配規則（基於漢語音韻學互補分佈）
+    // key = 聲母, value = 該聲母可搭配的介音集合
+    private val CONSONANT_MEDIAL_RULES: Map<String, Set<String>> =
+        buildMap {
+            // ㄅㄆㄇ（雙唇音）：可接 ㄧ、ㄨ，不可接 ㄩ
+            for (c in listOf("ㄅ", "ㄆ", "ㄇ")) put(c, setOf("ㄧ", "ㄨ"))
+            // ㄈ（唇齒音）：只能接 ㄨ
+            put("ㄈ", setOf("ㄨ"))
+            // ㄉㄊ（舌尖音）：可接 ㄧ、ㄨ，不可接 ㄩ
+            for (c in listOf("ㄉ", "ㄊ")) put(c, setOf("ㄧ", "ㄨ"))
+            // ㄋㄌ（鼻/邊音）：三個介音都可接
+            for (c in listOf("ㄋ", "ㄌ")) put(c, setOf("ㄧ", "ㄨ", "ㄩ"))
+            // ㄍㄎㄏ（舌根音）：只能接 ㄨ，不可接 ㄧ、ㄩ（顎化規則）
+            for (c in listOf("ㄍ", "ㄎ", "ㄏ")) put(c, setOf("ㄨ"))
+            // ㄐㄑㄒ（舌面音）：只能接 ㄧ、ㄩ，不可接 ㄨ（互補分佈）
+            for (c in listOf("ㄐ", "ㄑ", "ㄒ")) put(c, setOf("ㄧ", "ㄩ"))
+            // ㄓㄔㄕㄖ（翹舌音）：只能接 ㄨ
+            for (c in listOf("ㄓ", "ㄔ", "ㄕ", "ㄖ")) put(c, setOf("ㄨ"))
+            // ㄗㄘㄙ（平舌音）：只能接 ㄨ
+            for (c in listOf("ㄗ", "ㄘ", "ㄙ")) put(c, setOf("ㄨ"))
+        }
+
     /**
      * 將數字序列映射為可能的注音組合
      *
@@ -131,6 +165,9 @@ object T9ZhuyinMapper {
     private fun isValidZhuyinCombination(combination: String): Boolean {
         if (combination.isEmpty()) return false
 
+        var consonant: String? = null
+        var medial: String? = null
+        var final_: String? = null
         var hasConsonant = false
         var hasMedial = false
         var hasFinal = false
@@ -144,18 +181,21 @@ object T9ZhuyinMapper {
                 charStr in CONSONANTS -> {
                     consonantCount++
                     hasConsonant = true
+                    consonant = charStr
                     // 聲母不能在介音或韻母後
                     if (hasMedial || hasFinal) return false
                 }
                 charStr in MEDIALS -> {
                     medialCount++
                     hasMedial = true
+                    medial = charStr
                     // 介音不能在韻母後
                     if (hasFinal) return false
                 }
                 charStr in FINALS -> {
                     finalCount++
                     hasFinal = true
+                    final_ = charStr
                 }
                 else -> return false // 未知符號
             }
@@ -167,7 +207,30 @@ object T9ZhuyinMapper {
         }
 
         // 有效組合：必須有介音或韻母（聲母可選）
-        return hasMedial || hasFinal
+        if (!hasMedial && !hasFinal) return false
+
+        // 聲母-介音搭配規則檢查（漢語音韻學互補分佈）
+        if (consonant != null && medial != null) {
+            val allowedMedials = CONSONANT_MEDIAL_RULES[consonant]
+            if (allowedMedials != null && medial !in allowedMedials) {
+                return false
+            }
+        }
+
+        // 介音-韻母搭配規則檢查
+        if (medial != null && final_ != null) {
+            val allowedFinals = MEDIAL_FINAL_RULES[medial]
+            if (allowedFinals != null && final_ !in allowedFinals) {
+                return false
+            }
+        }
+
+        // ㄐㄑㄒ 必須搭配介音（不能直接接韻母，如 *ㄐㄚ 不合法）
+        if (consonant != null && consonant in setOf("ㄐ", "ㄑ", "ㄒ") && !hasMedial) {
+            return false
+        }
+
+        return true
     }
 
     /**
@@ -234,7 +297,7 @@ object T9ZhuyinMapper {
                 // 常用完整組合
                 "ㄅㄧㄢ",
                 "ㄉㄧㄢ",
-                "ㄍㄧㄢ", // 邊、點、間
+                "ㄐㄧㄢ", // 間、見、建
                 "ㄏㄠ",
                 "ㄇㄠ",
                 "ㄋㄠ", // 好、毛、腦

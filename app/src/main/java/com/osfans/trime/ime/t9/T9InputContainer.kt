@@ -174,8 +174,8 @@ class T9InputContainer
                 add(
                     contextDisplay,
                     lParams(dp(64), wrapContent) {
-                        // 寬度64dp，高度wrap-content，垂直置中
-                        centerVertically()
+                        // 寬度64dp，高度wrap-content，頂部錨定在文字輸入框下方
+                        topToBottomOf(textInputArea, dp(8))
                         startOfParent(dp(16)) // 添加leftMargin=16dp
                     },
                 )
@@ -184,8 +184,8 @@ class T9InputContainer
                 add(
                     rightPanel,
                     lParams(dp(56), wrapContent) {
-                        // 56dp寬，高度 wrap_content，垂直置中，內移以避開圓形邊緣
-                        centerVertically()
+                        // 56dp寬，高度 wrap_content，頂部錨定在文字輸入框下方
+                        topToBottomOf(textInputArea, dp(8))
                         endOfParent(dp(24))
                     },
                 )
