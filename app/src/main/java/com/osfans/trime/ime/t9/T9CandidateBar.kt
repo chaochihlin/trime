@@ -85,14 +85,16 @@ class T9CandidateBar
             overScrollMode = View.OVER_SCROLL_NEVER
 
             // 設置內距以避免邊緣裁切
-            setPadding(dp(8), dp(4), dp(8), dp(4))
+            setPadding(dp(4), dp(4), dp(52), dp(4))
 
             // 設置固定高度
             layoutParams?.height = dp(CANDIDATE_HEIGHT_DP)
 
-            // 設置背景顏色（20% 透明度黑色）
-            setBackgroundColor("#33000000".toColorInt())
+            // 背景透明，融入容器底色
+            setBackgroundColor(android.graphics.Color.TRANSPARENT)
         }
+
+        var onCandidatesUpdated: (() -> Unit)? = null
 
         /**
          * 更新候選詞列表
@@ -104,6 +106,7 @@ class T9CandidateBar
             if (candidates.isNotEmpty()) {
                 scrollToPosition(0)
             }
+            post { onCandidatesUpdated?.invoke() }
         }
 
         /**
@@ -118,6 +121,7 @@ class T9CandidateBar
          */
         fun clearCandidates() {
             candidateAdapter.updateCandidates(emptyList(), 0, false)
+            onCandidatesUpdated?.invoke()
         }
 
         /**

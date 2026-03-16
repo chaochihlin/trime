@@ -6,24 +6,22 @@ package com.osfans.trime.ime.t9
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
 import android.util.AttributeSet
-import android.view.Gravity
-import android.view.MotionEvent
-import android.widget.TextView
-import androidx.core.graphics.toColorInt
+import android.widget.ImageButton
+import androidx.core.content.ContextCompat
+import com.osfans.trime.R
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
+import splitties.dimensions.dp
 
 /**
  * T9刪除按鈕
  *
- * 圓形白色背景的刪除按鈕，包含：
- * - 圓形白色背景
- * - ⌫ 退格符號
- * - 按壓視覺效果
- * - 觸覺回饋
+ * Material Design 風格的退格按鈕，包含：
+ * - 透明背景 + 漣漪效果
+ * - backspace vector icon
+ * - 觸覺回饋和音效
  *
  * @param context Android上下文
  * @param attrs 屬性集
@@ -33,21 +31,7 @@ class T9DeleteButton
     constructor(
         context: Context,
         attrs: AttributeSet? = null,
-    ) : TextView(context, attrs) {
-        // 正常狀態背景（透明）
-        private val normalDrawable =
-            GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.TRANSPARENT)
-            }
-
-        // 按壓狀態背景（半透明白色）
-        private val pressedDrawable =
-            GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor("#40FFFFFF".toColorInt()) // 25% 透明度白色
-            }
-
+    ) : ImageButton(context, attrs) {
         private var theme: Theme? = null
 
         companion object {
@@ -56,62 +40,38 @@ class T9DeleteButton
 
         init {
             setupButton()
-            setupTouchHandling()
         }
 
         /**
          * 設置按鈕基本屬性
          */
         private fun setupButton() {
-            // 設置退格符號
-            text = "⌫"
-            textSize = 28f
-            setTextColor(Color.WHITE) // 改為白色字體
-            typeface = Typeface.DEFAULT
-            gravity = Gravity.CENTER
+            // 設置退格圖標
+            setImageResource(R.drawable.ic_baseline_backspace_24)
+            scaleType = ScaleType.CENTER
+            setColorFilter(Color.WHITE)
 
-            // 設置背景
-            background = normalDrawable
+            // 設置尺寸
+            minimumWidth = dp(32)
+            minimumHeight = dp(32)
 
-            // 設置可點擊
-            isClickable = true
-            isFocusable = true
+            // 設置透明背景
+            background = ContextCompat.getDrawable(context, android.R.color.transparent)
+
+            // 設置漣漪效果
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                try {
+                    val colorStateList = ContextCompat.getColorStateList(context, android.R.color.darker_gray)
+                    if (colorStateList != null) {
+                        background = RippleDrawable(colorStateList, null, null)
+                    }
+                } catch (e: Exception) {
+                    background = ContextCompat.getDrawable(context, android.R.color.transparent)
+                }
+            }
 
             // 啟用觸覺回饋
             isHapticFeedbackEnabled = true
-        }
-
-        /**
-         * 設置觸控處理
-         */
-        private fun setupTouchHandling() {
-            setOnTouchListener { _, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        // 按下效果
-                        background = pressedDrawable
-                        scaleX = 0.95f
-                        scaleY = 0.95f
-
-                        // 觸覺回饋
-                        InputFeedbackManager.keyPressVibrate(this)
-
-                        true
-                    }
-                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                        // 釋放效果
-                        background = normalDrawable
-                        scaleX = 1.0f
-                        scaleY = 1.0f
-
-                        if (event.action == MotionEvent.ACTION_UP) {
-                            performClick()
-                        }
-                        true
-                    }
-                    else -> false
-                }
-            }
         }
 
         /**
@@ -119,20 +79,7 @@ class T9DeleteButton
          */
         fun updateTheme(theme: Theme) {
             this.theme = theme
-
-            try {
-                // 使用透明背景和白色文字
-                setTextColor(Color.WHITE)
-
-                // 更新背景顏色
-                normalDrawable.setColor(Color.TRANSPARENT)
-                pressedDrawable.setColor("#40FFFFFF".toColorInt())
-
-                invalidate()
-            } catch (e: Exception) {
-                // 使用默認顏色
-                setTextColor(Color.WHITE)
-            }
+            setColorFilter(Color.WHITE)
         }
 
         /**
@@ -147,6 +94,7 @@ class T9DeleteButton
         }
 
         override fun performClick(): Boolean {
+            InputFeedbackManager.keyPressVibrate(this)
             playKeySound()
             return super.performClick()
         }

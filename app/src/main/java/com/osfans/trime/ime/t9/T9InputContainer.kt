@@ -6,12 +6,17 @@ package com.osfans.trime.ime.t9
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.recyclerview.widget.RecyclerView
 import androidx.core.graphics.toColorInt
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.data.theme.Theme
@@ -59,6 +64,8 @@ class T9InputContainer
         private lateinit var candidateBar: T9CandidateBar
         private lateinit var confirmButton: T9ConfirmButton
         private lateinit var rightPanel: LinearLayout // 右側面板：聲調鍵 + 確認鍵
+        private lateinit var candidateWrapper: FrameLayout // 候選詞欄包裝器（含漸層遮罩）
+        private lateinit var candidateGradient: View // 候選詞欄右側漸層遮罩
         private lateinit var eventHandler: T9InputEventHandler
 
         // 聲調鍵 TextView（key = 聲調符號，value = TextView）
@@ -116,6 +123,40 @@ class T9InputContainer
                         visibility = VISIBLE
                     }
 
+                // 候選詞欄右側漸層遮罩（透明→底色，提示可橫滑）
+                candidateGradient =
+                    object : View(context) {
+                        override fun onTouchEvent(event: MotionEvent?): Boolean = false
+                    }.apply {
+                        background =
+                            GradientDrawable(
+                                GradientDrawable.Orientation.LEFT_RIGHT,
+                                intArrayOf(Color.TRANSPARENT, "#1B224D".toColorInt()),
+                            )
+                        isClickable = false
+                        isFocusable = false
+                        visibility = GONE
+                    }
+                candidateWrapper =
+                    FrameLayout(context).apply {
+                        id = generateViewId()
+                        addView(
+                            candidateBar,
+                            FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                            ),
+                        )
+                        addView(
+                            candidateGradient,
+                            FrameLayout.LayoutParams(
+                                dp(24),
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                Gravity.END,
+                            ),
+                        )
+                    }
+
                 contextDisplay =
                     ContextDisplayArea(context).apply {
                         id = generateViewId()
@@ -151,11 +192,11 @@ class T9InputContainer
         private fun setupLayout() {
             try {
                 add(
-                    candidateBar,
-                    lParams(dp(170), dp(50)) {
-                        // 候選詞列：170dp寬 x 50dp高（在圓形安全弧內最大化可見候選字數）
-                        topOfParent(dp(28)) // 距離頂部28dp（確保在圓形弧內）
-                        centerHorizontally()
+                    candidateWrapper,
+                    lParams(0, dp(50)) {
+                        topOfParent(dp(28))
+                        startOfParent(dp(115)) // 左邊緣維持原位
+                        endOfParent(dp(16)) // 右邊延伸至接近圓弧邊緣
                     },
                 )
 
@@ -164,7 +205,7 @@ class T9InputContainer
                     textInputArea,
                     lParams(0, dp(56)) {
                         // 文字輸入區域：左右各32dp margin x 56dp高
-                        topToBottomOf(candidateBar, dp(2)) // 距離候選詞區域4dp
+                        topToBottomOf(candidateWrapper, dp(2)) // 距離候選詞區域4dp
                         startOfParent(dp(32)) // 左邊距32dp
                         endOfParent(dp(32)) // 右邊距32dp
                     },
@@ -228,6 +269,20 @@ class T9InputContainer
                         }
                     },
                 )
+
+                // 候選詞欄滾動時更新漸層遮罩
+                candidateBar.addOnScrollListener(
+                    object : RecyclerView.OnScrollListener() {
+                        override fun onScrolled(
+                            recyclerView: RecyclerView,
+                            dx: Int,
+                            dy: Int,
+                        ) {
+                            updateCandidateGradient()
+                        }
+                    },
+                )
+                candidateBar.onCandidatesUpdated = { updateCandidateGradient() }
 
                 contextDisplay.setStateChangeListener(
                     object : ContextDisplayArea.StateChangeListener {
@@ -370,6 +425,14 @@ class T9InputContainer
                 toneView.visibility = if (tone in validTones) VISIBLE else GONE
             }
             Timber.d("$TAG: 動態聲調鍵更新，可見: $validTones")
+        }
+
+        /**
+         * 更新候選詞欄右側漸層遮罩
+         */
+        private fun updateCandidateGradient() {
+            val hasMore = candidateBar.getCandidateCount() > 0 && candidateBar.canScrollRight()
+            candidateGradient.visibility = if (hasMore) VISIBLE else GONE
         }
 
         /**

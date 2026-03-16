@@ -324,7 +324,7 @@ class ContextDisplayArea
                         TextView(context).apply {
                             text = punctuation
                             textSize = 16f
-                            setTextColor(Color.GRAY)
+                            setTextColor(Color.WHITE)
                             gravity = Gravity.CENTER
 
                             // 設置點擊區域
@@ -362,7 +362,7 @@ class ContextDisplayArea
                         shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                         cornerRadius = dp(8).toFloat()
                         setColor(Color.TRANSPARENT)
-                        setStroke(dp(1), Color.parseColor("#444444"))
+                        setStroke(dp(1), Color.parseColor("#666666"))
                     }
                 return shape
             }
@@ -380,9 +380,9 @@ class ContextDisplayArea
                         button.setTextColor(punctuationTextColor)
                     }
                 } catch (e: Exception) {
-                    // 使用默認顏色
+                    // 使用默認顏色（白色，與注音符號一致）
                     punctuationButtons.forEach { button ->
-                        button.setTextColor(Color.GRAY)
+                        button.setTextColor(Color.WHITE)
                     }
                 }
             }
