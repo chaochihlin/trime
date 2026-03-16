@@ -56,6 +56,8 @@ class T9InputEventHandler(
 
     companion object {
         private const val TAG = "T9InputEventHandler"
+        // 佔位提示的 comment 標記，用於區分不可選取的提示項目
+        private const val HINT_MARKER = "__hint__"
     }
 
     init {
@@ -390,14 +392,12 @@ class T9InputEventHandler(
 
                         // 【方案 2】補充候選詞
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
-                            // 單鍵輸入：補充該數字對應的常用字
+                            // 單鍵輸入：以 t9_chars.json 策劃順序為主，解決 RIME 精確匹配優先問題
                             val firstDigit = digitSequence[0].toString().toIntOrNull()
                             if (firstDigit != null) {
                                 val originalCount = candidateItems.size
-                                candidateItems = T9ZhuyinMapper.supplementCandidates(candidateItems, firstDigit)
-                                if (candidateItems.size > originalCount) {
-                                    Timber.d("$TAG: 單鍵補充了 ${candidateItems.size - originalCount} 個候選詞")
-                                }
+                                candidateItems = T9ZhuyinMapper.prioritizedCandidates(candidateItems, firstDigit)
+                                Timber.d("$TAG: 單鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
                             }
                         } else if (currentDigitCount >= 2) {
                             // 多鍵輸入：根據有效注音組合補充候選詞
@@ -454,8 +454,8 @@ class T9InputEventHandler(
                                     Timber.d("$TAG: RIME 無候選詞，但根據數字 '$firstDigit' 顯示注音: $individualZhuyins")
                                     contextDisplay.showZhuyinCombinations(individualZhuyins)
 
-                                    // 【關鍵修復】即使 RIME 無候選詞，也使用前端補充
-                                    val supplementedCandidates = T9ZhuyinMapper.supplementCandidates(emptyList(), firstDigit)
+                                    // 【關鍵修復】即使 RIME 無候選詞，也使用前端策劃候選字
+                                    val supplementedCandidates = T9ZhuyinMapper.prioritizedCandidates(emptyList(), firstDigit)
                                     if (supplementedCandidates.isNotEmpty()) {
                                         cachedCandidates = supplementedCandidates
                                         displayedCandidates = supplementedCandidates
@@ -675,7 +675,14 @@ class T9InputEventHandler(
         }
 
         displayedCandidates = filtered
-        candidateBar.updateCandidates(filtered)
+        if (filtered.isEmpty() && (currentZhuyinFilter != null || currentToneFilter != null)) {
+            // 過濾後無結果時，顯示佔位提示（不可選取）
+            // displayedCandidates 維持空列表，確保點擊時 onCandidateSelected 不會送出提示文字
+            val hint = CandidateItem(text = "無候選字", comment = HINT_MARKER)
+            candidateBar.updateCandidates(listOf(hint))
+        } else {
+            candidateBar.updateCandidates(filtered)
+        }
     }
 
     /**

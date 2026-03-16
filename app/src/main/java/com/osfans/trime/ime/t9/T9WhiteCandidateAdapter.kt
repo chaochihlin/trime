@@ -41,17 +41,17 @@ class T9WhiteCandidateAdapter : BaseQuickAdapter<CandidateItem, T9WhiteCandidate
     ): T9WhiteCandidateViewHolder {
         val textView =
             AutoScaleTextView(context).apply {
-                textSize = 20f // 增大字體以改善點擊
+                textSize = 18f // 適中字體大小
                 setTextColor(Color.WHITE)
                 isSingleLine = true
                 gravity = gravityCenter
                 scaleMode = AutoScaleTextView.Mode.Proportional
-                minimumWidth = dp(44) // 增大最小寬度
-                setPaddingDp(8, 0, 8, 0)
+                minimumWidth = dp(34) // 縮小最小寬度以顯示更多候選字（原44dp）
+                setPaddingDp(4, 0, 4, 0) // 縮小內距（原8dp）
                 layoutParams =
                     ViewGroup.MarginLayoutParams(wrapContent, matchParent).apply {
-                        marginStart = dp(2)
-                        marginEnd = dp(2)
+                        marginStart = dp(1)
+                        marginEnd = dp(1)
                     }
                 // 添加半透明底色以顯示點擊範圍
                 setBackgroundColor("#40FFFFFF".toColorInt())

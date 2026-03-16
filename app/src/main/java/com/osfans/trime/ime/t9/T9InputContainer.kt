@@ -63,7 +63,7 @@ class T9InputContainer
 
         // 聲調鍵 TextView（key = 聲調符號，value = TextView）
         private val toneKeys = mutableMapOf<String, TextView>()
-        private val TONE_SYMBOLS = listOf("ˊ", "ˇ", "ˋ", "˙")
+        private val TONE_SYMBOLS = listOf("ˉ", "ˊ", "ˇ", "ˋ", "˙")
 
         // 配置參數
         private lateinit var theme: Theme
@@ -152,9 +152,9 @@ class T9InputContainer
             try {
                 add(
                     candidateBar,
-                    lParams(dp(140), dp(56)) {
-                        // 候選詞列：140dp寬 x 56dp高（縮小寬度以適應圓形頂部）
-                        topOfParent(dp(24)) // 距離頂部24dp（避開圓形切角）
+                    lParams(dp(170), dp(50)) {
+                        // 候選詞列：170dp寬 x 50dp高（在圓形安全弧內最大化可見候選字數）
+                        topOfParent(dp(28)) // 距離頂部28dp（確保在圓形弧內）
                         centerHorizontally()
                     },
                 )
@@ -311,16 +311,18 @@ class T9InputContainer
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
 
-                // ˊ
-                addView(createToneKey("ˊ"), LinearLayout.LayoutParams(dp(56), dp(30)))
-                // ˇ
-                addView(createToneKey("ˇ"), LinearLayout.LayoutParams(dp(56), dp(30)))
+                // ˉ (一聲)
+                addView(createToneKey("ˉ"), LinearLayout.LayoutParams(dp(56), dp(24)))
+                // ˊ (二聲)
+                addView(createToneKey("ˊ"), LinearLayout.LayoutParams(dp(56), dp(24)))
                 // 確認鍵
-                addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(38)))
-                // ˋ
-                addView(createToneKey("ˋ"), LinearLayout.LayoutParams(dp(56), dp(30)))
-                // ˙
-                addView(createToneKey("˙"), LinearLayout.LayoutParams(dp(56), dp(30)))
+                addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(36)))
+                // ˇ (三聲)
+                addView(createToneKey("ˇ"), LinearLayout.LayoutParams(dp(56), dp(24)))
+                // ˋ (四聲)
+                addView(createToneKey("ˋ"), LinearLayout.LayoutParams(dp(56), dp(24)))
+                // ˙ (輕聲)
+                addView(createToneKey("˙"), LinearLayout.LayoutParams(dp(56), dp(24)))
             }
         }
 

@@ -12,7 +12,9 @@ import com.osfans.trime.core.CandidateItem
  * 基於 doc/task-02-rime-schema.md 中定義的T9映射表實作數字到注音的轉換邏輯。
  */
 object T9ZhuyinMapper {
-    // 聲調符號（用於從 comment 中去除）
+    // 顯式聲調符號（二、三、四聲和輕聲）
+    // 注意：一聲（陰平）在注音中無聲調符號，由 filterCandidatesByTone() 中
+    // tone == "ˉ" 時以 candidateTone == null 來匹配
     private val TONE_MARKS = setOf('ˊ', 'ˇ', 'ˋ', '˙')
 
     // T9數字到注音符號的映射表 (來自 task-02-rime-schema.md)
@@ -471,35 +473,43 @@ object T9ZhuyinMapper {
     // ==================== 方案 2：前端補充候選詞 ====================
 
     /**
-     * 補充候選詞
+     * 單鍵輸入時以 t9_chars.json 策劃順序為主的候選詞合併
      *
-     * 當 RIME 返回的候選詞不足時，從外部 JSON 檔案載入的 T9 數字鍵映射表中補充常用字。
-     * 這解決了 RIME abbrev 規則對某些數字不生效的問題。
+     * RIME 的精確匹配優先機制會讓韻母字（如「啊」ㄚ）排在聲母字（如「不」ㄅㄨˋ）前面，
+     * 即使後者的使用頻率更高。此方法以 t9_chars.json 的人工策劃順序為主，
+     * 再附加 RIME 獨有的候選字。
      *
-     * 注意：必須先呼叫 T9CharDataLoader.init(context) 初始化資料。
-     *
-     * @param candidates RIME 返回的候選詞列表
-     * @param digit 當前輸入的數字鍵 (0-9)
-     * @return 補充後的候選詞列表
+     * @param rimeCandidates RIME 引擎返回的候選詞
+     * @param digit 數字鍵 (0-9)
+     * @return 以策劃順序為主的候選詞列表
      */
-    fun supplementCandidates(
-        candidates: List<CandidateItem>,
+    fun prioritizedCandidates(
+        rimeCandidates: List<CandidateItem>,
         digit: Int,
     ): List<CandidateItem> {
-        // 找出候選詞中已存在的文字（用於去重）
-        val existingTexts = candidates.map { it.text }.toSet()
-
-        // 從外部 JSON 載入的 T9 數字鍵映射表中補充候選詞
-        val supplemented = candidates.toMutableList()
         val digitChars = T9CharDataLoader.getDigitChars(digit)
+        val result = mutableListOf<CandidateItem>()
+        val addedTexts = mutableSetOf<String>()
+
+        // 優先加入 t9_chars.json 的策劃順序候選字
         for (char in digitChars) {
-            // 避免重複添加
-            if (char.text !in existingTexts) {
-                supplemented.add(char)
+            if (char.text !in addedTexts) {
+                // 若 RIME 也有此字，優先使用 RIME 版本（comment 可能更準確）
+                val rimeVersion = rimeCandidates.find { it.text == char.text }
+                result.add(rimeVersion ?: char)
+                addedTexts.add(char.text)
             }
         }
 
-        return supplemented
+        // 再附加 RIME 獨有的候選字（不在 t9_chars.json 中的）
+        for (candidate in rimeCandidates) {
+            if (candidate.text !in addedTexts) {
+                result.add(candidate)
+                addedTexts.add(candidate.text)
+            }
+        }
+
+        return result
     }
 
     /**
@@ -579,7 +589,7 @@ object T9ZhuyinMapper {
      * 根據聲調過濾候選詞
      *
      * @param candidates 完整的候選詞列表
-     * @param tone 聲調符號（"ˊ", "ˇ", "ˋ", "˙"），null 表示一聲（無聲調標記）
+     * @param tone 聲調符號（"ˉ"=一聲, "ˊ"=二聲, "ˇ"=三聲, "ˋ"=四聲, "˙"=輕聲）
      * @return 過濾後的候選詞列表
      */
     fun filterCandidatesByTone(
@@ -588,7 +598,12 @@ object T9ZhuyinMapper {
     ): List<CandidateItem> {
         return candidates.filter { candidate ->
             val candidateTone = extractToneFromComment(candidate.comment)
-            candidateTone == tone
+            if (tone == "ˉ") {
+                // 一聲：匹配無聲調標記的候選詞
+                candidateTone == null
+            } else {
+                candidateTone == tone
+            }
         }
     }
 
