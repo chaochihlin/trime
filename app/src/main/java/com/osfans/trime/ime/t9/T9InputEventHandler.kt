@@ -54,6 +54,9 @@ class T9InputEventHandler(
     // 聲調變更監聽器（用於通知 UI 更新高亮狀態）
     var onToneFilterChanged: ((String?) -> Unit)? = null
 
+    // 合法聲調變更監聽器（用於動態顯示/隱藏聲調鍵）
+    var onValidTonesChanged: ((Set<String>) -> Unit)? = null
+
     companion object {
         private const val TAG = "T9InputEventHandler"
         // 佔位提示的 comment 標記，用於區分不可選取的提示項目
@@ -437,9 +440,9 @@ class T9InputEventHandler(
                             }
                         }
 
-                        displayedCandidates = candidateItems
-                        candidateBar.updateCandidates(candidateItems)
-                        Timber.d("$TAG: 更新候選詞列，共 ${candidateItems.size} 個候選詞: ${candidateItems.take(3).map { it.text }}")
+                        // 透過 applyFilters 更新顯示（觸發一聲優先排序 + 合法聲調計算）
+                        applyFilters()
+                        Timber.d("$TAG: 更新候選詞列，共 ${cachedCandidates.size} 個候選詞: ${displayedCandidates.take(3).map { it.text }}")
                     } else {
                         // RIME 返回 0 個候選詞，但仍需處理 UI 顯示
                         currentZhuyinFilter = null
@@ -458,17 +461,13 @@ class T9InputEventHandler(
                                     val supplementedCandidates = T9ZhuyinMapper.prioritizedCandidates(emptyList(), firstDigit)
                                     if (supplementedCandidates.isNotEmpty()) {
                                         cachedCandidates = supplementedCandidates
-                                        displayedCandidates = supplementedCandidates
-                                        candidateBar.updateCandidates(supplementedCandidates)
-                                        Timber.d(
-                                            "$TAG: 前端補充了 ${supplementedCandidates.size} 個候選詞: ${supplementedCandidates.take(
-                                                3,
-                                            ).map { it.text }}",
-                                        )
+                                        applyFilters()
+                                        Timber.d("$TAG: 前端補充了 ${supplementedCandidates.size} 個候選詞")
                                     } else {
                                         cachedCandidates = emptyList()
                                         displayedCandidates = emptyList()
                                         candidateBar.clearCandidates()
+                                        onValidTonesChanged?.invoke(emptySet())
                                     }
                                 }
                             } else {
@@ -610,6 +609,7 @@ class T9InputEventHandler(
             currentZhuyinFilter = null
             currentToneFilter = null
             onToneFilterChanged?.invoke(null)
+            onValidTonesChanged?.invoke(emptySet())
 
             Timber.d("$TAG: 清空輸入狀態（保留文字），數字序列和緩存已重置")
 
@@ -667,11 +667,18 @@ class T9InputEventHandler(
             filtered = zhuyinFiltered
         }
 
+        // 計算並通知合法聲調（基於注音過濾後、聲調過濾前的候選字）
+        val validTones = computeValidTones(filtered)
+        onValidTonesChanged?.invoke(validTones)
+
         // 再套用聲調過濾（嚴格模式：空結果也套用）
         if (currentToneFilter != null) {
             val toneFiltered = T9ZhuyinMapper.filterCandidatesByTone(filtered, currentToneFilter!!)
             Timber.d("$TAG: 聲調過濾 '$currentToneFilter': ${filtered.size} → ${toneFiltered.size}")
             filtered = toneFiltered
+        } else {
+            // 無聲調篩選時，一聲候選字排到前面
+            filtered = sortFirstToneFirst(filtered)
         }
 
         displayedCandidates = filtered
@@ -683,6 +690,43 @@ class T9InputEventHandler(
         } else {
             candidateBar.updateCandidates(filtered)
         }
+    }
+
+    /**
+     * 將一聲候選字排到前面，其餘維持原順序
+     */
+    private fun sortFirstToneFirst(candidates: List<CandidateItem>): List<CandidateItem> {
+        if (candidates.isEmpty()) return candidates
+        val firstTone = mutableListOf<CandidateItem>()
+        val others = mutableListOf<CandidateItem>()
+        for (candidate in candidates) {
+            val tone = T9ZhuyinMapper.extractToneFromComment(candidate.comment)
+            // tone == null 且 comment 有注音資訊 → 一聲（注音中一聲無聲調符號）
+            // tone == null 且 comment 為空 → 無注音資訊，不提前
+            if (tone == null && candidate.comment.isNotBlank()) {
+                firstTone.add(candidate)
+            } else {
+                others.add(candidate)
+            }
+        }
+        if (firstTone.isEmpty()) return candidates
+        Timber.d("$TAG: 一聲優先排序：${firstTone.size} 個一聲 + ${others.size} 個其他")
+        return firstTone + others
+    }
+
+    /**
+     * 從候選字列表計算存在哪些顯式聲調（ˊˇˋ˙）
+     * 不含一聲：UI 已移除一聲鍵，一聲候選字改由預設排序提前顯示
+     */
+    private fun computeValidTones(candidates: List<CandidateItem>): Set<String> {
+        val tones = mutableSetOf<String>()
+        for (candidate in candidates) {
+            val tone = T9ZhuyinMapper.extractToneFromComment(candidate.comment)
+            if (tone != null) {
+                tones.add(tone)
+            }
+        }
+        return tones
     }
 
     /**

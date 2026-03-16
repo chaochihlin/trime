@@ -63,7 +63,7 @@ class T9InputContainer
 
         // 聲調鍵 TextView（key = 聲調符號，value = TextView）
         private val toneKeys = mutableMapOf<String, TextView>()
-        private val TONE_SYMBOLS = listOf("ˉ", "ˊ", "ˇ", "ˋ", "˙")
+        private val TONE_SYMBOLS = listOf("ˊ", "ˇ", "ˋ", "˙")
 
         // 配置參數
         private lateinit var theme: Theme
@@ -278,6 +278,11 @@ class T9InputContainer
                     setActiveTone(activeTone)
                 }
 
+                // 設置合法聲調變更回呼（動態顯示/隱藏聲調鍵）
+                eventHandler.onValidTonesChanged = { validTones ->
+                    updateVisibleToneKeys(validTones)
+                }
+
                 // 設置文字輸入框刪除按鈕點擊事件
                 textInputArea.onDeleteClickListener = {
                     eventHandler.onBackspacePress()
@@ -303,7 +308,7 @@ class T9InputContainer
         }
 
         /**
-         * 建立右側面板：聲調鍵（ˊ ˇ）+ 確認鍵（✓）+ 聲調鍵（ˋ ˙）
+         * 建立右側面板：確認鍵（✓）在最上方 + 動態聲調鍵
          */
         private fun createRightPanel(): LinearLayout {
             return LinearLayout(context).apply {
@@ -311,18 +316,12 @@ class T9InputContainer
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
 
-                // ˉ (一聲)
-                addView(createToneKey("ˉ"), LinearLayout.LayoutParams(dp(56), dp(24)))
-                // ˊ (二聲)
-                addView(createToneKey("ˊ"), LinearLayout.LayoutParams(dp(56), dp(24)))
-                // 確認鍵
+                // 確認鍵（固定在最上方）
                 addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(36)))
-                // ˇ (三聲)
-                addView(createToneKey("ˇ"), LinearLayout.LayoutParams(dp(56), dp(24)))
-                // ˋ (四聲)
-                addView(createToneKey("ˋ"), LinearLayout.LayoutParams(dp(56), dp(24)))
-                // ˙ (輕聲)
-                addView(createToneKey("˙"), LinearLayout.LayoutParams(dp(56), dp(24)))
+                // 聲調鍵（根據候選字動態顯示/隱藏）
+                for (tone in TONE_SYMBOLS) {
+                    addView(createToneKey(tone), LinearLayout.LayoutParams(dp(56), dp(28)))
+                }
             }
         }
 
@@ -352,15 +351,25 @@ class T9InputContainer
         private fun setActiveTone(activeTone: String?) {
             for ((tone, toneView) in toneKeys) {
                 if (tone == activeTone) {
-                    // 選中狀態：Cyan 背景、粗體
                     toneView.setBackgroundColor("#00BCD4".toColorInt())
                     toneView.setTypeface(null, Typeface.BOLD)
                 } else {
-                    // 未選中：透明背景、普通文字
                     toneView.setBackgroundColor(Color.TRANSPARENT)
                     toneView.setTypeface(null, Typeface.NORMAL)
                 }
             }
+        }
+
+        /**
+         * 根據合法聲調集合動態顯示/隱藏聲調鍵
+         *
+         * @param validTones 當前候選字中存在的聲調集合
+         */
+        private fun updateVisibleToneKeys(validTones: Set<String>) {
+            for ((tone, toneView) in toneKeys) {
+                toneView.visibility = if (tone in validTones) VISIBLE else GONE
+            }
+            Timber.d("$TAG: 動態聲調鍵更新，可見: $validTones")
         }
 
         /**
