@@ -121,6 +121,9 @@ speller:
     # 例如：輸入 8 時，除了精確匹配的「於」(8)，還會顯示「好」(88)、「和」(83) 等
     - abbrev/^([0-9]).+$/$1/
 
+menu:
+  page_size: 50
+
 translator:
   dictionary: bopomofo_t9
   spelling_hints: 8
@@ -152,7 +155,7 @@ translator:
 
   comment_format:
     - "xform/^([0-9]+)$/T9:$1/"
-    - "xform/^([ㄅ-ㄩ]+)$/注音:$1/"
+    - "xform/^([ㄅ-ㄩˊˇˋ˙]+)$/注音:$1/"
 
 punctuator:
   import_preset: symbols
