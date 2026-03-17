@@ -203,9 +203,9 @@ class T9InputContainer
                 Timber.d("$TAG: Adding text input area to layout...")
                 add(
                     textInputArea,
-                    lParams(0, dp(56)) {
-                        // 文字輸入區域：左右各32dp margin x 56dp高
-                        topToBottomOf(candidateWrapper, dp(2)) // 距離候選詞區域4dp
+                    lParams(0, wrapContent) {
+                        // 文字輸入區域：左右各32dp margin，高度由內容決定
+                        topToBottomOf(candidateWrapper, dp(2)) // 距離候選詞區域2dp
                         startOfParent(dp(32)) // 左邊距32dp
                         endOfParent(dp(32)) // 右邊距32dp
                     },

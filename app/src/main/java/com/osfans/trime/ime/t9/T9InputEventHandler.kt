@@ -211,29 +211,31 @@ class T9InputEventHandler(
         try {
             // 獲取文字輸入框內容
             val textContent = textInputArea.getText()
+            Timber.d("$TAG: T9 textContent='$textContent'")
 
-            if (textContent.isNotEmpty()) {
-                // FIX: 防止重複輸入問題
-                // 因為 T9 輸入框在啟動時會載入原輸入框的內容，所以提交時需要先清除原內容
-                // 否則會導致內容重複 (例如: 原本是"A", T9載入"A", 用戶輸入"B"變成"AB", 提交後變成"AAB")
-                val ic = service.currentInputConnection
-                if (ic != null) {
-                    // 嘗試獲取游標前的文字（最多1000個字符）
-                    // 假設游標在文字末尾，這將刪除所有現有文字
-                    val beforeCursor = ic.getTextBeforeCursor(1000, 0)
-                    if (!beforeCursor.isNullOrEmpty()) {
-                        Timber.d("$TAG: 刪除游標前 ${beforeCursor.length} 個字符以防止重複")
-                        ic.deleteSurroundingText(beforeCursor.length, 0)
-                    }
+            // 先清除宿主 App 的既有文字（不論 T9 輸入框是否為空）
+            val ic = service.currentInputConnection
+            if (ic != null) {
+                val beforeCursor = ic.getTextBeforeCursor(1000, 0)
+                if (!beforeCursor.isNullOrEmpty()) {
+                    Timber.d("$TAG: 刪除宿主 App 游標前 ${beforeCursor.length} 個字符")
+                    ic.deleteSurroundingText(beforeCursor.length, 0)
                 }
+                val afterCursor = ic.getTextAfterCursor(1000, 0)
+                if (!afterCursor.isNullOrEmpty()) {
+                    Timber.d("$TAG: 刪除宿主 App 游標後 ${afterCursor.length} 個字符")
+                    ic.deleteSurroundingText(0, afterCursor.length)
+                }
+            }
 
-                // 提交文字輸入框內容到目標應用程式
+            // 提交 T9 輸入框內容（如果有的話）
+            if (textContent.isNotEmpty()) {
                 service.commitText(textContent)
                 Timber.d("$TAG: 提交文字內容: $textContent")
-
-                // 清空文字輸入框
-                textInputArea.clear()
             }
+
+            // 清空文字輸入框
+            textInputArea.clear()
 
             // 清除所有輸入狀態
             coroutineScope.launch {
@@ -413,7 +415,7 @@ class T9InputEventHandler(
 
                         // 【方案 E】緩存完整候選詞列表，用於前端過濾
                         cachedCandidates = candidateItems
-                        currentZhuyinFilter = null // 重置過濾條件
+                        currentZhuyinFilter = null // 重置注音過濾（後續分支會重新賦值）
                         currentToneFilter = null // 重置聲調過濾
                         onToneFilterChanged?.invoke(null)
                         Timber.d("$TAG: 緩存 ${candidateItems.size} 個候選詞")
@@ -425,20 +427,31 @@ class T9InputEventHandler(
                                 val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
                                 Timber.d("$TAG: 第一次按鍵，顯示個別注音: $individualZhuyins")
                                 contextDisplay.showZhuyinCombinations(individualZhuyins)
+                                // 自動選取第一個注音作為過濾條件
+                                currentZhuyinFilter = individualZhuyins.firstOrNull()
                             }
                         } else {
                             // 第二次以上：根據數字序列計算所有有效的注音組合
-                            val zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                            var zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                            // 過濾掉在候選字中無匹配的組合（如 ㄍㄦ）
+                            zhuyinCombinations =
+                                zhuyinCombinations.filter { combo ->
+                                    T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(candidateItems, combo).isNotEmpty()
+                                }
                             if (zhuyinCombinations.isNotEmpty()) {
                                 Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
                                 contextDisplay.showZhuyinCombinations(zhuyinCombinations)
+                                // 自動選取第一個注音組合作為過濾條件
+                                currentZhuyinFilter = zhuyinCombinations.first()
                             } else {
                                 // 若無有效組合，則從候選詞提取（備援方案）
                                 val fallbackCombinations = T9ZhuyinMapper.extractUniqueZhuyinCombinations(candidateItems)
                                 Timber.d("$TAG: 無有效組合，從候選詞提取: $fallbackCombinations")
                                 contextDisplay.showZhuyinCombinations(fallbackCombinations)
+                                currentZhuyinFilter = fallbackCombinations.firstOrNull()
                             }
                         }
+                        Timber.d("$TAG: 自動注音過濾: '$currentZhuyinFilter'")
 
                         // 透過 applyFilters 更新顯示（觸發一聲優先排序 + 合法聲調計算）
                         applyFilters()

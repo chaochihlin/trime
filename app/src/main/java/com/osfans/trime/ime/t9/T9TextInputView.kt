@@ -42,7 +42,7 @@ class T9TextInputView
         // 文字輸入框
         private val editText =
             EditText(context).apply {
-                textSize = 20f // 針對圓形螢幕優化的字體大小
+                textSize = 16f // 針對圓形螢幕優化的字體大小
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER_VERTICAL
                 typeface = Typeface.DEFAULT
@@ -57,7 +57,7 @@ class T9TextInputView
                 layoutParams =
                     LayoutParams(dp(32), dp(32)).apply {
                         gravity = Gravity.CENTER_VERTICAL
-                        marginEnd = dp(4)
+                        marginEnd = dp(8)
                     }
             }
 
@@ -90,8 +90,12 @@ class T9TextInputView
             // 內距設置
             setPadding(0, 0, 0, 0)
 
-            // 背景顏色（20% 黑色）
-            setBackgroundColor("#33000000".toColorInt()) // 20% 透明度黑色
+            // 圓角背景（20% 黑色）
+            background =
+                android.graphics.drawable.GradientDrawable().apply {
+                    setColor("#33000000".toColorInt())
+                    cornerRadius = dp(8).toFloat()
+                }
 
             // 添加輸入框和刪除按鈕
             addView(editText, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))
@@ -218,11 +222,15 @@ class T9TextInputView
                 val hintColor = "#80FFFFFF".toColorInt() // 半透明白色
                 editText.setHintTextColor(hintColor)
 
-                // 更新背景顏色（使用 20% 黑色）
+                // 更新背景顏色（圓角 + 20% 黑色）
                 val backgroundColor =
                     ColorManager.getColor("input_background_color")
                         ?: Color.parseColor("#33000000") // 20% 透明度黑色
-                setBackgroundColor(backgroundColor)
+                background =
+                    android.graphics.drawable.GradientDrawable().apply {
+                        setColor(backgroundColor)
+                        cornerRadius = dp(8).toFloat()
+                    }
 
                 // 更新字體
                 val font =
@@ -241,7 +249,11 @@ class T9TextInputView
                 // 如果主題配置失敗，使用默認樣式
                 editText.setTextColor(Color.WHITE)
                 editText.setHintTextColor("#80FFFFFF".toColorInt())
-                setBackgroundColor("#33000000".toColorInt())
+                background =
+                    android.graphics.drawable.GradientDrawable().apply {
+                        setColor("#33000000".toColorInt())
+                        cornerRadius = dp(8).toFloat()
+                    }
                 editText.typeface = Typeface.DEFAULT
             }
         }

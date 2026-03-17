@@ -56,10 +56,9 @@ class ZhuyinSelectorView
             isVerticalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
 
-            // 設置內距使選中項能夠顯示在中央
-            val verticalPadding = dp(VERTICAL_PADDING_DP)
+            // 設置內距：上方小 padding 讓清單頂部貼近文字輸入框底部，下方大 padding 維持 Snap 居中效果
             val horizontalPadding = dp(HORIZONTAL_PADDING_DP)
-            setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+            setPadding(horizontalPadding, dp(4), horizontalPadding, dp(VERTICAL_PADDING_DP))
 
             // 附加 Snap 助手實現對齊效果
             snapHelper.attachToRecyclerView(this)

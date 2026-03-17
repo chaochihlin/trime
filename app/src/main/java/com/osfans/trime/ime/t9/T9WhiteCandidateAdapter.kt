@@ -40,7 +40,7 @@ class T9WhiteCandidateAdapter : BaseQuickAdapter<CandidateItem, T9WhiteCandidate
     ): T9WhiteCandidateViewHolder {
         val textView =
             AutoScaleTextView(context).apply {
-                textSize = 18f
+                textSize = 20f
                 setTextColor(Color.WHITE)
                 isSingleLine = true
                 gravity = gravityCenter

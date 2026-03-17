@@ -39,7 +39,7 @@ class T9NumberKey
     ) : LinearLayout(context, attrs) {
         companion object {
             private const val TAG = "T9NumberKey"
-            private const val ZHUYIN_TEXT_SIZE = 13f // 注音符號文字大小 (適合顯示4個注音)
+            private const val ZHUYIN_TEXT_SIZE = 14f // 注音符號文字大小
             private const val NUMBER_TEXT_SIZE = 14f // 數字標籤文字大小
         }
 
