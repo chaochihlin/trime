@@ -136,13 +136,13 @@ class T9TextInputView
         }
 
         /**
-         * 追加候選詞到輸入框末尾
+         * 在游標位置插入候選詞
          */
         fun appendCandidate(candidateText: String) {
-            val currentText = editText.text.toString()
-            val newText = currentText + candidateText
-            editText.setText(newText)
-            editText.setSelection(newText.length) // 移動游標到末尾
+            val cursorPos = editText.selectionStart
+            val editable = editText.text
+            editable.insert(cursorPos, candidateText)
+            // Editable.insert() 會自動將游標移到插入文字之後
         }
 
         /**
@@ -159,14 +159,13 @@ class T9TextInputView
         fun getText(): String = editText.text.toString()
 
         /**
-         * 刪除最後一個字符
+         * 刪除游標前一個字符
          */
-        fun deleteLastCharacter() {
-            val currentText = editText.text.toString()
-            if (currentText.isNotEmpty()) {
-                val newText = currentText.substring(0, currentText.length - 1)
-                editText.setText(newText)
-                editText.setSelection(newText.length)
+        fun deleteCharacterBeforeCursor() {
+            val cursorPos = editText.selectionStart
+            if (cursorPos > 0) {
+                editText.text.delete(cursorPos - 1, cursorPos)
+                // Editable.delete() 會自動調整游標位置
             }
         }
 

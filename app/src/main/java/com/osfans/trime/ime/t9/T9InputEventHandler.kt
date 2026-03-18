@@ -751,9 +751,9 @@ class T9InputEventHandler(
                     resendDigitSequenceToRime()
                 }
             } else if (textInputArea.hasContent()) {
-                // 情境 2：刪除文字輸入框的最後一個字
-                textInputArea.deleteLastCharacter()
-                Timber.d("$TAG: 從文字輸入框刪除最後一個字符")
+                // 情境 2：刪除游標前一個字
+                textInputArea.deleteCharacterBeforeCursor()
+                Timber.d("$TAG: 從文字輸入框刪除游標前一個字符")
             } else {
                 // 情境 3：發送退格到應用程式
                 service.sendDownUpKeyEvents(android.view.KeyEvent.KEYCODE_DEL)
