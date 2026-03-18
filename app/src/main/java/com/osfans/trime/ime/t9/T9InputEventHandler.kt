@@ -10,6 +10,7 @@ import com.osfans.trime.daemon.RimeSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import splitties.systemservices.inputMethodManager
 import timber.log.Timber
 
 /**
@@ -261,26 +262,8 @@ class T9InputEventHandler(
      * 處理語言切換事件
      */
     override fun onLanguageSwitch() {
-        Timber.d("$TAG: Language switch pressed")
-
-        try {
-            coroutineScope.launch {
-                rimeSession.runOnReady {
-                    // 切換到下一個輸入方案
-                    val currentSchema = "luna_pinyin" // 暫時硬編碼，之後可從主題獲取
-                    Timber.d("$TAG: Current schema: $currentSchema")
-
-                    // 這裡可以實現方案切換邏輯
-                    // 暫時先清空當前輸入
-                    clearComposition()
-
-                    // 在主線程更新UI
-                    clearInputState()
-                }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "$TAG: Error processing language switch")
-        }
+        Timber.d("$TAG: Language switch pressed - showing input method picker")
+        inputMethodManager.showInputMethodPicker()
     }
 
     /**
