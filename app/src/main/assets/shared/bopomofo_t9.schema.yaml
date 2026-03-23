@@ -122,7 +122,7 @@ speller:
     - abbrev/^([0-9]).+$/$1/
 
 menu:
-  page_size: 50
+  page_size: 200
 
 translator:
   dictionary: bopomofo_t9

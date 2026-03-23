@@ -30,6 +30,9 @@ object T9CharDataLoader {
     // 快取載入的資料
     private var cachedData: T9CharData? = null
 
+    // 快取已轉換的 CandidateItem 列表（避免每次呼叫都重新配置）
+    private var cachedDigitChars: Map<Int, List<CandidateItem>> = emptyMap()
+
     /**
      * 初始化並載入資料
      *
@@ -48,6 +51,11 @@ object T9CharDataLoader {
                     .bufferedReader()
                     .use { it.readText() }
             cachedData = json.decodeFromString<T9CharData>(jsonString)
+            // 預先建立 CandidateItem 快取
+            cachedDigitChars =
+                cachedData?.digitChars?.entries?.associate { (key, items) ->
+                    key.toInt() to items.map { CandidateItem(it.text, it.comment) }
+                } ?: emptyMap()
             Timber.d("$TAG: 成功載入 T9 字詞資料，版本: ${cachedData?.version}")
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 載入 T9 字詞資料失敗")
@@ -62,12 +70,7 @@ object T9CharDataLoader {
      * @param digit 數字鍵 (0-9)
      * @return 候選字列表
      */
-    fun getDigitChars(digit: Int): List<CandidateItem> {
-        val data = cachedData ?: return emptyList()
-        return data.digitChars[digit.toString()]?.map {
-            CandidateItem(it.text, it.comment)
-        } ?: emptyList()
-    }
+    fun getDigitChars(digit: Int): List<CandidateItem> = cachedDigitChars[digit] ?: emptyList()
 
     /**
      * 取得指定注音的單韻母/單介音字列表

@@ -263,53 +263,17 @@ object T9ZhuyinMapper {
     /**
      * 檢查是否為常用注音組合
      */
-    private fun isCommonCombination(combination: String): Boolean {
-        val commonCombinations =
-            setOf(
-                // 常用聲母+韻母
-                "ㄅㄚ",
-                "ㄉㄚ",
-                "ㄍㄚ",
-                "ㄇㄚ",
-                "ㄋㄚ",
-                "ㄌㄚ",
-                "ㄓㄚ",
-                "ㄔㄚ",
-                "ㄕㄚ",
-                "ㄗㄚ",
-                "ㄘㄚ",
-                "ㄙㄚ",
-                // 單獨介音
-                "ㄧ",
-                "ㄨ",
-                "ㄩ",
-                // 常用韻母
-                "ㄚ",
-                "ㄛ",
-                "ㄜ",
-                "ㄞ",
-                "ㄟ",
-                "ㄠ",
-                "ㄡ",
-                "ㄢ",
-                "ㄣ",
-                "ㄤ",
-                "ㄥ",
-                "ㄦ",
-                // 常用完整組合
-                "ㄅㄧㄢ",
-                "ㄉㄧㄢ",
-                "ㄐㄧㄢ", // 間、見、建
-                "ㄏㄠ",
-                "ㄇㄠ",
-                "ㄋㄠ", // 好、毛、腦
-                "ㄍㄨㄛ",
-                "ㄏㄨㄛ",
-                "ㄓㄨㄛ", // 國、火、桌
-            )
+    private val COMMON_COMBINATIONS =
+        setOf(
+            "ㄅㄚ", "ㄉㄚ", "ㄍㄚ", "ㄇㄚ", "ㄋㄚ", "ㄌㄚ",
+            "ㄓㄚ", "ㄔㄚ", "ㄕㄚ", "ㄗㄚ", "ㄘㄚ", "ㄙㄚ",
+            "ㄧ", "ㄨ", "ㄩ",
+            "ㄚ", "ㄛ", "ㄜ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄦ",
+            "ㄅㄧㄢ", "ㄉㄧㄢ", "ㄐㄧㄢ", "ㄏㄠ", "ㄇㄠ", "ㄋㄠ",
+            "ㄍㄨㄛ", "ㄏㄨㄛ", "ㄓㄨㄛ",
+        )
 
-        return commonCombinations.contains(combination)
-    }
+    private fun isCommonCombination(combination: String): Boolean = combination in COMMON_COMBINATIONS
 
     /**
      * 取得指定數字對應的所有注音符號
@@ -537,8 +501,8 @@ object T9ZhuyinMapper {
 
         val supplemented = candidates.toMutableList()
 
-        // 從所有相關數字鍵的候選詞中收集
-        for (digit in digitSequence.mapNotNull { it.toString().toIntOrNull() }.toSet()) {
+        // 從所有數字鍵的候選詞中收集（多音字可能收錄在非輸入序列的數字鍵下）
+        for (digit in 0..9) {
             val digitChars = T9CharDataLoader.getDigitChars(digit)
             for (candidateItem in digitChars) {
                 // 跳過已存在的

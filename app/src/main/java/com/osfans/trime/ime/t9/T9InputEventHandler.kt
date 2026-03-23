@@ -424,14 +424,14 @@ class T9InputEventHandler(
                             if (zhuyinCombinations.isNotEmpty()) {
                                 Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
                                 contextDisplay.showZhuyinCombinations(zhuyinCombinations)
-                                // 自動選取第一個注音組合作為過濾條件
-                                currentZhuyinFilter = zhuyinCombinations.first()
+                                // 多鍵輸入預設不過濾，顯示所有候選字
+                                currentZhuyinFilter = null
                             } else {
                                 // 若無有效組合，則從候選詞提取（備援方案）
                                 val fallbackCombinations = T9ZhuyinMapper.extractUniqueZhuyinCombinations(candidateItems)
                                 Timber.d("$TAG: 無有效組合，從候選詞提取: $fallbackCombinations")
                                 contextDisplay.showZhuyinCombinations(fallbackCombinations)
-                                currentZhuyinFilter = fallbackCombinations.firstOrNull()
+                                currentZhuyinFilter = null
                             }
                         }
                         Timber.d("$TAG: 自動注音過濾: '$currentZhuyinFilter'")
