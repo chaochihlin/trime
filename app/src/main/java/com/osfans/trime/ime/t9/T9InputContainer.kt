@@ -371,11 +371,13 @@ class T9InputContainer
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
 
-                // 確認鍵（固定在最上方）
-                addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(36)))
-                // 聲調鍵（根據候選字動態顯示/隱藏）
-                for (tone in TONE_SYMBOLS) {
-                    addView(createToneKey(tone), LinearLayout.LayoutParams(dp(56), dp(28)))
+                // 確認鍵（固定在最上方，加大觸控區域）
+                addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(48)))
+                // 聲調鍵（根據候選字動態顯示/隱藏，與確認鍵保持間距）
+                for ((index, tone) in TONE_SYMBOLS.withIndex()) {
+                    val lp = LinearLayout.LayoutParams(dp(56), dp(28))
+                    lp.topMargin = if (index == 0) dp(12) else dp(6) // 確認鍵間距12dp，聲調間距6dp
+                    addView(createToneKey(tone), lp)
                 }
             }
         }

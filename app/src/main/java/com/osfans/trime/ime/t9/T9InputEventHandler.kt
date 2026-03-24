@@ -379,6 +379,7 @@ class T9InputEventHandler(
                         Timber.d("$TAG: 目前數字序列長度: $currentDigitCount")
 
                         // 【方案 2】補充候選詞
+                        var multiKeyCombinations: List<String>? = null
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
                             // 單鍵輸入：以 t9_chars.json 策劃順序為主，解決 RIME 精確匹配優先問題
                             val firstDigit = digitSequence[0].toString().toIntOrNull()
@@ -388,12 +389,11 @@ class T9InputEventHandler(
                                 Timber.d("$TAG: 單鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
                             }
                         } else if (currentDigitCount >= 2) {
-                            // 多鍵輸入：根據有效注音組合補充候選詞
+                            // 多鍵輸入：計算有效注音組合（只算一次，後續共用）
+                            multiKeyCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
                             val originalCount = candidateItems.size
-                            candidateItems = T9ZhuyinMapper.supplementMultiKeyCandidates(candidateItems, digitSequence.toString())
-                            if (candidateItems.size > originalCount) {
-                                Timber.d("$TAG: 多鍵補充了 ${candidateItems.size - originalCount} 個候選詞")
-                            }
+                            candidateItems = T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations)
+                            Timber.d("$TAG: 多鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
                         }
 
                         // 【方案 E】緩存完整候選詞列表，用於前端過濾
@@ -414,9 +414,8 @@ class T9InputEventHandler(
                                 currentZhuyinFilter = individualZhuyins.firstOrNull()
                             }
                         } else {
-                            // 第二次以上：根據數字序列計算所有有效的注音組合
-                            var zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
-                            // 過濾掉在候選字中無匹配的組合（如 ㄍㄦ）
+                            // 第二次以上：從已計算的注音組合中過濾有效項
+                            var zhuyinCombinations = multiKeyCombinations ?: T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
                             zhuyinCombinations =
                                 zhuyinCombinations.filter { combo ->
                                     T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(candidateItems, combo).isNotEmpty()
@@ -424,14 +423,14 @@ class T9InputEventHandler(
                             if (zhuyinCombinations.isNotEmpty()) {
                                 Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
                                 contextDisplay.showZhuyinCombinations(zhuyinCombinations)
-                                // 多鍵輸入預設不過濾，顯示所有候選字
-                                currentZhuyinFilter = null
+                                // 自動套用第一個注音組合作為過濾條件（與單鍵行為一致）
+                                currentZhuyinFilter = zhuyinCombinations.firstOrNull()
                             } else {
                                 // 若無有效組合，則從候選詞提取（備援方案）
                                 val fallbackCombinations = T9ZhuyinMapper.extractUniqueZhuyinCombinations(candidateItems)
                                 Timber.d("$TAG: 無有效組合，從候選詞提取: $fallbackCombinations")
                                 contextDisplay.showZhuyinCombinations(fallbackCombinations)
-                                currentZhuyinFilter = null
+                                currentZhuyinFilter = fallbackCombinations.firstOrNull()
                             }
                         }
                         Timber.d("$TAG: 自動注音過濾: '$currentZhuyinFilter'")

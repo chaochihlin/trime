@@ -477,50 +477,47 @@ object T9ZhuyinMapper {
     }
 
     /**
-     * 多鍵輸入時補充候選詞
+     * 多鍵輸入的候選字優先排序（t9_chars.json 優先，RIME 獨有排後）
      *
-     * 根據數字序列計算有效的注音組合，然後從外部載入的字詞資料中找出匹配的候選詞。
-     * 這解決了多鍵輸入時 RIME 可能不返回某些注音組合候選詞的問題。
+     * 仿照 prioritizedCandidates() 的模式，但針對多鍵輸入：
+     * 1. 從 t9_chars.json 中找出所有匹配有效注音組合的候選字，排在前面
+     * 2. RIME 獨有的候選字（不在 t9_chars.json 中）排在後面
      *
-     * @param candidates RIME 返回的候選詞列表
-     * @param digitSequence 數字序列，如 "86"
-     * @return 補充後的候選詞列表
+     * @param rimeCandidates RIME 引擎回傳的候選詞列表
+     * @param digitSequence 數字序列，如 "51"
+     * @return 重新排序後的候選詞列表
      */
-    fun supplementMultiKeyCandidates(
-        candidates: List<CandidateItem>,
-        digitSequence: String,
+    fun prioritizedMultiKeyCandidates(
+        rimeCandidates: List<CandidateItem>,
+        validCombinations: List<String>,
     ): List<CandidateItem> {
-        if (digitSequence.length < 2) return candidates
+        if (validCombinations.isEmpty()) return rimeCandidates
 
-        // 計算有效的注音組合
-        val validCombinations = mapToZhuyinCombinations(digitSequence)
-        if (validCombinations.isEmpty()) return candidates
+        val validSet = validCombinations.toHashSet()
 
-        // 找出候選詞中已存在的文字（用於去重）
-        val existingTexts = candidates.map { it.text }.toMutableSet()
+        val rimeByText = rimeCandidates.associateBy { it.text }
+        val result = mutableListOf<CandidateItem>()
+        val addedTexts = mutableSetOf<String>()
 
-        val supplemented = candidates.toMutableList()
-
-        // 從所有數字鍵的候選詞中收集（多音字可能收錄在非輸入序列的數字鍵下）
         for (digit in 0..9) {
-            val digitChars = T9CharDataLoader.getDigitChars(digit)
-            for (candidateItem in digitChars) {
-                // 跳過已存在的
-                if (candidateItem.text in existingTexts) continue
-
-                // 檢查候選詞的注音是否精確匹配任一有效組合
-                val candidateZhuyin = extractZhuyinFromComment(candidateItem.comment)
-                if (candidateZhuyin != null) {
-                    val matches = validCombinations.any { validZhuyin -> candidateZhuyin == validZhuyin }
-                    if (matches) {
-                        supplemented.add(candidateItem)
-                        existingTexts.add(candidateItem.text)
-                    }
+            for (item in T9CharDataLoader.getDigitChars(digit)) {
+                if (item.text in addedTexts) continue
+                val zhuyin = extractZhuyinFromComment(item.comment)
+                if (zhuyin != null && zhuyin in validSet) {
+                    result.add(rimeByText[item.text] ?: item)
+                    addedTexts.add(item.text)
                 }
             }
         }
 
-        return supplemented
+        for (candidate in rimeCandidates) {
+            if (candidate.text !in addedTexts) {
+                result.add(candidate)
+                addedTexts.add(candidate.text)
+            }
+        }
+
+        return result
     }
 
     // ==================== 聲調過濾功能 ====================
