@@ -84,7 +84,7 @@ class T9KeyboardView
                 TextView(context).apply {
                     id = generateViewId()
                     text = index.toString()
-                    textSize = 11f
+                    textSize = 14f
                     setTextColor(Color.parseColor("#AAAAAA"))
                     setTypeface(null, Typeface.BOLD)
                     gravity = Gravity.CENTER
@@ -101,7 +101,7 @@ class T9KeyboardView
         private val languageKey =
             T9FunctionKey(context).apply {
                 id = generateViewId()
-                text = "中"
+                text = "注"
                 setOnClickListener { actionListener?.onLanguageSwitch() }
             }
 
