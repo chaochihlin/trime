@@ -106,15 +106,16 @@ class T9InputEventHandler(
         Timber.d("$TAG: 短按數字鍵: $number - 觸發注音符號輸入")
 
         try {
-            // 追蹤數字序列
-            digitSequence.append(number)
+            // 追蹤輸入序列（用 RIME 字符：0-9 為數字，10→'a'，11→'b'）
+            val rimeChar = T9ZhuyinMapper.keyIndexToChar(number)
+            digitSequence.append(rimeChar)
             Timber.d("$TAG: 目前數字序列: $digitSequence (長度: ${digitSequence.length})")
 
             // 發送按鍵到 RIME 引擎，注音選擇器將在 handleRimeMessage 中更新
             coroutineScope.launch {
                 rimeSession.runOnReady {
-                    val keyCode = number.toString().first().code
-                    Timber.d("$TAG: 發送按鍵碼 $keyCode 到 RIME 引擎處理注音輸入")
+                    val keyCode = rimeChar.code
+                    Timber.d("$TAG: 發送按鍵碼 $keyCode ('$rimeChar') 到 RIME 引擎處理注音輸入")
 
                     val result = processKey(keyCode, 0u)
                     Timber.d("$TAG: RIME 處理結果: $result")
@@ -187,21 +188,22 @@ class T9InputEventHandler(
     override fun onNumberKeyLongPress(number: Int): Boolean {
         Timber.d("$TAG: 長按數字鍵: $number - 直接輸入數字字符")
 
-        try {
-            val digitText = number.toString()
-
-            // 將數字追加到文字輸入框中（與候選字選擇行為一致）
-            textInputArea.appendCandidate(digitText)
-            Timber.d("$TAG: ✅ 成功輸入數字到文字輸入框: $digitText")
-            return true
+        return try {
+            onDigitInput(number)
+            true
         } catch (e: Exception) {
-            Timber.e(e, "$TAG: ❌ 處理長按數字鍵時發生錯誤: $number")
-            return false
+            Timber.e(e, "$TAG: 處理長按數字鍵時發生錯誤: $number")
+            false
         }
     }
 
-    // 注意：滑動手勢已移除，聲調由 RIME 引擎自動推測
-    // 原有的 onSwipeUp/Down/Left/Right 和 sendToneInput 方法已刪除
+    /**
+     * 直接輸入數字字符（不經 RIME），長按注音鍵和數字列按鈕共用
+     */
+    override fun onDigitInput(digit: Int) {
+        Timber.d("$TAG: 直接輸入數字: $digit")
+        textInputArea.appendCandidate(digit.toString())
+    }
 
     /**
      * 處理確認鍵按下事件 - 新邏輯：提交文字輸入框內容
@@ -382,7 +384,7 @@ class T9InputEventHandler(
                         var multiKeyCombinations: List<String>? = null
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
                             // 單鍵輸入：以 t9_chars.json 策劃順序為主，解決 RIME 精確匹配優先問題
-                            val firstDigit = digitSequence[0].toString().toIntOrNull()
+                            val firstDigit = T9ZhuyinMapper.charToKeyIndex(digitSequence[0])
                             if (firstDigit != null) {
                                 val originalCount = candidateItems.size
                                 candidateItems = T9ZhuyinMapper.prioritizedCandidates(candidateItems, firstDigit)
@@ -405,7 +407,7 @@ class T9InputEventHandler(
 
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
                             // 第一次按鍵：顯示該數字對應的個別注音符號
-                            val firstDigit = digitSequence[0].toString().toIntOrNull()
+                            val firstDigit = T9ZhuyinMapper.charToKeyIndex(digitSequence[0])
                             if (firstDigit != null) {
                                 val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
                                 Timber.d("$TAG: 第一次按鍵，顯示個別注音: $individualZhuyins")
@@ -446,7 +448,7 @@ class T9InputEventHandler(
                             val currentDigitCount = digitSequence.length
                             if (currentDigitCount == 1) {
                                 // 單鍵：顯示該數字對應的個別注音符號
-                                val firstDigit = digitSequence[0].toString().toIntOrNull()
+                                val firstDigit = T9ZhuyinMapper.charToKeyIndex(digitSequence[0])
                                 if (firstDigit != null) {
                                     val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
                                     Timber.d("$TAG: RIME 無候選詞，但根據數字 '$firstDigit' 顯示注音: $individualZhuyins")

@@ -5,32 +5,27 @@
 package com.osfans.trime.ime.t9
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.View
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.data.theme.Theme
+import com.osfans.trime.ime.keyboard.InputFeedbackManager
+import splitties.dimensions.dp
 import timber.log.Timber
 
 /**
- * T9注音九宮格鍵盤視圖
+ * T9注音鍵盤視圖（12鍵版）
  *
- * 專為智慧手錶圓形螢幕設計的T9輸入法鍵盤組件。
- * 採用4x4網格佈局，包含：
- * - 3x3數字鍵網格（1-9）
- * - 圓形確認按鈕
- * - 底部功能鍵列（0鍵、語言切換）
- *
- * 功能特性：
- * - 圓形螢幕完美適配
- * - 注音符號提示顯示
- * - 觸覺回饋優化
- * - RIME引擎整合
- *
- * @param context Android上下文
- * @param attrs 屬性集
- * @param defStyleAttr 默認樣式屬性
+ * 專為智慧手錶圓形螢幕設計，佈局：
+ * - 4×3 注音鍵網格（12鍵，按傳統注音順序分組）
+ * - 獨立數字鍵列（0-9，直接輸入數字）
+ * - 底部語言切換鍵
  */
 class T9KeyboardView
     @JvmOverloads
@@ -42,97 +37,64 @@ class T9KeyboardView
         companion object {
             private const val TAG = "T9KeyboardView"
 
-            // T9注音對應表 - 與 YAML 配置保持一致
-            private val ZHUYIN_MAPPING =
-                mapOf(
-                    1 to "ㄅㄉㄚ",
-                    2 to "ㄍㄐㄞㄧ",
-                    3 to "ㄓㄗㄢㄦ",
-                    4 to "ㄆㄊㄛ",
-                    5 to "ㄎㄑㄟㄨ",
-                    6 to "ㄔㄘㄣ",
-                    7 to "ㄇㄋㄜㄝ",
-                    8 to "ㄏㄒㄠㄩ",
-                    9 to "ㄕㄙㄤㄥ",
-                    0 to "ㄈㄌㄡㄖ",
-                )
+            // 12鍵在 4×3 網格中的排列順序（左→右，上→下）
+            private val GRID_ORDER = intArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11)
         }
 
-        // T9鍵盤事件監聽器
         interface T9KeyboardActionListener {
-            /**
-             * 處理數字鍵短按事件 - 輸入對應的注音符號
-             * 透過 RIME 引擎處理，根據當前方案決定具體的注音符號
-             *
-             * @param number 按下的數字鍵 (0-9)
-             */
             fun onNumberKeyPress(number: Int)
 
-            /**
-             * 處理數字鍵長按事件 - 直接輸入數字字符
-             * 繞過 RIME 引擎，直接將數字提交到當前輸入目標
-             *
-             * @param number 按下的數字鍵 (0-9)
-             * @return true 如果處理成功，false 否則
-             */
             fun onNumberKeyLongPress(number: Int): Boolean
+
+            fun onDigitInput(digit: Int)
 
             fun onConfirmPress()
 
             fun onLanguageSwitch()
-
-            // 注意：滑動手勢已移除，聲調由 RIME 引擎自動推測
         }
 
         private var actionListener: T9KeyboardActionListener? = null
         private lateinit var theme: Theme
         private lateinit var rimeSession: RimeSession
 
-        // 數字鍵網格（1-9）
-        private val numberKeys =
-            Array(9) { index ->
+        // 12 個注音鍵（只顯示注音，不顯示數字）
+        private val zhuyinKeys =
+            Array(12) { index ->
+                val keyNum = GRID_ORDER[index]
                 T9NumberKey(context).apply {
                     id = generateViewId()
-                    keyNumber = index + 1
-                    keyHints = getHintsForNumber(index + 1)
+                    keyNumber = -1 // 不顯示數字
+                    keyHints = getHintsForNumber(keyNum)
+                    tag = keyNum // 用 tag 記錄實際 key number
 
-                    // Set click listener for normal presses
-                    setOnClickListener { actionListener?.onNumberKeyPress(index + 1) }
-
-                    // Set long click listener
+                    setOnClickListener { actionListener?.onNumberKeyPress(keyNum) }
                     setOnLongClickListener {
-                        Timber.d("$TAG: 長按數字鍵 ${index + 1}")
-                        // 長按視覺回饋（數字模式）
+                        Timber.d("$TAG: 長按注音鍵 $keyNum")
                         updateKeyDisplay(isPressed = true, mode = T9NumberKey.KeyDisplayMode.DIGIT)
-                        val result = actionListener?.onNumberKeyLongPress(index + 1) ?: false
-                        Timber.d("$TAG: 長按處理結果: $result")
-                        if (result) {
-                            // 標記長按已處理，阻止後續的點擊事件
-                            markLongPressHandled()
-                        }
+                        val result = actionListener?.onNumberKeyLongPress(keyNum) ?: false
+                        if (result) markLongPressHandled()
                         result
                     }
-
-                    // 注意：滑動手勢已移除，聲調由 RIME 引擎自動推測
                 }
             }
 
-        // 功能鍵
-        private val zeroKey =
-            T9NumberKey(context).apply {
-                id = generateViewId()
-                keyNumber = 0
-                keyHints = getHintsForNumber(0)
-                setOnClickListener { actionListener?.onNumberKeyPress(0) }
-                setOnLongClickListener {
-                    Timber.d("$TAG: 長按數字鍵 0")
-                    updateKeyDisplay(isPressed = true, mode = T9NumberKey.KeyDisplayMode.DIGIT)
-                    val result = actionListener?.onNumberKeyLongPress(0) ?: false
-                    Timber.d("$TAG: 長按處理結果: $result")
-                    if (result) {
-                        markLongPressHandled()
+        // 10 個數字按鈕（獨立行，直接輸入數字）
+        private val digitButtons =
+            Array(10) { index ->
+                TextView(context).apply {
+                    id = generateViewId()
+                    text = index.toString()
+                    textSize = 11f
+                    setTextColor(Color.parseColor("#AAAAAA"))
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    isClickable = true
+                    isFocusable = true
+                    setOnClickListener {
+                        InputFeedbackManager.keyPressVibrate(this)
+                        InputFeedbackManager.keyPressSound()
+                        actionListener?.onDigitInput(index)
                     }
-                    result
                 }
             }
 
@@ -147,9 +109,6 @@ class T9KeyboardView
             id = generateViewId()
         }
 
-        /**
-         * 設置T9鍵盤配置
-         */
         fun setup(
             theme: Theme,
             rimeSession: RimeSession,
@@ -164,19 +123,10 @@ class T9KeyboardView
             if (width > 0) {
                 setupLayoutWithDynamicSizing()
             } else {
-                post {
-                    if (width > 0 && height > 0) {
-                        setupLayoutWithDynamicSizing()
-                    } else {
-                        setupLayoutWithDynamicSizing()
-                    }
-                }
+                post { setupLayoutWithDynamicSizing() }
             }
         }
 
-        /**
-         * 當View尺寸改變時重新計算佈局
-         */
         override fun onSizeChanged(
             w: Int,
             h: Int,
@@ -184,188 +134,129 @@ class T9KeyboardView
             oldh: Int,
         ) {
             super.onSizeChanged(w, h, oldw, oldh)
-            if (w > 0) {
-                setupLayoutWithDynamicSizing()
-            }
+            if (w > 0) setupLayoutWithDynamicSizing()
         }
 
-        /**
-         * 設置鍵盤佈局（扁平化版本）
-         */
         private fun setupLayoutWithDynamicSizing() {
             removeAllViews()
-            setupDynamicLayout()
-        }
+            // 加入所有 view
+            val allViews = mutableListOf<View>()
+            allViews.addAll(zhuyinKeys)
+            allViews.addAll(digitButtons)
+            allViews.add(languageKey)
 
-        private fun setupDynamicLayout() {
-            // 確保所有 view 都已加入，且都有 ID
-            val allKeys = listOf(*numberKeys, zeroKey, languageKey)
-
-            allKeys.forEach { key ->
-                if (key.parent == null) {
-                    if (key.id == View.NO_ID) {
-                        key.id = View.generateViewId()
-                    }
-                    // 為底部按鈕使用wrap_content，其他使用0(match_constraint)
-                    val layoutParams =
-                        if (key == zeroKey || key == languageKey) {
-                            LayoutParams(LayoutParams.WRAP_CONTENT, 0)
-                        } else {
-                            LayoutParams(0, 0)
-                        }
-                    addView(key, layoutParams)
-                }
+            allViews.forEach { view ->
+                if (view.id == View.NO_ID) view.id = View.generateViewId()
+                addView(view, LayoutParams(0, 0))
             }
 
             val set = ConstraintSet()
             set.clone(this)
 
-            // --- 1. 建立垂直輔助線 (用於劃分列) ---
-            val vGuideline25 = View.generateViewId()
-            val vGuideline50 = View.generateViewId()
-            val vGuideline75 = View.generateViewId()
-            set.create(vGuideline25, ConstraintSet.VERTICAL_GUIDELINE)
-            set.create(vGuideline50, ConstraintSet.VERTICAL_GUIDELINE)
-            set.create(vGuideline75, ConstraintSet.VERTICAL_GUIDELINE)
-            set.setGuidelinePercent(vGuideline25, 0.33f) // 第一條線在 33% 位置
-            set.setGuidelinePercent(vGuideline50, 0.66f) // 第二條線在 66% 位置
-            // 因為只有三列，所以不需要75%的線，我們這裡簡化為兩條
+            // --- 垂直輔助線（3列） ---
+            val vG1 = View.generateViewId()
+            val vG2 = View.generateViewId()
+            set.create(vG1, ConstraintSet.VERTICAL_GUIDELINE)
+            set.create(vG2, ConstraintSet.VERTICAL_GUIDELINE)
+            set.setGuidelinePercent(vG1, 0.33f)
+            set.setGuidelinePercent(vG2, 0.66f)
 
-            // --- 2. 建立水平輔助線 (用於劃分行) ---
-            val hGuideline25 = View.generateViewId()
-            val hGuideline50 = View.generateViewId()
-            val hGuideline75 = View.generateViewId()
-            set.create(hGuideline25, ConstraintSet.HORIZONTAL_GUIDELINE)
-            set.create(hGuideline50, ConstraintSet.HORIZONTAL_GUIDELINE)
-            set.create(hGuideline75, ConstraintSet.HORIZONTAL_GUIDELINE)
-            set.setGuidelinePercent(hGuideline25, 0.25f) // 第一行結束
-            set.setGuidelinePercent(hGuideline50, 0.50f) // 第二行結束
-            set.setGuidelinePercent(hGuideline75, 0.75f) // 第三行結束
+            // --- 水平輔助線（6行：4行注音 + 1行數字 + 1行底部） ---
+            // 比例：19% × 4 + 12% + 12% = 100%
+            val hLines = Array(5) { View.generateViewId() }
+            val hPercents = floatArrayOf(0.19f, 0.38f, 0.57f, 0.76f, 0.88f)
+            for (i in hLines.indices) {
+                set.create(hLines[i], ConstraintSet.HORIZONTAL_GUIDELINE)
+                set.setGuidelinePercent(hLines[i], hPercents[i])
+            }
 
-            // --- 3. 將按鍵約束到輔助線 ---
-            // 統一所有按鍵的約束，不設置額外邊距，讓按鍵均分空間
+            // --- Row 1-4: 4×3 注音鍵 ---
+            for (row in 0..3) {
+                val topAnchor = if (row == 0) ConstraintSet.PARENT_ID else hLines[row - 1]
+                val bottomAnchor = hLines[row]
+                val topSide = if (row == 0) ConstraintSet.TOP else ConstraintSet.BOTTOM
+                for (col in 0..2) {
+                    val keyIdx = row * 3 + col
+                    val keyId = zhuyinKeys[keyIdx].id
+                    set.connect(keyId, ConstraintSet.TOP, topAnchor, topSide)
+                    set.connect(keyId, ConstraintSet.BOTTOM, bottomAnchor, ConstraintSet.TOP)
+                    val startAnchor = if (col == 0) ConstraintSet.PARENT_ID else if (col == 1) vG1 else vG2
+                    val endAnchor = if (col == 0) vG1 else if (col == 1) vG2 else ConstraintSet.PARENT_ID
+                    val startSide = if (col == 0) ConstraintSet.START else ConstraintSet.END
+                    val endSide = if (col == 2) ConstraintSet.END else ConstraintSet.START
+                    set.connect(keyId, ConstraintSet.START, startAnchor, startSide)
+                    set.connect(keyId, ConstraintSet.END, endAnchor, endSide)
+                }
+            }
 
-            // Row 1 (Keys 1, 2, 3)
-            set.connect(numberKeys[0].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-            set.connect(numberKeys[0].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
-            set.connect(numberKeys[0].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-            set.connect(numberKeys[0].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
-
-            set.connect(numberKeys[1].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-            set.connect(numberKeys[1].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
-            set.connect(numberKeys[1].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
-            set.connect(numberKeys[1].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
-
-            set.connect(numberKeys[2].id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-            set.connect(numberKeys[2].id, ConstraintSet.BOTTOM, hGuideline25, ConstraintSet.TOP)
-            set.connect(numberKeys[2].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[2].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-
-            // Row 2 (Keys 4, 5, 6)
-            set.connect(numberKeys[3].id, ConstraintSet.TOP, hGuideline25, ConstraintSet.BOTTOM)
-            set.connect(numberKeys[3].id, ConstraintSet.BOTTOM, hGuideline50, ConstraintSet.TOP)
-            set.connect(numberKeys[3].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-            set.connect(numberKeys[3].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
-
-            set.connect(numberKeys[4].id, ConstraintSet.TOP, hGuideline25, ConstraintSet.BOTTOM)
-            set.connect(numberKeys[4].id, ConstraintSet.BOTTOM, hGuideline50, ConstraintSet.TOP)
-            set.connect(numberKeys[4].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
-            set.connect(numberKeys[4].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
-
-            set.connect(numberKeys[5].id, ConstraintSet.TOP, hGuideline25, ConstraintSet.BOTTOM)
-            set.connect(numberKeys[5].id, ConstraintSet.BOTTOM, hGuideline50, ConstraintSet.TOP)
-            set.connect(numberKeys[5].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[5].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-
-            // Row 3 (Keys 7, 8, 9)
-            set.connect(numberKeys[6].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
-            set.connect(numberKeys[6].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
-            set.connect(numberKeys[6].id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-            set.connect(numberKeys[6].id, ConstraintSet.END, vGuideline25, ConstraintSet.START)
-
-            set.connect(numberKeys[7].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
-            set.connect(numberKeys[7].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
-            set.connect(numberKeys[7].id, ConstraintSet.START, vGuideline25, ConstraintSet.END)
-            set.connect(numberKeys[7].id, ConstraintSet.END, vGuideline50, ConstraintSet.START)
-
-            set.connect(numberKeys[8].id, ConstraintSet.TOP, hGuideline50, ConstraintSet.BOTTOM)
-            set.connect(numberKeys[8].id, ConstraintSet.BOTTOM, hGuideline75, ConstraintSet.TOP)
-            set.connect(numberKeys[8].id, ConstraintSet.START, vGuideline50, ConstraintSet.END)
-            set.connect(numberKeys[8].id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
-
-            // Row 4 (0, Language) - 使用wrap-content寬度，水平居中排列
-            set.connect(zeroKey.id, ConstraintSet.TOP, hGuideline75, ConstraintSet.BOTTOM)
-            set.connect(zeroKey.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-
-            set.connect(languageKey.id, ConstraintSet.TOP, hGuideline75, ConstraintSet.BOTTOM)
-            set.connect(languageKey.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-
-            // 創建水平鏈，實現居中效果
+            // --- Row 5: 數字鍵 1-7（水平鏈，填滿寬度） ---
+            val row5Order = intArrayOf(1, 2, 3, 4, 5, 6, 7)
+            val row5Ids = IntArray(7) { digitButtons[row5Order[it]].id }
+            for (id in row5Ids) {
+                set.connect(id, ConstraintSet.TOP, hLines[3], ConstraintSet.BOTTOM)
+                set.connect(id, ConstraintSet.BOTTOM, hLines[4], ConstraintSet.TOP)
+            }
             set.createHorizontalChain(
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.LEFT,
                 ConstraintSet.PARENT_ID,
                 ConstraintSet.RIGHT,
-                intArrayOf(zeroKey.id, languageKey.id),
+                row5Ids,
                 null,
-                ConstraintSet.CHAIN_PACKED,
+                ConstraintSet.CHAIN_SPREAD,
             )
 
-            // 設置按鈕間距
-            set.setMargin(languageKey.id, ConstraintSet.START, 8)
+            // --- Row 6: 數字鍵 8,9,0 + ZH(TW)（水平鏈，填滿寬度） ---
+            val row6Order = intArrayOf(8, 9, 0)
+            val row6Ids = IntArray(4)
+            for (i in 0..2) row6Ids[i] = digitButtons[row6Order[i]].id
+            row6Ids[3] = languageKey.id
+            for (id in row6Ids) {
+                set.connect(id, ConstraintSet.TOP, hLines[4], ConstraintSet.BOTTOM)
+                set.connect(id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+            }
+            set.createHorizontalChain(
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.LEFT,
+                ConstraintSet.PARENT_ID,
+                ConstraintSet.RIGHT,
+                row6Ids,
+                null,
+                ConstraintSet.CHAIN_SPREAD,
+            )
 
-            // 最後，套用所有約束
             try {
                 set.applyTo(this)
-                requestLayout()
                 invalidate()
             } catch (e: Exception) {
                 Timber.e(e, "$TAG: Failed to apply ConstraintSet")
             }
         }
 
-        /**
-         * 更新主題樣式
-         */
         private fun updateThemeStyles() {
             if (::theme.isInitialized) {
                 try {
-                    numberKeys.forEach { it.updateStyle() }
-                    zeroKey.updateStyle()
+                    zhuyinKeys.forEach { it.updateStyle() }
                 } catch (e: Exception) {
                     Timber.e(e, "$TAG: Failed to update theme styles")
                 }
             }
         }
 
-        /**
-         * 取得指定數字對應的注音符號提示
-         */
-        private fun getHintsForNumber(number: Int): String = ZHUYIN_MAPPING[number] ?: ""
+        private fun getHintsForNumber(number: Int): String =
+            T9ZhuyinMapper.getZhuyinForDigit(number).joinToString("")
 
-        /**
-         * 設置鍵盤是否啟用
-         */
         fun setKeyboardEnabled(enabled: Boolean) {
-            numberKeys.forEach { it.isEnabled = enabled }
-            zeroKey.isEnabled = enabled
+            zhuyinKeys.forEach { it.isEnabled = enabled }
+            digitButtons.forEach { it.isEnabled = enabled }
             languageKey.isEnabled = enabled
-
             alpha = if (enabled) 1.0f else 0.6f
         }
 
-        /**
-         * 取得指定位置的按鍵
-         */
-        fun getNumberKey(number: Int): T9NumberKey? =
-            when (number) {
-                in 1..9 -> numberKeys[number - 1]
-                0 -> zeroKey
-                else -> null
-            }
+        fun getNumberKey(number: Int): T9NumberKey? {
+            val gridIdx = GRID_ORDER.indexOf(number)
+            return if (gridIdx >= 0) zhuyinKeys[gridIdx] else null
+        }
 
-        /**
-         * 取得語言切換按鈕
-         */
         fun getLanguageKey(): T9FunctionKey = languageKey
     }

@@ -53,7 +53,7 @@ engine:
     - uniquifier
 
 speller:
-  alphabet: '1234567890'
+  alphabet: '1234567890ab'
   delimiter: " '"
   max_code_length: 8
   auto_select: false
@@ -64,62 +64,62 @@ speller:
     - xform/ˋ//
     - xform/˙//
 
-    # 2. 注音符號映射到數字鍵
-    # 1: ㄅㄉㄚ
+    # 2. 注音符號映射到 12 鍵（按傳統注音順序分組）
+    # 1:ㄅㄉ
     - xform/ㄅ/1/
     - xform/ㄉ/1/
-    - xform/ㄚ/1/
-    # 2: ㄍㄐㄞㄧ
-    - xform/ㄍ/2/
-    - xform/ㄐ/2/
-    - xform/ㄞ/2/
-    - xform/ㄧ/2/
-    # 3: ㄓㄗㄢㄦ
-    - xform/ㄓ/3/
-    - xform/ㄗ/3/
+    # 2:ㄓㄚ
+    - xform/ㄓ/2/
+    - xform/ㄚ/2/
+    # 3:ㄞㄢㄦ
+    - xform/ㄞ/3/
     - xform/ㄢ/3/
     - xform/ㄦ/3/
-    # 4: ㄆㄊㄛ
+    # 4:ㄆㄊㄍ
     - xform/ㄆ/4/
     - xform/ㄊ/4/
-    - xform/ㄛ/4/
-    # 5: ㄎㄑㄟㄨ
-    - xform/ㄎ/5/
-    - xform/ㄑ/5/
-    - xform/ㄟ/5/
-    - xform/ㄨ/5/
-    # 6: ㄔㄘㄣ
-    - xform/ㄔ/6/
-    - xform/ㄘ/6/
+    - xform/ㄍ/4/
+    # 5:ㄐㄔㄗ
+    - xform/ㄐ/5/
+    - xform/ㄔ/5/
+    - xform/ㄗ/5/
+    # 6:ㄧㄛㄟㄣ
+    - xform/ㄧ/6/
+    - xform/ㄛ/6/
+    - xform/ㄟ/6/
     - xform/ㄣ/6/
-    # 7: ㄇㄋㄜㄝ
+    # 7:ㄇㄋㄎ
     - xform/ㄇ/7/
     - xform/ㄋ/7/
-    - xform/ㄜ/7/
-    - xform/ㄝ/7/
-    # 8: ㄏㄒㄠㄩ
-    - xform/ㄏ/8/
-    - xform/ㄒ/8/
-    - xform/ㄠ/8/
-    - xform/ㄩ/8/
-    # 9: ㄕㄙㄤㄥ
-    - xform/ㄕ/9/
-    - xform/ㄙ/9/
+    - xform/ㄎ/7/
+    # 8:ㄑㄕㄘ
+    - xform/ㄑ/8/
+    - xform/ㄕ/8/
+    - xform/ㄘ/8/
+    # 9:ㄨㄜㄠㄤ
+    - xform/ㄨ/9/
+    - xform/ㄜ/9/
+    - xform/ㄠ/9/
     - xform/ㄤ/9/
-    - xform/ㄥ/9/
-    # 0: ㄈㄌㄡㄖ
+    # 0:ㄈㄌㄏ
     - xform/ㄈ/0/
     - xform/ㄌ/0/
-    - xform/ㄡ/0/
-    - xform/ㄖ/0/
+    - xform/ㄏ/0/
+    # a:ㄒㄖㄙ
+    - xform/ㄒ/a/
+    - xform/ㄖ/a/
+    - xform/ㄙ/a/
+    # b:ㄩㄝㄡㄥ
+    - xform/ㄩ/b/
+    - xform/ㄝ/b/
+    - xform/ㄡ/b/
+    - xform/ㄥ/b/
 
     # 3. 移除空格
     - xform/ //
 
     # 4. T9 簡碼：讓多位數編碼產生首位數簡碼
-    # 這樣輸入單個數字時，所有以該數字開頭的字都會出現在候選詞中
-    # 例如：輸入 8 時，除了精確匹配的「於」(8)，還會顯示「好」(88)、「和」(83) 等
-    - abbrev/^([0-9]).+$/$1/
+    - abbrev/^([0-9ab]).+$/$1/
 
 menu:
   page_size: 200
@@ -138,23 +138,25 @@ translator:
 
   # 輸入顯示格式 - 手錶T9專用優化
   preedit_format:
-    # 簡化數字序列顯示，適應小螢幕
-    - "xform/1/[1]ㄅㄉㄚ/"
-    - "xform/2/[2]ㄍㄐㄞㄧ/"
-    - "xform/3/[3]ㄓㄗㄢㄦ/"
-    - "xform/4/[4]ㄆㄊㄛ/"
-    - "xform/5/[5]ㄎㄑㄟㄨ/"
-    - "xform/6/[6]ㄔㄘㄣ/"
-    - "xform/7/[7]ㄇㄋㄜㄝ/"
-    - "xform/8/[8]ㄏㄒㄠㄩ/"
-    - "xform/9/[9]ㄕㄙㄤㄥ/"
-    - "xform/0/[0]ㄈㄌㄡㄖ/"
+    # 簡化數字序列顯示，適應小螢幕（12 鍵映射）
+    - "xform/1/[1]ㄅㄉ/"
+    - "xform/2/[2]ㄓㄚ/"
+    - "xform/3/[3]ㄞㄢㄦ/"
+    - "xform/4/[4]ㄆㄊㄍ/"
+    - "xform/5/[5]ㄐㄔㄗ/"
+    - "xform/6/[6]ㄧㄛㄟㄣ/"
+    - "xform/7/[7]ㄇㄋㄎ/"
+    - "xform/8/[8]ㄑㄕㄘ/"
+    - "xform/9/[9]ㄨㄜㄠㄤ/"
+    - "xform/0/[0]ㄈㄌㄏ/"
+    - "xform/a/[a]ㄒㄖㄙ/"
+    - "xform/b/[b]ㄩㄝㄡㄥ/"
 
     # 多位數序列格式化
-    - "xform/([0-9])([0-9])/[$1][$2] → /"
+    - "xform/([0-9ab])([0-9ab])/[$1][$2] → /"
 
   comment_format:
-    - "xform/^([0-9]+)$/T9:$1/"
+    - "xform/^([0-9ab]+)$/T9:$1/"
     - "xform/^([ㄅ-ㄩˊˇˋ˙]+)$/注音:$1/"
 
 punctuator:

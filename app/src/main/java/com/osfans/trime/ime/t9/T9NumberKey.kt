@@ -98,10 +98,15 @@ class T9NumberKey
                 setColor(Color.parseColor("#33FFFF00")) // 淡黃色背景表示數字模式
             }
 
-        var keyNumber: Int = 0
+        var keyNumber: Int = -1
             set(value) {
                 field = value
-                numberTextView.text = value.toString()
+                if (value < 0) {
+                    numberTextView.visibility = View.GONE
+                } else {
+                    numberTextView.text = value.toString()
+                    numberTextView.visibility = View.VISIBLE
+                }
             }
 
         var keyHints: String = ""

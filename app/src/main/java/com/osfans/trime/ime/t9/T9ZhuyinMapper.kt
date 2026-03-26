@@ -17,19 +17,38 @@ object T9ZhuyinMapper {
     // tone == "ˉ" 時以 candidateTone == null 來匹配
     private val TONE_MARKS = setOf('ˊ', 'ˇ', 'ˋ', '˙')
 
-    // T9數字到注音符號的映射表 (來自 task-02-rime-schema.md)
+    /** 將 RIME 字符（'0'-'9','a','b'）轉為 T9_MAPPING 的 Int key */
+    fun charToKeyIndex(ch: Char): Int? =
+        when (ch) {
+            in '0'..'9' -> ch - '0'
+            'a' -> 10
+            'b' -> 11
+            else -> null
+        }
+
+    /** 將 T9_MAPPING 的 Int key 轉為 RIME 字符 */
+    fun keyIndexToChar(index: Int): Char =
+        when (index) {
+            10 -> 'a'
+            11 -> 'b'
+            else -> index.digitToChar()
+        }
+
+    // T9 12鍵注音映射表（按傳統注音順序分組）
     private val T9_MAPPING =
         mapOf(
-            1 to listOf("ㄅ", "ㄉ", "ㄚ"), // 聲母: ㄅㄉ, 韻母: ㄚ
-            2 to listOf("ㄍ", "ㄐ", "ㄞ", "ㄧ"), // 聲母: ㄍㄐ, 韻母: ㄞ, 介音: ㄧ
-            3 to listOf("ㄓ", "ㄗ", "ㄢ", "ㄦ"), // 聲母: ㄓㄗ, 韻母: ㄢㄦ
-            4 to listOf("ㄆ", "ㄊ", "ㄛ"), // 聲母: ㄆㄊ, 韻母: ㄛ
-            5 to listOf("ㄎ", "ㄑ", "ㄟ", "ㄨ"), // 聲母: ㄎㄑ, 韻母: ㄟ, 介音: ㄨ
-            6 to listOf("ㄔ", "ㄘ", "ㄣ"), // 聲母: ㄔㄘ, 韻母: ㄣ
-            7 to listOf("ㄇ", "ㄋ", "ㄜ", "ㄝ"), // 聲母: ㄇㄋ, 韻母: ㄜㄝ
-            8 to listOf("ㄏ", "ㄒ", "ㄠ", "ㄩ"), // 聲母: ㄏㄒ, 韻母: ㄠ, 介音: ㄩ
-            9 to listOf("ㄕ", "ㄙ", "ㄤ", "ㄥ"), // 聲母: ㄕㄙ, 韻母: ㄤㄥ
-            0 to listOf("ㄈ", "ㄌ", "ㄡ", "ㄖ"), // 聲母: ㄈㄌㄖ, 韻母: ㄡ
+            1 to listOf("ㄅ", "ㄉ"),
+            2 to listOf("ㄓ", "ㄚ"),
+            3 to listOf("ㄞ", "ㄢ", "ㄦ"),
+            4 to listOf("ㄆ", "ㄊ", "ㄍ"),
+            5 to listOf("ㄐ", "ㄔ", "ㄗ"),
+            6 to listOf("ㄧ", "ㄛ", "ㄟ", "ㄣ"),
+            7 to listOf("ㄇ", "ㄋ", "ㄎ"),
+            8 to listOf("ㄑ", "ㄕ", "ㄘ"),
+            9 to listOf("ㄨ", "ㄜ", "ㄠ", "ㄤ"),
+            0 to listOf("ㄈ", "ㄌ", "ㄏ"),
+            10 to listOf("ㄒ", "ㄖ", "ㄙ"),
+            11 to listOf("ㄩ", "ㄝ", "ㄡ", "ㄥ"),
         )
 
     // 注音符號分類 (用於組合驗證)
@@ -132,10 +151,10 @@ object T9ZhuyinMapper {
     private fun generateAllCombinations(digitSequence: String): List<String> {
         if (digitSequence.isEmpty()) return listOf("")
 
-        val firstDigit = digitSequence.first().toString().toIntOrNull() ?: return emptyList()
+        val firstKey = charToKeyIndex(digitSequence.first()) ?: return emptyList()
         val remainingDigits = digitSequence.drop(1)
 
-        val firstZhuyinOptions = T9_MAPPING[firstDigit] ?: return emptyList()
+        val firstZhuyinOptions = T9_MAPPING[firstKey] ?: return emptyList()
         val remainingCombinations = generateAllCombinations(remainingDigits)
 
         val combinations = mutableListOf<String>()
@@ -499,7 +518,7 @@ object T9ZhuyinMapper {
         val result = mutableListOf<CandidateItem>()
         val addedTexts = mutableSetOf<String>()
 
-        for (digit in 0..9) {
+        for (digit in 0..11) {
             for (item in T9CharDataLoader.getDigitChars(digit)) {
                 if (item.text in addedTexts) continue
                 val zhuyin = extractZhuyinFromComment(item.comment)
