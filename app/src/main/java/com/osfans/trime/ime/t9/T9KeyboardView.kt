@@ -101,7 +101,7 @@ class T9KeyboardView
         private val languageKey =
             T9FunctionKey(context).apply {
                 id = generateViewId()
-                text = "ZH(TW)"
+                text = "中"
                 setOnClickListener { actionListener?.onLanguageSwitch() }
             }
 
@@ -189,7 +189,7 @@ class T9KeyboardView
                 }
             }
 
-            // --- Row 5: 數字鍵 1-7（水平鏈，填滿寬度） ---
+            // --- Row 5: 數字鍵 1-7（內縮 20dp 適配圓形螢幕） ---
             val row5Order = intArrayOf(1, 2, 3, 4, 5, 6, 7)
             val row5Ids = IntArray(7) { digitButtons[row5Order[it]].id }
             for (id in row5Ids) {
@@ -205,8 +205,10 @@ class T9KeyboardView
                 null,
                 ConstraintSet.CHAIN_SPREAD,
             )
+            set.setMargin(row5Ids.first(), ConstraintSet.START, dp(20))
+            set.setMargin(row5Ids.last(), ConstraintSet.END, dp(20))
 
-            // --- Row 6: 數字鍵 8,9,0 + ZH(TW)（水平鏈，填滿寬度） ---
+            // --- Row 6: 數字鍵 8,9,0 + 中（內縮 50dp 適配圓形螢幕） ---
             val row6Order = intArrayOf(8, 9, 0)
             val row6Ids = IntArray(4)
             for (i in 0..2) row6Ids[i] = digitButtons[row6Order[i]].id
@@ -224,6 +226,8 @@ class T9KeyboardView
                 null,
                 ConstraintSet.CHAIN_SPREAD,
             )
+            set.setMargin(row6Ids.first(), ConstraintSet.START, dp(50))
+            set.setMargin(row6Ids.last(), ConstraintSet.END, dp(50))
 
             try {
                 set.applyTo(this)
