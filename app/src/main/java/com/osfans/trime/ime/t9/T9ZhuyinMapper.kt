@@ -268,6 +268,7 @@ object T9ZhuyinMapper {
         when {
             hasConsonant && hasMedial && hasFinal -> score += 3.0 // 聲母+介音+韻母
             hasConsonant && hasFinal -> score += 2.0 // 聲母+韻母
+            hasConsonant && hasMedial -> score += 2.0
             hasFinal -> score += 1.0 // 僅韻母
         }
 

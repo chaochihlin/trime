@@ -28,7 +28,7 @@ class ZhuyinSelectorView
     ) : RecyclerView(context, attrs) {
         companion object {
             private const val TAG = "ZhuyinSelectorView"
-            private const val VERTICAL_PADDING_DP = 48
+            private const val VERTICAL_PADDING_DP = 8
             private const val HORIZONTAL_PADDING_DP = 4
         }
 

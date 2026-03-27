@@ -214,10 +214,11 @@ class T9InputContainer
                 Timber.d("$TAG: Adding context display to layout...")
                 add(
                     contextDisplay,
-                    lParams(dp(64), wrapContent) {
-                        // 寬度64dp，高度wrap-content，頂部錨定在文字輸入框下方
+                    lParams(dp(64), 0) {
+                        // 寬度64dp，高度撐滿（與鍵盤同高），讓注音選擇器可垂直滾動
                         topToBottomOf(textInputArea, dp(8))
-                        startOfParent(dp(16)) // 添加leftMargin=16dp
+                        bottomOfParent(dp(16))
+                        startOfParent(dp(16))
                     },
                 )
 

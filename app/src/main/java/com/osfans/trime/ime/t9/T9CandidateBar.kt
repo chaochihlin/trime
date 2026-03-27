@@ -85,7 +85,7 @@ class T9CandidateBar
             overScrollMode = View.OVER_SCROLL_NEVER
 
             // 設置內距以避免邊緣裁切
-            setPadding(dp(4), dp(4), dp(52), dp(4))
+            setPadding(dp(4), dp(4), dp(32), dp(4))
 
             // 設置固定高度
             layoutParams?.height = dp(CANDIDATE_HEIGHT_DP)

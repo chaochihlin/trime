@@ -422,17 +422,18 @@ class T9InputEventHandler(
                                 zhuyinCombinations.filter { combo ->
                                     T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(candidateItems, combo).isNotEmpty()
                                 }
+
                             if (zhuyinCombinations.isNotEmpty()) {
                                 Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
                                 contextDisplay.showZhuyinCombinations(zhuyinCombinations)
-                                // 自動套用第一個注音組合作為過濾條件（與單鍵行為一致）
-                                currentZhuyinFilter = zhuyinCombinations.firstOrNull()
+                                // 多鍵輸入不自動篩選，由用戶主動點擊注音或聲調鍵篩選
+                                currentZhuyinFilter = null
                             } else {
                                 // 若無有效組合，則從候選詞提取（備援方案）
                                 val fallbackCombinations = T9ZhuyinMapper.extractUniqueZhuyinCombinations(candidateItems)
                                 Timber.d("$TAG: 無有效組合，從候選詞提取: $fallbackCombinations")
                                 contextDisplay.showZhuyinCombinations(fallbackCombinations)
-                                currentZhuyinFilter = fallbackCombinations.firstOrNull()
+                                currentZhuyinFilter = null
                             }
                         }
                         Timber.d("$TAG: 自動注音過濾: '$currentZhuyinFilter'")
