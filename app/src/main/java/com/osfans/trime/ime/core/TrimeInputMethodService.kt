@@ -854,6 +854,10 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         keyCode: Int,
         event: KeyEvent,
     ): Boolean {
+        // 圓形螢幕手錶：攔截系統右滑產生的 BACK 事件，防止 IME 被意外關閉
+        if (keyCode == KeyEvent.KEYCODE_BACK && isInputViewShown && isRoundScreen()) {
+            return true
+        }
         if (inputDeviceManager.evaluateOnKeyDown(event, this)) {
             decorLocationUpdated = false
             forceShowSelf()
