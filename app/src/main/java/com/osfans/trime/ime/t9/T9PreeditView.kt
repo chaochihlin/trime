@@ -62,7 +62,7 @@ class T9PreeditView
                 layoutParams =
                     LayoutParams(dp(32), dp(32)).apply {
                         gravity = Gravity.CENTER_VERTICAL
-                        marginEnd = dp(4)
+                        marginEnd = dp(16)
                     }
             }
 
