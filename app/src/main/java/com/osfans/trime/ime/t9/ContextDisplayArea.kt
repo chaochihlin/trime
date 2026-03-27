@@ -312,10 +312,10 @@ class ContextDisplayArea
 
             private fun setupLayout() {
                 orientation = VERTICAL
-                gravity = Gravity.CENTER
+                gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
 
                 // 設置內距
-                setPadding(dp(4), dp(8), dp(4), dp(8))
+                setPadding(dp(4), dp(4), dp(4), dp(8))
             }
 
             private fun createPunctuationButtons() {
