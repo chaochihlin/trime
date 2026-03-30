@@ -33,22 +33,22 @@ class T9FunctionKey
         context: Context,
         attrs: AttributeSet? = null,
     ) : Button(context, attrs) {
-        // 正常狀態背景
+        // 正常狀態背景（明顯圓角方框，加大觸控面積）
         private val normalDrawable =
             GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(6).toFloat()
+                cornerRadius = dp(8).toFloat()
                 setColor(Color.parseColor("#2e2e2e"))
-                setStroke(dp(1), Color.parseColor("#444444"))
+                setStroke(dp(2), Color.parseColor("#888888"))
             }
 
         // 按壓狀態背景
         private val pressedDrawable =
             GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(6).toFloat()
+                cornerRadius = dp(8).toFloat()
                 setColor(Color.parseColor("#4e4e4e"))
-                setStroke(dp(1), Color.parseColor("#666666"))
+                setStroke(dp(2), Color.parseColor("#AAAAAA"))
             }
 
         init {
@@ -60,8 +60,8 @@ class T9FunctionKey
          * 設置按鈕基本屬性
          */
         private fun setupButton() {
-            // 移除背景
-            background = null
+            // 設置圓角方框背景
+            background = normalDrawable
 
             // 設置文字樣式
             textSize = 16f
@@ -94,6 +94,7 @@ class T9FunctionKey
                         if (isEnabled) {
                             scaleX = 0.95f
                             scaleY = 0.95f
+                            background = pressedDrawable
 
                             // 觸覺回饋
                             InputFeedbackManager.keyPressVibrate(this)
@@ -104,6 +105,7 @@ class T9FunctionKey
                         // 釋放效果
                         scaleX = 1.0f
                         scaleY = 1.0f
+                        background = normalDrawable
 
                         if (event.action == MotionEvent.ACTION_UP && isEnabled) {
                             performClick()

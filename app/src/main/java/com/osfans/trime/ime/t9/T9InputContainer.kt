@@ -200,47 +200,42 @@ class T9InputContainer
                     },
                 )
 
-                Timber.d("$TAG: Adding text input area to layout...")
                 add(
                     textInputArea,
                     lParams(0, wrapContent) {
-                        // 文字輸入區域：左右各32dp margin，高度由內容決定
-                        topToBottomOf(candidateWrapper, dp(2)) // 距離候選詞區域2dp
-                        startOfParent(dp(32)) // 左邊距32dp
-                        endOfParent(dp(32)) // 右邊距32dp
+                        topToBottomOf(candidateWrapper, dp(2))
+                        startOfParent(dp(32))
+                        endOfParent(dp(32))
                     },
                 )
 
-                Timber.d("$TAG: Adding context display to layout...")
+                // 右側面板（確認鍵 + 聲調鍵）— 最右側
+                add(
+                    rightPanel,
+                    lParams(dp(48), wrapContent) {
+                        topToBottomOf(textInputArea, dp(8))
+                        endOfParent(dp(16))
+                    },
+                )
+
+                // 注音選擇器 — 右側面板左邊
                 add(
                     contextDisplay,
                     lParams(dp(64), 0) {
-                        // 寬度64dp，高度撐滿（與鍵盤同高），讓注音選擇器可垂直滾動
                         topToBottomOf(textInputArea, dp(8))
                         bottomOfParent(dp(16))
-                        startOfParent(dp(16))
+                        endToStartOf(rightPanel, dp(2))
                     },
                 )
 
-                Timber.d("$TAG: Adding right panel to layout...")
-                add(
-                    rightPanel,
-                    lParams(dp(56), wrapContent) {
-                        // 56dp寬，高度 wrap_content，頂部錨定在文字輸入框下方
-                        topToBottomOf(textInputArea, dp(8))
-                        endOfParent(dp(24))
-                    },
-                )
-
-                Timber.d("$TAG: Adding T9 keyboard to layout...")
+                // T9 鍵盤 — 左側
                 add(
                     t9Keyboard,
                     lParams(0, 0) {
-                        // 修改：T9KeyboardView 位於 textInputArea 下方
-                        topToBottomOf(textInputArea, dp(8)) // 距離文字輸入區域8dp
-                        bottomOfParent(dp(16)) // 添加bottomMargin=16dp
-                        startToEndOf(contextDisplay, dp(2)) // 緊鄰ContextDisplay，2dp間距
-                        endToStartOf(rightPanel, dp(2)) // 與右側面板保持2dp間距
+                        topToBottomOf(textInputArea, dp(8))
+                        bottomOfParent(dp(16))
+                        startOfParent(dp(16))
+                        endToStartOf(contextDisplay, dp(2))
                     },
                 )
             } catch (e: Exception) {

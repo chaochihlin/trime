@@ -33,9 +33,11 @@ class T9CandidateBar
         attrs: AttributeSet? = null,
     ) : RecyclerView(context, attrs) {
         companion object {
-            const val CANDIDATE_HEIGHT_DP = 32 // 候選詞高度
-            const val CANDIDATE_PADDING_DP = 8 // 候選詞內距
-            const val MAX_VISIBLE_CANDIDATES = 7 // 最大可見候選數
+            const val CANDIDATE_HEIGHT_DP = 32
+            const val CANDIDATE_PADDING_DP = 8
+            const val MAX_VISIBLE_CANDIDATES = 7
+            // 圓形螢幕頂部（y≈28dp）右弧線內縮約 82dp，需足夠 padding 避免最後候選字被裁切
+            const val RIGHT_PADDING_DP = 96
         }
 
         interface OnCandidateClickListener {
@@ -84,7 +86,7 @@ class T9CandidateBar
             overScrollMode = View.OVER_SCROLL_NEVER
 
             // 設置內距以避免邊緣裁切
-            setPadding(dp(4), dp(4), dp(32), dp(4))
+            setPadding(dp(4), dp(4), dp(RIGHT_PADDING_DP), dp(4))
 
             // 設置固定高度
             layoutParams?.height = dp(CANDIDATE_HEIGHT_DP)

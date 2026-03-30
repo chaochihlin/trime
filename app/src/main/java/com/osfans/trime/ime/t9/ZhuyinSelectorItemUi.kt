@@ -29,8 +29,8 @@ class ZhuyinSelectorItemUi(
         const val SELECTED_BG_COLOR = 0x33FFFFFF // 半透明白色背景 (20% 不透明度)
         const val SELECTED_TEXT_COLOR = 0xFFFFFFFF.toInt() // 白色文字
         const val UNSELECTED_TEXT_COLOR = 0xFF888888.toInt() // 灰色文字
-        const val ITEM_HEIGHT_DP = 36
-        const val TEXT_SIZE_SP = 18f
+        const val ITEM_HEIGHT_DP = 30
+        const val TEXT_SIZE_SP = 16f
         const val CORNER_RADIUS_DP = 8
     }
 

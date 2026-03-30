@@ -203,7 +203,7 @@ class T9KeyboardView
                 }
             }
 
-            // --- Row 5: 數字鍵 1-7（內縮 20dp 適配圓形螢幕） ---
+            // --- Row 5: 數字鍵 1-7（左側大幅內縮適配圓形螢幕左下弧線） ---
             val row5Order = intArrayOf(1, 2, 3, 4, 5, 6, 7)
             val row5Ids = IntArray(7) { digitButtons[row5Order[it]].id }
             for (id in row5Ids) {
@@ -219,10 +219,10 @@ class T9KeyboardView
                 null,
                 ConstraintSet.CHAIN_SPREAD,
             )
-            set.setMargin(row5Ids.first(), ConstraintSet.START, dp(20))
-            set.setMargin(row5Ids.last(), ConstraintSet.END, dp(20))
+            set.setMargin(row5Ids.first(), ConstraintSet.START, dp(70))
+            set.setMargin(row5Ids.last(), ConstraintSet.END, dp(5))
 
-            // --- Row 6: 數字鍵 8,9,0 + 中（內縮 50dp 適配圓形螢幕） ---
+            // --- Row 6: 數字鍵 8,9,0 + 注（左側大幅內縮適配圓形螢幕底部弧線） ---
             val row6Order = intArrayOf(8, 9, 0)
             val row6Ids = IntArray(4)
             for (i in 0..2) row6Ids[i] = digitButtons[row6Order[i]].id
@@ -240,8 +240,8 @@ class T9KeyboardView
                 null,
                 ConstraintSet.CHAIN_SPREAD,
             )
-            set.setMargin(row6Ids.first(), ConstraintSet.START, dp(50))
-            set.setMargin(row6Ids.last(), ConstraintSet.END, dp(50))
+            set.setMargin(row6Ids.first(), ConstraintSet.START, dp(100))
+            set.setMargin(row6Ids.last(), ConstraintSet.END, dp(10))
 
             try {
                 set.applyTo(this)
