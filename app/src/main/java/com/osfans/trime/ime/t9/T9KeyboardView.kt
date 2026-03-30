@@ -180,8 +180,22 @@ class T9KeyboardView
                     val keyId = zhuyinKeys[keyIdx].id
                     set.connect(keyId, ConstraintSet.TOP, topAnchor, topSide)
                     set.connect(keyId, ConstraintSet.BOTTOM, bottomAnchor, ConstraintSet.TOP)
-                    val startAnchor = if (col == 0) ConstraintSet.PARENT_ID else if (col == 1) vG1 else vG2
-                    val endAnchor = if (col == 0) vG1 else if (col == 1) vG2 else ConstraintSet.PARENT_ID
+                    val startAnchor =
+                        if (col == 0) {
+                            ConstraintSet.PARENT_ID
+                        } else if (col == 1) {
+                            vG1
+                        } else {
+                            vG2
+                        }
+                    val endAnchor =
+                        if (col == 0) {
+                            vG1
+                        } else if (col == 1) {
+                            vG2
+                        } else {
+                            ConstraintSet.PARENT_ID
+                        }
                     val startSide = if (col == 0) ConstraintSet.START else ConstraintSet.END
                     val endSide = if (col == 2) ConstraintSet.END else ConstraintSet.START
                     set.connect(keyId, ConstraintSet.START, startAnchor, startSide)
@@ -247,8 +261,7 @@ class T9KeyboardView
             }
         }
 
-        private fun getHintsForNumber(number: Int): String =
-            T9ZhuyinMapper.getZhuyinForDigit(number).joinToString("")
+        private fun getHintsForNumber(number: Int): String = T9ZhuyinMapper.getZhuyinForDigit(number).joinToString("")
 
         fun setKeyboardEnabled(enabled: Boolean) {
             zhuyinKeys.forEach { it.isEnabled = enabled }

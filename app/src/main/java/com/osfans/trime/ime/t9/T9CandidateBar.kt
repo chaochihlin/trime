@@ -7,7 +7,6 @@ package com.osfans.trime.ime.t9
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.osfans.trime.core.CandidateItem

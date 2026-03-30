@@ -566,25 +566,22 @@ object T9ZhuyinMapper {
         return if (lastChar in TONE_MARKS) lastChar.toString() else null
     }
 
-    /**
-     * 根據聲調過濾候選詞
-     *
-     * @param candidates 完整的候選詞列表
-     * @param tone 聲調符號（"ˉ"=一聲, "ˊ"=二聲, "ˇ"=三聲, "ˋ"=四聲, "˙"=輕聲）
-     * @return 過濾後的候選詞列表
-     */
+    /** 解析候選詞的所有聲調：優先從 toneMap 取得，否則從 comment 提取 */
+    fun resolveTones(
+        candidate: CandidateItem,
+        toneMap: Map<String, Set<String?>> = emptyMap(),
+    ): Set<String?> =
+        toneMap[candidate.text]
+            ?: setOf(extractToneFromComment(candidate.comment))
+
     fun filterCandidatesByTone(
         candidates: List<CandidateItem>,
         tone: String,
+        toneMap: Map<String, Set<String?>> = emptyMap(),
     ): List<CandidateItem> {
         return candidates.filter { candidate ->
-            val candidateTone = extractToneFromComment(candidate.comment)
-            if (tone == "ˉ") {
-                // 一聲：匹配無聲調標記的候選詞
-                candidateTone == null
-            } else {
-                candidateTone == tone
-            }
+            val tones = resolveTones(candidate, toneMap)
+            if (tone == "ˉ") null in tones else tone in tones
         }
     }
 

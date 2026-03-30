@@ -52,6 +52,10 @@ class T9InputEventHandler(
     // 目前顯示在候選詞列的實際候選詞（經過過濾後的結果）
     private var displayedCandidates: List<CandidateItem> = emptyList()
 
+    // 多音字聲調映射：text → 所有聲調集合（null 代表一聲）
+    // 用於解決 RIME uniquifier 移除後的多音字聲調過濾
+    private var multiToneMap: Map<String, Set<String?>> = emptyMap()
+
     // 聲調變更監聽器（用於通知 UI 更新高亮狀態）
     var onToneFilterChanged: ((String?) -> Unit)? = null
 
@@ -60,6 +64,7 @@ class T9InputEventHandler(
 
     companion object {
         private const val TAG = "T9InputEventHandler"
+
         // 佔位提示的 comment 標記，用於區分不可選取的提示項目
         private const val HINT_MARKER = "__hint__"
     }
@@ -376,6 +381,9 @@ class T9InputEventHandler(
                                 CandidateItem(text = rimeCandidate.text, comment = rimeCandidate.comment ?: "")
                             }
 
+                        // 從原始 RIME 候選詞建立多音字聲調映射（移除 uniquifier 後含多讀音重複項）
+                        multiToneMap = buildToneMap(candidateItems)
+
                         // 根據按鍵次數決定顯示方式
                         val currentDigitCount = digitSequence.length
                         Timber.d("$TAG: 目前數字序列長度: $currentDigitCount")
@@ -417,7 +425,8 @@ class T9InputEventHandler(
                             }
                         } else {
                             // 第二次以上：從已計算的注音組合中過濾有效項
-                            var zhuyinCombinations = multiKeyCombinations ?: T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                            var zhuyinCombinations =
+                                multiKeyCombinations ?: T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
                             zhuyinCombinations =
                                 zhuyinCombinations.filter { combo ->
                                     T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(candidateItems, combo).isNotEmpty()
@@ -574,9 +583,10 @@ class T9InputEventHandler(
             // 重置數字序列
             digitSequence.clear()
 
-            // 【方案 E】清空緩存
+            // 清空緩存
             cachedCandidates = emptyList()
             displayedCandidates = emptyList()
+            multiToneMap = emptyMap()
             currentZhuyinFilter = null
             currentToneFilter = null
             onToneFilterChanged?.invoke(null)
@@ -601,9 +611,10 @@ class T9InputEventHandler(
             // 重置數字序列（準備下一次輸入）
             digitSequence.clear()
 
-            // 【方案 E】清空緩存
+            // 清空緩存
             cachedCandidates = emptyList()
             displayedCandidates = emptyList()
+            multiToneMap = emptyMap()
             currentZhuyinFilter = null
             currentToneFilter = null
             onToneFilterChanged?.invoke(null)
@@ -671,7 +682,7 @@ class T9InputEventHandler(
 
         // 再套用聲調過濾（嚴格模式：空結果也套用）
         if (currentToneFilter != null) {
-            val toneFiltered = T9ZhuyinMapper.filterCandidatesByTone(filtered, currentToneFilter!!)
+            val toneFiltered = T9ZhuyinMapper.filterCandidatesByTone(filtered, currentToneFilter!!, multiToneMap)
             Timber.d("$TAG: 聲調過濾 '$currentToneFilter': ${filtered.size} → ${toneFiltered.size}")
             filtered = toneFiltered
         } else {
@@ -698,10 +709,7 @@ class T9InputEventHandler(
         val firstTone = mutableListOf<CandidateItem>()
         val others = mutableListOf<CandidateItem>()
         for (candidate in candidates) {
-            val tone = T9ZhuyinMapper.extractToneFromComment(candidate.comment)
-            // tone == null 且 comment 有注音資訊 → 一聲（注音中一聲無聲調符號）
-            // tone == null 且 comment 為空 → 無注音資訊，不提前
-            if (tone == null && candidate.comment.isNotBlank()) {
+            if (null in T9ZhuyinMapper.resolveTones(candidate, multiToneMap)) {
                 firstTone.add(candidate)
             } else {
                 others.add(candidate)
@@ -712,19 +720,29 @@ class T9InputEventHandler(
         return firstTone + others
     }
 
-    /**
-     * 從候選字列表計算存在哪些顯式聲調（ˊˇˋ˙）
-     * 不含一聲：UI 已移除一聲鍵，一聲候選字改由預設排序提前顯示
-     */
     private fun computeValidTones(candidates: List<CandidateItem>): Set<String> {
         val tones = mutableSetOf<String>()
         for (candidate in candidates) {
-            val tone = T9ZhuyinMapper.extractToneFromComment(candidate.comment)
-            if (tone != null) {
-                tones.add(tone)
+            for (tone in T9ZhuyinMapper.resolveTones(candidate, multiToneMap)) {
+                if (tone != null) tones.add(tone)
             }
         }
         return tones
+    }
+
+    /**
+     * 從候選詞列表建立多音字聲調映射表
+     * 移除 RIME uniquifier 後，同一個字會有多個候選項（不同聲調），
+     * 此函數收集每個字的所有聲調，用於後續過濾。
+     */
+    private fun buildToneMap(candidates: List<CandidateItem>): Map<String, Set<String?>> {
+        val map = mutableMapOf<String, MutableSet<String?>>()
+        for (c in candidates) {
+            map
+                .getOrPut(c.text) { mutableSetOf() }
+                .add(T9ZhuyinMapper.extractToneFromComment(c.comment))
+        }
+        return map
     }
 
     /**
