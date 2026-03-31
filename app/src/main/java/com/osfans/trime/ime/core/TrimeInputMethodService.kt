@@ -854,8 +854,9 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
         keyCode: Int,
         event: KeyEvent,
     ): Boolean {
-        // 圓形螢幕手錶：攔截系統右滑產生的 BACK 事件，防止 IME 被意外關閉
+        // 圓形螢幕手錶：實體 BACK 鍵（此手錶的 Return 鍵硬體映射為 BACK）觸發 T9 確認
         if (keyCode == KeyEvent.KEYCODE_BACK && isInputViewShown && isRoundScreen()) {
+            inputView?.getT9InputContainer()?.getEventHandler()?.onConfirmPress()
             return true
         }
         if (inputDeviceManager.evaluateOnKeyDown(event, this)) {
