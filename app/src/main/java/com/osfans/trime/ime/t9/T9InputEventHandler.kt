@@ -39,6 +39,9 @@ class T9InputEventHandler(
     // 追蹤目前輸入的數字序列（用於判斷顯示個別注音或組合注音）
     private val digitSequence = StringBuilder()
 
+    // 每個按鍵對應的 half 值（與 digitSequence 同步增減）
+    private val digitHalves = mutableListOf<Int>()
+
     // ==================== 前端過濾機制（方案 E）====================
     // 緩存完整的候選詞列表，用於前端過濾
     private var cachedCandidates: List<CandidateItem> = emptyList()
@@ -107,13 +110,17 @@ class T9InputEventHandler(
      * - 第一次按鍵：顯示該數字對應的個別注音符號
      * - 第二次以上：顯示從候選詞提取的注音組合
      */
-    override fun onNumberKeyPress(number: Int) {
-        Timber.d("$TAG: 短按數字鍵: $number - 觸發注音符號輸入")
+    override fun onNumberKeyPress(
+        number: Int,
+        half: Int,
+    ) {
+        Timber.d("$TAG: 短按數字鍵: $number (half=$half) - 觸發注音符號輸入")
 
         try {
             // 追蹤輸入序列（用 RIME 字符：0-9 為數字，10→'a'，11→'b'）
             val rimeChar = T9ZhuyinMapper.keyIndexToChar(number)
             digitSequence.append(rimeChar)
+            digitHalves.add(half)
             Timber.d("$TAG: 目前數字序列: $digitSequence (長度: ${digitSequence.length})")
 
             // 發送按鍵到 RIME 引擎，注音選擇器將在 handleRimeMessage 中更新
@@ -414,11 +421,12 @@ class T9InputEventHandler(
                         Timber.d("$TAG: 緩存 ${candidateItems.size} 個候選詞")
 
                         if (currentDigitCount == 1 && digitSequence.isNotEmpty()) {
-                            // 第一次按鍵：顯示該數字對應的個別注音符號
+                            // 第一次按鍵：顯示該數字對應的個別注音符號（考慮 half 拆分）
                             val firstDigit = T9ZhuyinMapper.charToKeyIndex(digitSequence[0])
                             if (firstDigit != null) {
-                                val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
-                                Timber.d("$TAG: 第一次按鍵，顯示個別注音: $individualZhuyins")
+                                val firstHalf = digitHalves.firstOrNull() ?: 0
+                                val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigitHalf(firstDigit, firstHalf)
+                                Timber.d("$TAG: 第一次按鍵，顯示個別注音 (half=$firstHalf): $individualZhuyins")
                                 contextDisplay.showZhuyinCombinations(individualZhuyins)
                                 // 自動選取第一個注音作為過濾條件
                                 currentZhuyinFilter = individualZhuyins.firstOrNull()
@@ -460,8 +468,9 @@ class T9InputEventHandler(
                                 // 單鍵：顯示該數字對應的個別注音符號
                                 val firstDigit = T9ZhuyinMapper.charToKeyIndex(digitSequence[0])
                                 if (firstDigit != null) {
-                                    val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigit(firstDigit)
-                                    Timber.d("$TAG: RIME 無候選詞，但根據數字 '$firstDigit' 顯示注音: $individualZhuyins")
+                                    val firstHalf = digitHalves.firstOrNull() ?: 0
+                                    val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigitHalf(firstDigit, firstHalf)
+                                    Timber.d("$TAG: RIME 無候選詞，但根據數字 '$firstDigit' 顯示注音 (half=$firstHalf): $individualZhuyins")
                                     contextDisplay.showZhuyinCombinations(individualZhuyins)
 
                                     // 【關鍵修復】即使 RIME 無候選詞，也使用前端策劃候選字
@@ -582,6 +591,7 @@ class T9InputEventHandler(
 
             // 重置數字序列
             digitSequence.clear()
+            digitHalves.clear()
 
             // 清空緩存
             cachedCandidates = emptyList()
@@ -610,6 +620,7 @@ class T9InputEventHandler(
 
             // 重置數字序列（準備下一次輸入）
             digitSequence.clear()
+            digitHalves.clear()
 
             // 清空緩存
             cachedCandidates = emptyList()
@@ -760,6 +771,7 @@ class T9InputEventHandler(
                 // 情境 1：刪除最後一個數字
                 val removedDigit = digitSequence.last()
                 digitSequence.deleteAt(digitSequence.length - 1)
+                if (digitHalves.isNotEmpty()) digitHalves.removeAt(digitHalves.lastIndex)
                 Timber.d("$TAG: 刪除數字 '$removedDigit'，剩餘序列: '$digitSequence'")
 
                 if (digitSequence.isEmpty()) {
@@ -824,6 +836,7 @@ class T9InputEventHandler(
 
             // 重置數字序列
             digitSequence.clear()
+            digitHalves.clear()
             Timber.d("$TAG: 清除輸入狀態並重置 RIME，數字序列已重置")
 
             // 清除 RIME 引擎的組合輸入
@@ -850,6 +863,7 @@ class T9InputEventHandler(
 
             // 重置數字序列
             digitSequence.clear()
+            digitHalves.clear()
 
             // 清空 UI 狀態
             clearInputState()
@@ -865,6 +879,7 @@ class T9InputEventHandler(
         try {
             t9InputLogic.reset()
             digitSequence.clear()
+            digitHalves.clear()
             Timber.d("$TAG: 處理器已重置，數字序列已清空")
         } catch (e: Exception) {
             Timber.e(e, "$TAG: Error resetting handler")

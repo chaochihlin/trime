@@ -300,6 +300,22 @@ object T9ZhuyinMapper {
      */
     fun getZhuyinForDigit(digit: Int): List<String> = T9_MAPPING[digit] ?: emptyList()
 
+    /**
+     * 取得指定數字對應的注音符號，支援拆分顯示
+     * @param half 0=完整, 1=前半（前2個）, 2=後半（後2個）
+     */
+    fun getZhuyinForDigitHalf(
+        digit: Int,
+        half: Int,
+    ): List<String> {
+        val all = getZhuyinForDigit(digit)
+        return when {
+            half == 1 && all.size > 2 -> all.take(2)
+            half == 2 && all.size > 2 -> all.drop(2)
+            else -> all
+        }
+    }
+
     // ==================== 反向映射：注音 -> 數字 ====================
 
     // 反向映射表：注音 -> 數字（延遲初始化）

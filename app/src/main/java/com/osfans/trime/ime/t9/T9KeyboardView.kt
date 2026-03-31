@@ -37,12 +37,22 @@ class T9KeyboardView
         companion object {
             private const val TAG = "T9KeyboardView"
 
-            // 12鍵在 4×3 網格中的排列順序（左→右，上→下）
-            private val GRID_ORDER = intArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11)
+            // 每行的按鍵定義：(keyNum, half) — half: 0=完整, 1=前半, 2=後半
+            // Row1: 3欄，Row2-4: 4欄（4-symbol 鍵拆成兩個視覺按鍵）
+            private val ROW_DEFS =
+                arrayOf(
+                    arrayOf(1 to 0, 2 to 0, 3 to 0),
+                    arrayOf(4 to 0, 5 to 0, 6 to 1, 6 to 2),
+                    arrayOf(7 to 0, 8 to 0, 9 to 1, 9 to 2),
+                    arrayOf(0 to 0, 10 to 0, 11 to 1, 11 to 2),
+                )
         }
 
         interface T9KeyboardActionListener {
-            fun onNumberKeyPress(number: Int)
+            fun onNumberKeyPress(
+                number: Int,
+                half: Int = 0,
+            )
 
             fun onNumberKeyLongPress(number: Int): Boolean
 
@@ -57,26 +67,32 @@ class T9KeyboardView
         private lateinit var theme: Theme
         private lateinit var rimeSession: RimeSession
 
-        // 12 個注音鍵（只顯示注音，不顯示數字）
-        private val zhuyinKeys =
-            Array(12) { index ->
-                val keyNum = GRID_ORDER[index]
-                T9NumberKey(context).apply {
-                    id = generateViewId()
-                    keyNumber = -1 // 不顯示數字
-                    keyHints = getHintsForNumber(keyNum)
-                    tag = keyNum // 用 tag 記錄實際 key number
+        // 注音鍵（15個：Row1×3 + Row2-4×4，4-symbol 鍵拆成兩個視覺按鍵）
+        // 二維陣列 [row][col]，與 ROW_DEFS 對應
+        private val zhuyinKeys: Array<Array<T9NumberKey>> =
+            Array(ROW_DEFS.size) { row ->
+                Array(ROW_DEFS[row].size) { col ->
+                    val (keyNum, half) = ROW_DEFS[row][col]
+                    T9NumberKey(context).apply {
+                        id = generateViewId()
+                        keyNumber = -1 // 不顯示數字
+                        keyHints = getHintsForNumber(keyNum, half)
+                        tag = keyNum // 用 tag 記錄實際 key number
 
-                    setOnClickListener { actionListener?.onNumberKeyPress(keyNum) }
-                    setOnLongClickListener {
-                        Timber.d("$TAG: 長按注音鍵 $keyNum")
-                        updateKeyDisplay(isPressed = true, mode = T9NumberKey.KeyDisplayMode.DIGIT)
-                        val result = actionListener?.onNumberKeyLongPress(keyNum) ?: false
-                        if (result) markLongPressHandled()
-                        result
+                        setOnClickListener { actionListener?.onNumberKeyPress(keyNum, half) }
+                        setOnLongClickListener {
+                            Timber.d("$TAG: 長按注音鍵 $keyNum")
+                            updateKeyDisplay(isPressed = true, mode = T9NumberKey.KeyDisplayMode.DIGIT)
+                            val result = actionListener?.onNumberKeyLongPress(keyNum) ?: false
+                            if (result) markLongPressHandled()
+                            result
+                        }
                     }
                 }
             }
+
+        // 所有注音鍵的平面列表（用於遍歷）
+        private val allZhuyinKeys: List<T9NumberKey> = zhuyinKeys.flatMap { it.toList() }
 
         // 10 個數字按鈕（獨立行，直接輸入數字）
         private val digitButtons =
@@ -141,7 +157,7 @@ class T9KeyboardView
             removeAllViews()
             // 加入所有 view
             val allViews = mutableListOf<View>()
-            allViews.addAll(zhuyinKeys)
+            allViews.addAll(allZhuyinKeys)
             allViews.addAll(digitButtons)
             allViews.add(languageKey)
 
@@ -153,13 +169,24 @@ class T9KeyboardView
             val set = ConstraintSet()
             set.clone(this)
 
-            // --- 垂直輔助線（3列） ---
-            val vG1 = View.generateViewId()
-            val vG2 = View.generateViewId()
-            set.create(vG1, ConstraintSet.VERTICAL_GUIDELINE)
-            set.create(vG2, ConstraintSet.VERTICAL_GUIDELINE)
-            set.setGuidelinePercent(vG1, 0.33f)
-            set.setGuidelinePercent(vG2, 0.66f)
+            // --- 垂直輔助線 ---
+            // Row1 用 3 等分：33%, 66%
+            val vG3_1 = View.generateViewId()
+            val vG3_2 = View.generateViewId()
+            set.create(vG3_1, ConstraintSet.VERTICAL_GUIDELINE)
+            set.create(vG3_2, ConstraintSet.VERTICAL_GUIDELINE)
+            set.setGuidelinePercent(vG3_1, 0.33f)
+            set.setGuidelinePercent(vG3_2, 0.66f)
+            // Row2-4 用 4 等分：25%, 50%, 75%
+            val vG4_1 = View.generateViewId()
+            val vG4_2 = View.generateViewId()
+            val vG4_3 = View.generateViewId()
+            set.create(vG4_1, ConstraintSet.VERTICAL_GUIDELINE)
+            set.create(vG4_2, ConstraintSet.VERTICAL_GUIDELINE)
+            set.create(vG4_3, ConstraintSet.VERTICAL_GUIDELINE)
+            set.setGuidelinePercent(vG4_1, 0.25f)
+            set.setGuidelinePercent(vG4_2, 0.50f)
+            set.setGuidelinePercent(vG4_3, 0.75f)
 
             // --- 水平輔助線（6行：4行注音 + 1行數字 + 1行底部） ---
             // 比例：19% × 4 + 12% + 12% = 100%
@@ -170,34 +197,28 @@ class T9KeyboardView
                 set.setGuidelinePercent(hLines[i], hPercents[i])
             }
 
-            // --- Row 1-4: 4×3 注音鍵 ---
+            // Row1 的 3 欄垂直錨點
+            val row1Guides = arrayOf(ConstraintSet.PARENT_ID, vG3_1, vG3_2, ConstraintSet.PARENT_ID)
+            // Row2-4 的 4 欄垂直錨點
+            val row4Guides = arrayOf(ConstraintSet.PARENT_ID, vG4_1, vG4_2, vG4_3, ConstraintSet.PARENT_ID)
+
+            // --- Row 1-4: 注音鍵 ---
             for (row in 0..3) {
                 val topAnchor = if (row == 0) ConstraintSet.PARENT_ID else hLines[row - 1]
                 val bottomAnchor = hLines[row]
                 val topSide = if (row == 0) ConstraintSet.TOP else ConstraintSet.BOTTOM
-                for (col in 0..2) {
-                    val keyIdx = row * 3 + col
-                    val keyId = zhuyinKeys[keyIdx].id
+                val cols = zhuyinKeys[row].size
+                val guides = if (cols == 3) row1Guides else row4Guides
+
+                for (col in 0 until cols) {
+                    val keyId = zhuyinKeys[row][col].id
                     set.connect(keyId, ConstraintSet.TOP, topAnchor, topSide)
                     set.connect(keyId, ConstraintSet.BOTTOM, bottomAnchor, ConstraintSet.TOP)
-                    val startAnchor =
-                        if (col == 0) {
-                            ConstraintSet.PARENT_ID
-                        } else if (col == 1) {
-                            vG1
-                        } else {
-                            vG2
-                        }
-                    val endAnchor =
-                        if (col == 0) {
-                            vG1
-                        } else if (col == 1) {
-                            vG2
-                        } else {
-                            ConstraintSet.PARENT_ID
-                        }
+
+                    val startAnchor = guides[col]
+                    val endAnchor = guides[col + 1]
                     val startSide = if (col == 0) ConstraintSet.START else ConstraintSet.END
-                    val endSide = if (col == 2) ConstraintSet.END else ConstraintSet.START
+                    val endSide = if (col == cols - 1) ConstraintSet.END else ConstraintSet.START
                     set.connect(keyId, ConstraintSet.START, startAnchor, startSide)
                     set.connect(keyId, ConstraintSet.END, endAnchor, endSide)
                 }
@@ -254,26 +275,26 @@ class T9KeyboardView
         private fun updateThemeStyles() {
             if (::theme.isInitialized) {
                 try {
-                    zhuyinKeys.forEach { it.updateStyle() }
+                    allZhuyinKeys.forEach { it.updateStyle() }
                 } catch (e: Exception) {
                     Timber.e(e, "$TAG: Failed to update theme styles")
                 }
             }
         }
 
-        private fun getHintsForNumber(number: Int): String = T9ZhuyinMapper.getZhuyinForDigit(number).joinToString("")
+        private fun getHintsForNumber(
+            number: Int,
+            half: Int = 0,
+        ): String = T9ZhuyinMapper.getZhuyinForDigitHalf(number, half).joinToString("")
 
         fun setKeyboardEnabled(enabled: Boolean) {
-            zhuyinKeys.forEach { it.isEnabled = enabled }
+            allZhuyinKeys.forEach { it.isEnabled = enabled }
             digitButtons.forEach { it.isEnabled = enabled }
             languageKey.isEnabled = enabled
             alpha = if (enabled) 1.0f else 0.6f
         }
 
-        fun getNumberKey(number: Int): T9NumberKey? {
-            val gridIdx = GRID_ORDER.indexOf(number)
-            return if (gridIdx >= 0) zhuyinKeys[gridIdx] else null
-        }
+        fun getNumberKey(number: Int): T9NumberKey? = allZhuyinKeys.firstOrNull { it.tag == number }
 
         fun getLanguageKey(): T9FunctionKey = languageKey
     }
