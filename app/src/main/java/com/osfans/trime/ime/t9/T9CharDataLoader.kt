@@ -19,6 +19,7 @@ import timber.log.Timber
 object T9CharDataLoader {
     private const val TAG = "T9CharDataLoader"
     private const val DATA_FILE = "t9/t9_chars.json"
+    private const val DICT_FILE = "shared/bopomofo_t9.dict.yaml"
 
     private val json by lazy {
         Json {
@@ -32,6 +33,10 @@ object T9CharDataLoader {
 
     // 快取已轉換的 CandidateItem 列表（避免每次呼叫都重新配置）
     private var cachedDigitChars: Map<Int, List<CandidateItem>> = emptyMap()
+
+    // 從 RIME 字典解析的靜態聲調映射（字 → 所有聲調集合）
+    // RIME translator 每字只回傳一個讀音，此表補充完整的多音字聲調資訊
+    private var dictToneMap: Map<String, Set<String?>> = emptyMap()
 
     /**
      * 初始化並載入資料
@@ -59,10 +64,51 @@ object T9CharDataLoader {
             Timber.d("$TAG: 成功載入 T9 字詞資料，版本: ${cachedData?.version}")
         } catch (e: Exception) {
             Timber.e(e, "$TAG: 載入 T9 字詞資料失敗")
-            // 使用空資料作為後備
             cachedData = T9CharData.EMPTY
         }
+
+        // 從 RIME 字典建立靜態聲調映射
+        try {
+            dictToneMap = loadDictToneMap(context)
+            Timber.d("$TAG: 靜態聲調映射載入完成，共 ${dictToneMap.size} 字")
+        } catch (e: Exception) {
+            Timber.e(e, "$TAG: 載入靜態聲調映射失敗")
+        }
     }
+
+    // 聲調 Char→String 快取，避免每行都 toString() 產生新 String
+    private val TONE_STRING_CACHE = mapOf('ˊ' to "ˊ", 'ˇ' to "ˇ", 'ˋ' to "ˋ", '˙' to "˙")
+
+    /**
+     * 從 bopomofo_t9.dict.yaml 解析所有字的聲調映射
+     * 格式：字\t注音(含聲調)\t權重
+     */
+    private fun loadDictToneMap(context: Context): Map<String, Set<String?>> {
+        val map = mutableMapOf<String, MutableSet<String?>>()
+        context.assets.open(DICT_FILE).bufferedReader().use { reader ->
+            var inEntries = false
+            for (line in reader.lineSequence()) {
+                if (!inEntries) {
+                    if (line == "...") inEntries = true
+                    continue
+                }
+                if (line.isBlank() || line.startsWith("#")) continue
+                val parts = line.split('\t')
+                if (parts.size < 2) continue
+                val char = parts[0]
+                if (char.length != 1) continue
+                val zhuyin = parts[1]
+                val tone = zhuyin.lastOrNull()?.let { TONE_STRING_CACHE[it] }
+                map.getOrPut(char) { mutableSetOf() }.add(tone)
+            }
+        }
+        return map
+    }
+
+    /**
+     * 取得靜態聲調映射表（從字典解析，含完整多音字資訊）
+     */
+    fun getDictToneMap(): Map<String, Set<String?>> = dictToneMap
 
     /**
      * 取得指定數字鍵的候選字列表

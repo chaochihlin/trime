@@ -225,7 +225,7 @@ def generate_dict(terra_path: str, essay_path: str, output_path: str,
         converted = False
         seen = set()
 
-        for py_base, tone, _weight_str in readings:
+        for py_base, tone, weight_str in readings:
             bopomofo = pinyin_to_bopomofo(py_base)
             if not bopomofo:
                 continue
@@ -233,9 +233,18 @@ def generate_dict(terra_path: str, essay_path: str, output_path: str,
             tone_mark = TONE_MAP.get(tone, "")
             full_reading = bopomofo + tone_mark
 
+            # 用讀音比例縮放權重（如 "95%" → 0.95）
+            reading_ratio = 1.0
+            if weight_str and weight_str.endswith('%'):
+                try:
+                    reading_ratio = int(weight_str[:-1]) / 100.0
+                except ValueError:
+                    pass
+            reading_freq = max(1, int(freq * reading_ratio)) if freq > 0 else 0
+
             if full_reading not in seen:
                 seen.add(full_reading)
-                entries.append((char, full_reading, freq))
+                entries.append((char, full_reading, reading_freq))
                 converted = True
 
         if converted:

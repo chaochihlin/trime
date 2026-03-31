@@ -381,7 +381,7 @@ class T9InputEventHandler(
                                 CandidateItem(text = rimeCandidate.text, comment = rimeCandidate.comment ?: "")
                             }
 
-                        // 從原始 RIME 候選詞建立多音字聲調映射（移除 uniquifier 後含多讀音重複項）
+                        // 建立多音字聲調映射（RIME 每字只回傳一筆，由字典靜態映射補充）
                         multiToneMap = buildToneMap(candidateItems)
 
                         // 根據按鍵次數決定顯示方式
@@ -732,15 +732,16 @@ class T9InputEventHandler(
 
     /**
      * 從候選詞列表建立多音字聲調映射表
-     * 移除 RIME uniquifier 後，同一個字會有多個候選項（不同聲調），
-     * 此函數收集每個字的所有聲調，用於後續過濾。
+     * RIME translator 每字只回傳一個讀音，因此用字典靜態映射補充完整的多音字聲調。
      */
     private fun buildToneMap(candidates: List<CandidateItem>): Map<String, Set<String?>> {
         val map = mutableMapOf<String, MutableSet<String?>>()
+        val dictToneMap = T9CharDataLoader.getDictToneMap()
         for (c in candidates) {
-            map
-                .getOrPut(c.text) { mutableSetOf() }
-                .add(T9ZhuyinMapper.extractToneFromComment(c.comment))
+            val tones = map.getOrPut(c.text) { mutableSetOf() }
+            tones.add(T9ZhuyinMapper.extractToneFromComment(c.comment))
+            // 從字典靜態映射補充該字的所有聲調
+            dictToneMap[c.text]?.let { tones.addAll(it) }
         }
         return map
     }

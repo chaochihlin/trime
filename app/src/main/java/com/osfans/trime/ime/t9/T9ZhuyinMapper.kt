@@ -15,7 +15,7 @@ object T9ZhuyinMapper {
     // 顯式聲調符號（二、三、四聲和輕聲）
     // 注意：一聲（陰平）在注音中無聲調符號，由 filterCandidatesByTone() 中
     // tone == "ˉ" 時以 candidateTone == null 來匹配
-    private val TONE_MARKS = setOf('ˊ', 'ˇ', 'ˋ', '˙')
+    val TONE_MARKS = setOf('ˊ', 'ˇ', 'ˋ', '˙')
 
     /** 將 RIME 字符（'0'-'9','a','b'）轉為 T9_MAPPING 的 Int key */
     fun charToKeyIndex(ch: Char): Int? =
