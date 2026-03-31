@@ -76,8 +76,8 @@ object T9CharDataLoader {
         }
     }
 
-    // 聲調 Char→String 快取，避免每行都 toString() 產生新 String
-    private val TONE_STRING_CACHE = mapOf('ˊ' to "ˊ", 'ˇ' to "ˇ", 'ˋ' to "ˋ", '˙' to "˙")
+    // 從 T9ZhuyinMapper.TONE_MARKS 衍生，避免每行都 toString() 產生新 String
+    private val TONE_STRING_CACHE = T9ZhuyinMapper.TONE_MARKS.associateWith { it.toString() }
 
     /**
      * 從 bopomofo_t9.dict.yaml 解析所有字的聲調映射
