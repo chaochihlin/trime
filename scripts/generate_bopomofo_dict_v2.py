@@ -397,13 +397,46 @@ def compare_dicts(new_entries, old_path):
     test_cases = [
         ("拒", "ㄐㄩˋ"), ("好", "ㄏㄠˇ"), ("期", "ㄑㄧˊ"),
         ("夕", "ㄒㄧˋ"), ("汐", "ㄒㄧˋ"), ("瑚", "ㄏㄨˊ"),
-        ("上", "ㄕㄤˋ"), ("踏", "ㄊㄚˋ"), ("那", "ㄋㄚˋ"),
-        ("累", "ㄌㄟˋ"), ("個", "ㄍㄜˋ"), ("行", "ㄏㄤˊ"),
+        ("上", "ㄕㄤˋ"), ("踏", "ㄊㄚˋ"), ("個", "ㄍㄜˋ"),
+        ("行", "ㄏㄤˊ"), ("看", "ㄎㄢˋ"),
     ]
     for char, expected in test_cases:
         readings = new.get(char, set())
         status = "✅" if expected in readings else "❌"
         print(f"  {status} {char} 期望 {expected} | 新={sorted(readings)}")
+
+    # 破音字驗證：確認每個破音字的所有讀音都存在（客戶反映 Issue #5）
+    print(f"\n=== 破音字驗證 (Issue #5) ===")
+    multi_reading_cases = [
+        ("那", ["ㄋㄚˇ", "ㄋㄚˋ"]),
+        ("量", ["ㄌㄧㄤˊ", "ㄌㄧㄤˋ"]),
+        ("累", ["ㄌㄟˇ", "ㄌㄟˋ"]),
+        ("肯", ["ㄎㄣˇ"]),
+        ("好", ["ㄏㄠˇ", "ㄏㄠˋ"]),
+        ("難", ["ㄋㄢˊ", "ㄋㄢˋ"]),
+        ("郝", ["ㄏㄠˇ"]),
+        ("骰", ["ㄊㄡˊ"]),
+        ("少", ["ㄕㄠˇ", "ㄕㄠˋ"]),
+        ("撒", ["ㄙㄚ", "ㄙㄚˇ"]),
+        ("炸", ["ㄓㄚˊ", "ㄓㄚˋ"]),
+        ("要", ["ㄧㄠ", "ㄧㄠˋ"]),
+        ("把", ["ㄅㄚˇ", "ㄅㄚˋ"]),
+        ("肚", ["ㄉㄨˇ", "ㄉㄨˋ"]),
+        ("看", ["ㄎㄢˋ", "ㄎㄢ"]),
+    ]
+    multi_fail = 0
+    for char, expected_readings in multi_reading_cases:
+        readings = new.get(char, set())
+        missing = [r for r in expected_readings if r not in readings]
+        if missing:
+            print(f"  ❌ {char} 缺少: {missing} | 有={sorted(readings)}")
+            multi_fail += 1
+        else:
+            print(f"  ✅ {char} {sorted(readings)}")
+    if multi_fail:
+        print(f"  ⚠️  {multi_fail} 個字有缺少的讀音")
+    else:
+        print(f"  全部通過 ✅")
 
     if fix_examples:
         print(f"\n=== 讀音變更範例（前20個）===")
