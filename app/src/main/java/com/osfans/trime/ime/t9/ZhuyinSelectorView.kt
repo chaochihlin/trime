@@ -28,8 +28,9 @@ class ZhuyinSelectorView
     ) : RecyclerView(context, attrs) {
         companion object {
             private const val TAG = "ZhuyinSelectorView"
-            private const val VERTICAL_PADDING_DP = 8
             private const val HORIZONTAL_PADDING_DP = 4
+            // 圓形螢幕右下角弧線內縮，底部需足夠 padding 讓最後的注音組合可滾動到可觸控區域
+            private const val BOTTOM_PADDING_DP = 72
         }
 
         private var currentDigit: Int = -1
@@ -56,9 +57,8 @@ class ZhuyinSelectorView
             isVerticalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
 
-            // 設置內距：上方小 padding 讓清單頂部貼近文字輸入框底部，下方大 padding 維持 Snap 居中效果
             val horizontalPadding = dp(HORIZONTAL_PADDING_DP)
-            setPadding(horizontalPadding, dp(4), horizontalPadding, dp(VERTICAL_PADDING_DP))
+            setPadding(horizontalPadding, dp(4), horizontalPadding, dp(BOTTOM_PADDING_DP))
 
             // 附加 Snap 助手實現對齊效果
             snapHelper.attachToRecyclerView(this)
