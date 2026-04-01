@@ -37,8 +37,11 @@ class T9KeyboardView
         companion object {
             private const val TAG = "T9KeyboardView"
 
+            // 文字間隔等寬設計：3-symbol 欄較寬，2-symbol 欄較窄
+            private const val COL_WIDE = 0.28f
+            private const val COL_NARROW = 0.22f
+
             // 每行的按鍵定義：(keyNum, half) — half: 0=完整, 1=前半, 2=後半
-            // Row1: 3欄，Row2-4: 4欄（4-symbol 鍵拆成兩個視覺按鍵）
             private val ROW_DEFS =
                 arrayOf(
                     arrayOf(1 to 0, 2 to 0, 3 to 0),
@@ -169,24 +172,16 @@ class T9KeyboardView
             val set = ConstraintSet()
             set.clone(this)
 
-            // --- 垂直輔助線 ---
-            // Row1 用 3 等分：33%, 66%
-            val vG3_1 = View.generateViewId()
-            val vG3_2 = View.generateViewId()
-            set.create(vG3_1, ConstraintSet.VERTICAL_GUIDELINE)
-            set.create(vG3_2, ConstraintSet.VERTICAL_GUIDELINE)
-            set.setGuidelinePercent(vG3_1, 0.33f)
-            set.setGuidelinePercent(vG3_2, 0.66f)
-            // Row2-4 用 4 等分：25%, 50%, 75%
+            // --- 垂直輔助線（Row1 key3 跨 col3+col4） ---
             val vG4_1 = View.generateViewId()
             val vG4_2 = View.generateViewId()
             val vG4_3 = View.generateViewId()
             set.create(vG4_1, ConstraintSet.VERTICAL_GUIDELINE)
             set.create(vG4_2, ConstraintSet.VERTICAL_GUIDELINE)
             set.create(vG4_3, ConstraintSet.VERTICAL_GUIDELINE)
-            set.setGuidelinePercent(vG4_1, 0.25f)
-            set.setGuidelinePercent(vG4_2, 0.50f)
-            set.setGuidelinePercent(vG4_3, 0.75f)
+            set.setGuidelinePercent(vG4_1, COL_WIDE)
+            set.setGuidelinePercent(vG4_2, COL_WIDE * 2)
+            set.setGuidelinePercent(vG4_3, COL_WIDE * 2 + COL_NARROW)
 
             // --- 水平輔助線（6行：4行注音 + 1行數字 + 1行底部） ---
             // 比例：19% × 4 + 12% + 12% = 100%
@@ -197,10 +192,7 @@ class T9KeyboardView
                 set.setGuidelinePercent(hLines[i], hPercents[i])
             }
 
-            // Row1 的 3 欄垂直錨點
-            val row1Guides = arrayOf(ConstraintSet.PARENT_ID, vG3_1, vG3_2, ConstraintSet.PARENT_ID)
-            // Row2-4 的 4 欄垂直錨點
-            val row4Guides = arrayOf(ConstraintSet.PARENT_ID, vG4_1, vG4_2, vG4_3, ConstraintSet.PARENT_ID)
+            val colGuides = arrayOf(ConstraintSet.PARENT_ID, vG4_1, vG4_2, vG4_3, ConstraintSet.PARENT_ID)
 
             // --- Row 1-4: 注音鍵 ---
             for (row in 0..3) {
@@ -208,17 +200,18 @@ class T9KeyboardView
                 val bottomAnchor = hLines[row]
                 val topSide = if (row == 0) ConstraintSet.TOP else ConstraintSet.BOTTOM
                 val cols = zhuyinKeys[row].size
-                val guides = if (cols == 3) row1Guides else row4Guides
 
                 for (col in 0 until cols) {
                     val keyId = zhuyinKeys[row][col].id
                     set.connect(keyId, ConstraintSet.TOP, topAnchor, topSide)
                     set.connect(keyId, ConstraintSet.BOTTOM, bottomAnchor, ConstraintSet.TOP)
 
-                    val startAnchor = guides[col]
-                    val endAnchor = guides[col + 1]
+                    // Row1 key3 跨 col3+col4，讓注音第三欄視覺上較寬
+                    val endIdx = if (row == 0 && col == 2) colGuides.lastIndex else col + 1
+                    val startAnchor = colGuides[col]
+                    val endAnchor = colGuides[endIdx]
                     val startSide = if (col == 0) ConstraintSet.START else ConstraintSet.END
-                    val endSide = if (col == cols - 1) ConstraintSet.END else ConstraintSet.START
+                    val endSide = if (endAnchor == ConstraintSet.PARENT_ID) ConstraintSet.END else ConstraintSet.START
                     set.connect(keyId, ConstraintSet.START, startAnchor, startSide)
                     set.connect(keyId, ConstraintSet.END, endAnchor, endSide)
                 }

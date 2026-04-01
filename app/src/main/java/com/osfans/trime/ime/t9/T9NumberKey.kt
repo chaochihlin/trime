@@ -39,8 +39,9 @@ class T9NumberKey
     ) : LinearLayout(context, attrs) {
         companion object {
             private const val TAG = "T9NumberKey"
-            private const val ZHUYIN_TEXT_SIZE = 14f // 注音符號文字大小
-            private const val NUMBER_TEXT_SIZE = 14f // 數字標籤文字大小
+            private const val ZHUYIN_TEXT_SIZE = 14f
+            private const val NUMBER_TEXT_SIZE = 14f
+            private const val ZHUYIN_LETTER_SPACING = 0.15f
         }
 
         // 追蹤是否剛完成長按，用於阻止長按後的點擊事件
@@ -63,6 +64,7 @@ class T9NumberKey
                 gravity = Gravity.CENTER
                 maxLines = 1 // 設定為單行
                 typeface = Typeface.DEFAULT_BOLD // 加粗注音符號
+                letterSpacing = ZHUYIN_LETTER_SPACING
             }
 
         // 數字顯示TextView（現在作為次要顯示）
