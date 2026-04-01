@@ -407,7 +407,7 @@ class T9InputEventHandler(
                             }
                         } else if (currentDigitCount >= 2) {
                             // 多鍵輸入：計算有效注音組合（只算一次，後續共用）
-                            multiKeyCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                            multiKeyCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
                             val originalCount = candidateItems.size
                             candidateItems = T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations)
                             Timber.d("$TAG: 多鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
@@ -434,7 +434,7 @@ class T9InputEventHandler(
                         } else {
                             // 第二次以上：從已計算的注音組合中過濾有效項
                             var zhuyinCombinations =
-                                multiKeyCombinations ?: T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                                multiKeyCombinations ?: T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
                             zhuyinCombinations =
                                 zhuyinCombinations.filter { combo ->
                                     T9ZhuyinMapper.filterCandidatesByZhuyinPrefix(candidateItems, combo).isNotEmpty()
@@ -488,7 +488,7 @@ class T9InputEventHandler(
                                 }
                             } else {
                                 // 多鍵：計算有效注音組合
-                                val zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString())
+                                val zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
                                 if (zhuyinCombinations.isNotEmpty()) {
                                     Timber.d("$TAG: RIME 無候選詞，根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
                                     contextDisplay.showZhuyinCombinations(zhuyinCombinations)

@@ -134,12 +134,16 @@ object T9ZhuyinMapper {
      * 將數字序列映射為可能的注音組合
      *
      * @param digitSequence 數字序列，如 "123"
+     * @param halves 每個按鍵對應的 half 值（0=完整, 1=前半, 2=後半），與 digitSequence 逐位對應
      * @return 可能的注音組合列表，如 ["ㄅㄧㄢ", "ㄉㄚㄦ", ...]
      */
-    fun mapToZhuyinCombinations(digitSequence: String): List<String> {
+    fun mapToZhuyinCombinations(
+        digitSequence: String,
+        halves: List<Int> = emptyList(),
+    ): List<String> {
         if (digitSequence.isEmpty()) return emptyList()
 
-        return generateAllCombinations(digitSequence)
+        return generateAllCombinations(digitSequence, halves)
             .filter { isValidZhuyinCombination(it) }
             .sortedByDescending { getZhuyinScore(it) }
             .take(20) // 限制數量避免過多組合
@@ -148,14 +152,20 @@ object T9ZhuyinMapper {
     /**
      * 生成所有可能的注音組合 (遞歸生成)
      */
-    private fun generateAllCombinations(digitSequence: String): List<String> {
+    private fun generateAllCombinations(
+        digitSequence: String,
+        halves: List<Int> = emptyList(),
+    ): List<String> {
         if (digitSequence.isEmpty()) return listOf("")
 
         val firstKey = charToKeyIndex(digitSequence.first()) ?: return emptyList()
-        val remainingDigits = digitSequence.drop(1)
+        val half = halves.firstOrNull() ?: 0
 
-        val firstZhuyinOptions = T9_MAPPING[firstKey] ?: return emptyList()
-        val remainingCombinations = generateAllCombinations(remainingDigits)
+        val firstZhuyinOptions = getZhuyinForDigitHalf(firstKey, half)
+        val remainingCombinations = generateAllCombinations(
+            digitSequence.drop(1),
+            if (halves.isNotEmpty()) halves.drop(1) else halves,
+        )
 
         val combinations = mutableListOf<String>()
 
