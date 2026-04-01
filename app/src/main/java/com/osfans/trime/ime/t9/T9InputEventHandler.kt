@@ -9,6 +9,7 @@ import com.osfans.trime.core.RimeMessage
 import com.osfans.trime.daemon.RimeSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import splitties.systemservices.inputMethodManager
 import timber.log.Timber
@@ -41,6 +42,12 @@ class T9InputEventHandler(
 
     // 每個按鍵對應的 half 值（與 digitSequence 同步增減）
     private val digitHalves = mutableListOf<Int>()
+
+    // 重送數字序列的協程 Job（確保只有一個在跑，避免併發競態）
+    private var resendJob: Job? = null
+
+    // 目前顯示的注音組合（用於判斷刪除時是否應直接清空）
+    private var lastShownCombinations: List<String> = emptyList()
 
     // ==================== 前端過濾機制（方案 E）====================
     // 緩存完整的候選詞列表，用於前端過濾
@@ -414,13 +421,7 @@ class T9InputEventHandler(
                         } else if (currentDigitCount >= 2) {
                             // 多鍵輸入：計算有效注音組合（只算一次，後續共用）
                             multiKeyCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
-                            // 計算 half-filtered 允許的注音符號聯集（用於 validCombinations 為空時的備援過濾）
-                            val allowedSymbols = mutableSetOf<String>()
-                            for (i in digitSequence.indices) {
-                                val key = T9ZhuyinMapper.charToKeyIndex(digitSequence[i]) ?: continue
-                                val half = digitHalves.getOrElse(i) { 0 }
-                                allowedSymbols.addAll(T9ZhuyinMapper.getZhuyinForDigitHalf(key, half))
-                            }
+                            val allowedSymbols = collectAllowedSymbols()
                             val originalCount = candidateItems.size
                             candidateItems = T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations, allowedSymbols)
                             Timber.d("$TAG: 多鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
@@ -440,7 +441,7 @@ class T9InputEventHandler(
                                 val firstHalf = digitHalves.firstOrNull() ?: 0
                                 val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigitHalf(firstDigit, firstHalf)
                                 Timber.d("$TAG: 第一次按鍵，顯示個別注音 (half=$firstHalf): $individualZhuyins")
-                                contextDisplay.showZhuyinCombinations(individualZhuyins)
+                                showAndTrackCombinations(individualZhuyins)
                                 // 自動選取第一個注音作為過濾條件
                                 currentZhuyinFilter = individualZhuyins.firstOrNull()
                             }
@@ -455,14 +456,14 @@ class T9InputEventHandler(
 
                             if (zhuyinCombinations.isNotEmpty()) {
                                 Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
-                                contextDisplay.showZhuyinCombinations(zhuyinCombinations)
+                                showAndTrackCombinations(zhuyinCombinations)
                                 // 多鍵輸入不自動篩選，由用戶主動點擊注音或聲調鍵篩選
                                 currentZhuyinFilter = null
                             } else {
-                                // 若無有效組合，則從候選詞提取（備援方案）
-                                val fallbackCombinations = T9ZhuyinMapper.extractUniqueZhuyinCombinations(candidateItems)
-                                Timber.d("$TAG: 無有效組合，從候選詞提取: $fallbackCombinations")
-                                contextDisplay.showZhuyinCombinations(fallbackCombinations)
+                                // 若無有效組合，直接從按鍵序列計算允許的個別注音
+                                val individualSymbols = collectAllowedSymbols().toList()
+                                Timber.d("$TAG: 無有效組合，從按鍵序列計算個別注音: $individualSymbols")
+                                showAndTrackCombinations(individualSymbols)
                                 currentZhuyinFilter = null
                             }
                         }
@@ -484,7 +485,7 @@ class T9InputEventHandler(
                                     val firstHalf = digitHalves.firstOrNull() ?: 0
                                     val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigitHalf(firstDigit, firstHalf)
                                     Timber.d("$TAG: RIME 無候選詞，但根據數字 '$firstDigit' 顯示注音 (half=$firstHalf): $individualZhuyins")
-                                    contextDisplay.showZhuyinCombinations(individualZhuyins)
+                                    showAndTrackCombinations(individualZhuyins)
 
                                     // 【關鍵修復】即使 RIME 無候選詞，也使用前端策劃候選字
                                     val supplementedCandidates = T9ZhuyinMapper.prioritizedCandidates(emptyList(), firstDigit)
@@ -504,7 +505,7 @@ class T9InputEventHandler(
                                 val zhuyinCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
                                 if (zhuyinCombinations.isNotEmpty()) {
                                     Timber.d("$TAG: RIME 無候選詞，根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
-                                    contextDisplay.showZhuyinCombinations(zhuyinCombinations)
+                                    showAndTrackCombinations(zhuyinCombinations)
                                 } else {
                                     contextDisplay.clearInput()
                                     Timber.d("$TAG: RIME 無候選詞，且無有效注音組合")
@@ -690,6 +691,24 @@ class T9InputEventHandler(
      * 當過濾結果為空時，仍然顯示空結果（不回退到未過濾狀態），
      * 確保用戶選擇的過濾條件得到忠實執行。
      */
+
+    /** 顯示注音組合並追蹤，用於退格時判斷是否直接清空 */
+    private fun showAndTrackCombinations(combinations: List<String>) {
+        lastShownCombinations = combinations
+        contextDisplay.showZhuyinCombinations(combinations)
+    }
+
+    /** 從 digitSequence + digitHalves 計算去重的 half-filtered 注音符號列表 */
+    private fun collectAllowedSymbols(): LinkedHashSet<String> {
+        val symbols = linkedSetOf<String>()
+        for (i in digitSequence.indices) {
+            val key = T9ZhuyinMapper.charToKeyIndex(digitSequence[i]) ?: continue
+            val half = digitHalves.getOrElse(i) { 0 }
+            symbols.addAll(T9ZhuyinMapper.getZhuyinForDigitHalf(key, half))
+        }
+        return symbols
+    }
+
     private fun applyFilters() {
         var filtered = cachedCandidates
 
@@ -781,6 +800,15 @@ class T9InputEventHandler(
 
         try {
             if (digitSequence.isNotEmpty()) {
+                // 若注音組合清單全是單一注音（已是最基本狀態），直接清空全部
+                val allSingleSymbol = lastShownCombinations.isNotEmpty() &&
+                    lastShownCombinations.all { it.length <= 1 }
+                if (allSingleSymbol) {
+                    Timber.d("$TAG: 注音清單全為單一符號，直接清空全部")
+                    clearInputStateAndRime()
+                    return
+                }
+
                 // 情境 1：刪除最後一個數字
                 val removedDigit = digitSequence.last()
                 digitSequence.deleteAt(digitSequence.length - 1)
@@ -792,9 +820,14 @@ class T9InputEventHandler(
                     Timber.d("$TAG: 數字序列已清空，清除輸入狀態")
                     clearInputStateAndRime()
                 } else {
-                    // 還有剩餘數字，重新發送到 RIME 引擎以更新候選詞
-                    Timber.d("$TAG: 重新發送數字序列到 RIME: '$digitSequence'")
-                    resendDigitSequenceToRime()
+                    // 還有剩餘數字，送 BackSpace 給 RIME（避免 clear+resend 造成閃爍）
+                    Timber.d("$TAG: 送 BackSpace 到 RIME，剩餘序列: '$digitSequence'")
+                    resendJob?.cancel()
+                    resendJob = coroutineScope.launch {
+                        rimeSession.runOnReady {
+                            processKey(0xff08, 0u) // XK_BackSpace
+                        }
+                    }
                 }
             } else if (textInputArea.hasContent()) {
                 // 情境 2：刪除游標前一個字
@@ -811,35 +844,15 @@ class T9InputEventHandler(
     }
 
     /**
-     * 重新發送當前數字序列到 RIME 引擎
-     * 用於退格後重新計算候選詞
-     */
-    private fun resendDigitSequenceToRime() {
-        // 複製當前數字序列以避免協程執行期間的競態條件
-        val sequenceCopy = digitSequence.toString()
-        coroutineScope.launch {
-            rimeSession.runOnReady {
-                // 先清除 RIME 的當前輸入
-                clearComposition()
-                Timber.d("$TAG: 已清除 RIME 組合輸入")
-
-                // 逐一發送數字序列中的每個數字
-                for (digit in sequenceCopy) {
-                    val keyCode = digit.code
-                    val result = processKey(keyCode, 0u)
-                    Timber.d("$TAG: 重新發送數字 '$digit' (keyCode=$keyCode)，結果: $result")
-                }
-                // RIME 會透過 messageFlow 自動通知 UI 更新候選詞和注音選擇器
-            }
-        }
-    }
-
-    /**
      * 清除輸入狀態並重置 RIME 引擎
      * 用於一次性清除所有輸入中狀態
      */
     private fun clearInputStateAndRime() {
         try {
+            // 取消進行中的重送協程，避免遲到的 RIME 回應覆蓋清除後的 UI
+            resendJob?.cancel()
+            resendJob = null
+
             // 清除 UI 狀態（注音列表回到標點符號、清空候選字）
             contextDisplay.clearInput()
             candidateBar.clearCandidates()
@@ -850,6 +863,16 @@ class T9InputEventHandler(
             // 重置數字序列
             digitSequence.clear()
             digitHalves.clear()
+
+            // 清空緩存（防止 resend 遲到回應透過 applyFilters 復活）
+            cachedCandidates = emptyList()
+            displayedCandidates = emptyList()
+            lastShownCombinations = emptyList()
+            currentZhuyinFilter = null
+            currentToneFilter = null
+            onToneFilterChanged?.invoke(null)
+            onValidTonesChanged?.invoke(emptySet())
+
             Timber.d("$TAG: 清除輸入狀態並重置 RIME，數字序列已重置")
 
             // 清除 RIME 引擎的組合輸入

@@ -142,6 +142,9 @@ object T9ZhuyinMapper {
         halves: List<Int> = emptyList(),
     ): List<String> {
         if (digitSequence.isEmpty()) return emptyList()
+        // 單音節最多 3 個符號（聲母+介音+韻母），超過則不可能形成有效組合
+        // 提前返回避免 generateAllCombinations 的組合爆炸（2^N ~ 4^N）
+        if (digitSequence.length > 3) return emptyList()
 
         return generateAllCombinations(digitSequence, halves)
             .filter { isValidZhuyinCombination(it) }
