@@ -530,14 +530,22 @@ object T9ZhuyinMapper {
      * 2. RIME 獨有的候選字（不在 t9_chars.json 中）排在後面
      *
      * @param rimeCandidates RIME 引擎回傳的候選詞列表
-     * @param digitSequence 數字序列，如 "51"
-     * @return 重新排序後的候選詞列表
+     * @param validCombinations 有效的注音組合列表
+     * @return 過濾並排序後的候選詞列表
      */
     fun prioritizedMultiKeyCandidates(
         rimeCandidates: List<CandidateItem>,
         validCombinations: List<String>,
+        allowedSymbols: Set<String> = emptySet(),
     ): List<CandidateItem> {
-        if (validCombinations.isEmpty()) return rimeCandidates
+        if (validCombinations.isEmpty()) {
+            if (allowedSymbols.isEmpty()) return rimeCandidates
+            // 無有效單音節組合（多音節或無效輸入），用允許符號集過濾
+            return rimeCandidates.filter { candidate ->
+                val zhuyin = extractZhuyinFromComment(candidate.comment)
+                zhuyin != null && zhuyin.all { ch -> ch.toString() in allowedSymbols }
+            }
+        }
 
         val validSet = validCombinations.toHashSet()
 
@@ -556,8 +564,11 @@ object T9ZhuyinMapper {
             }
         }
 
+        // 附加 RIME 獨有的候選字，但只保留注音匹配有效組合的
         for (candidate in rimeCandidates) {
-            if (candidate.text !in addedTexts) {
+            if (candidate.text in addedTexts) continue
+            val zhuyin = extractZhuyinFromComment(candidate.comment)
+            if (zhuyin != null && zhuyin in validSet) {
                 result.add(candidate)
                 addedTexts.add(candidate.text)
             }

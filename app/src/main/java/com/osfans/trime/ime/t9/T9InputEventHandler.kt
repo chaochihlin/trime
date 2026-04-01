@@ -380,6 +380,12 @@ class T9InputEventHandler(
 
                     // 注意：新模式下情境顯示區由注音選擇器控制，不再顯示 preedit
 
+                    // Guard: 丟棄遲到的 RIME 回應（用戶已清空輸入）
+                    if (digitSequence.isEmpty()) {
+                        Timber.w("$TAG: GUARD_STALE_RESPONSE: 丟棄遲到的 RIME 回應 (${menu.candidates.size} 個候選字)")
+                        return
+                    }
+
                     // 更新候選詞列和注音選擇器
                     if (menu.candidates.isNotEmpty()) {
                         // 將 Rime 的 Candidate 轉換為 UI 需要的 CandidateItem
@@ -408,8 +414,15 @@ class T9InputEventHandler(
                         } else if (currentDigitCount >= 2) {
                             // 多鍵輸入：計算有效注音組合（只算一次，後續共用）
                             multiKeyCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
+                            // 計算 half-filtered 允許的注音符號聯集（用於 validCombinations 為空時的備援過濾）
+                            val allowedSymbols = mutableSetOf<String>()
+                            for (i in digitSequence.indices) {
+                                val key = T9ZhuyinMapper.charToKeyIndex(digitSequence[i]) ?: continue
+                                val half = digitHalves.getOrElse(i) { 0 }
+                                allowedSymbols.addAll(T9ZhuyinMapper.getZhuyinForDigitHalf(key, half))
+                            }
                             val originalCount = candidateItems.size
-                            candidateItems = T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations)
+                            candidateItems = T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations, allowedSymbols)
                             Timber.d("$TAG: 多鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
                         }
 
