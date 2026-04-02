@@ -72,7 +72,7 @@ class ContextDisplayArea
 
         companion object {
             // 預設標點符號
-            private val DEFAULT_PUNCTUATIONS = listOf("，", "。", "？")
+            private val DEFAULT_PUNCTUATIONS = listOf("，", "。", "？", "！")
             private const val TAG = "ContextDisplayArea"
         }
 
@@ -328,7 +328,7 @@ class ContextDisplayArea
                             gravity = Gravity.CENTER
 
                             // 設置點擊區域
-                            setPadding(dp(8), dp(12), dp(8), dp(12))
+                            setPadding(dp(8), dp(8), dp(8), dp(8))
                             isClickable = true
                             isFocusable = true
 
@@ -348,7 +348,7 @@ class ContextDisplayArea
                             LayoutParams.MATCH_PARENT,
                             LayoutParams.WRAP_CONTENT,
                         ).apply {
-                            topMargin = if (punctuationButtons.isNotEmpty()) dp(8) else 0
+                            topMargin = if (punctuationButtons.isNotEmpty()) dp(4) else 0
                         },
                     )
 

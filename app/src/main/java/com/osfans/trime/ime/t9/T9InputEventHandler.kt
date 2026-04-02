@@ -429,7 +429,7 @@ class T9InputEventHandler(
 
                         // 【方案 E】緩存完整候選詞列表，用於前端過濾
                         cachedCandidates = candidateItems
-                        currentZhuyinFilter = null // 重置注音過濾（後續分支會重新賦值）
+                        currentZhuyinFilter = null // 重置注音過濾
                         currentToneFilter = null // 重置聲調過濾
                         onToneFilterChanged?.invoke(null)
                         Timber.d("$TAG: 緩存 ${candidateItems.size} 個候選詞")
@@ -442,8 +442,6 @@ class T9InputEventHandler(
                                 val individualZhuyins = T9ZhuyinMapper.getZhuyinForDigitHalf(firstDigit, firstHalf)
                                 Timber.d("$TAG: 第一次按鍵，顯示個別注音 (half=$firstHalf): $individualZhuyins")
                                 showAndTrackCombinations(individualZhuyins)
-                                // 自動選取第一個注音作為過濾條件
-                                currentZhuyinFilter = individualZhuyins.firstOrNull()
                             }
                         } else {
                             // 第二次以上：從已計算的注音組合中過濾有效項
@@ -457,19 +455,14 @@ class T9InputEventHandler(
                             if (zhuyinCombinations.isNotEmpty()) {
                                 Timber.d("$TAG: 根據數字序列 '$digitSequence' 計算注音組合: $zhuyinCombinations")
                                 showAndTrackCombinations(zhuyinCombinations)
-                                // 多鍵輸入不自動篩選，由用戶主動點擊注音或聲調鍵篩選
-                                currentZhuyinFilter = null
                             } else {
                                 // 若無有效組合，直接從按鍵序列計算允許的個別注音
                                 val individualSymbols = collectAllowedSymbols().toList()
                                 Timber.d("$TAG: 無有效組合，從按鍵序列計算個別注音: $individualSymbols")
                                 showAndTrackCombinations(individualSymbols)
-                                currentZhuyinFilter = null
                             }
                         }
-                        Timber.d("$TAG: 自動注音過濾: '$currentZhuyinFilter'")
-
-                        // 透過 applyFilters 更新顯示（觸發一聲優先排序 + 合法聲調計算）
+                        // 透過 applyFilters 更新顯示（合法聲調計算）
                         applyFilters()
                         Timber.d("$TAG: 更新候選詞列，共 ${cachedCandidates.size} 個候選詞: ${displayedCandidates.take(3).map { it.text }}")
                     } else {
@@ -728,9 +721,6 @@ class T9InputEventHandler(
             val toneFiltered = T9ZhuyinMapper.filterCandidatesByTone(filtered, currentToneFilter!!, multiToneMap)
             Timber.d("$TAG: 聲調過濾 '$currentToneFilter': ${filtered.size} → ${toneFiltered.size}")
             filtered = toneFiltered
-        } else {
-            // 無聲調篩選時，一聲候選字排到前面
-            filtered = sortFirstToneFirst(filtered)
         }
 
         displayedCandidates = filtered
@@ -742,25 +732,6 @@ class T9InputEventHandler(
         } else {
             candidateBar.updateCandidates(filtered)
         }
-    }
-
-    /**
-     * 將一聲候選字排到前面，其餘維持原順序
-     */
-    private fun sortFirstToneFirst(candidates: List<CandidateItem>): List<CandidateItem> {
-        if (candidates.isEmpty()) return candidates
-        val firstTone = mutableListOf<CandidateItem>()
-        val others = mutableListOf<CandidateItem>()
-        for (candidate in candidates) {
-            if (null in T9ZhuyinMapper.resolveTones(candidate, multiToneMap)) {
-                firstTone.add(candidate)
-            } else {
-                others.add(candidate)
-            }
-        }
-        if (firstTone.isEmpty()) return candidates
-        Timber.d("$TAG: 一聲優先排序：${firstTone.size} 個一聲 + ${others.size} 個其他")
-        return firstTone + others
     }
 
     private fun computeValidTones(candidates: List<CandidateItem>): Set<String> {
