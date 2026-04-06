@@ -738,7 +738,7 @@ class T9InputEventHandler(
         val tones = mutableSetOf<String>()
         for (candidate in candidates) {
             for (tone in T9ZhuyinMapper.resolveTones(candidate, multiToneMap)) {
-                if (tone != null) tones.add(tone)
+                tones.add(tone ?: T9ZhuyinMapper.FIRST_TONE_SYMBOL) // null = 一聲（陰平）
             }
         }
         return tones

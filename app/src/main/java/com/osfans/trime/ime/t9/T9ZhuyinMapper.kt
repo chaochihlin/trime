@@ -12,9 +12,10 @@ import com.osfans.trime.core.CandidateItem
  * 基於 doc/task-02-rime-schema.md 中定義的T9映射表實作數字到注音的轉換邏輯。
  */
 object T9ZhuyinMapper {
+    // 一聲（陰平）在注音中無顯式聲調符號，RIME 回傳 null，UI 用此符號表示
+    const val FIRST_TONE_SYMBOL = "ˉ"
+
     // 顯式聲調符號（二、三、四聲和輕聲）
-    // 注意：一聲（陰平）在注音中無聲調符號，由 filterCandidatesByTone() 中
-    // tone == "ˉ" 時以 candidateTone == null 來匹配
     val TONE_MARKS = setOf('ˊ', 'ˇ', 'ˋ', '˙')
 
     /** 將 RIME 字符（'0'-'9','a','b'）轉為 T9_MAPPING 的 Int key */
@@ -621,7 +622,7 @@ object T9ZhuyinMapper {
     ): List<CandidateItem> {
         return candidates.filter { candidate ->
             val tones = resolveTones(candidate, toneMap)
-            if (tone == "ˉ") null in tones else tone in tones
+            if (tone == FIRST_TONE_SYMBOL) null in tones else tone in tones
         }
     }
 

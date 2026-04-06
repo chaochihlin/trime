@@ -70,7 +70,7 @@ class T9InputContainer
 
         // 聲調鍵 TextView（key = 聲調符號，value = TextView）
         private val toneKeys = mutableMapOf<String, TextView>()
-        private val TONE_SYMBOLS = listOf("ˊ", "ˇ", "ˋ", "˙")
+        private val TONE_SYMBOLS = listOf(T9ZhuyinMapper.FIRST_TONE_SYMBOL, "ˊ", "ˇ", "ˋ", "˙")
 
         // 配置參數
         private lateinit var theme: Theme
@@ -371,8 +371,8 @@ class T9InputContainer
                 addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(48)))
                 // 聲調鍵（根據候選字動態顯示/隱藏，與確認鍵保持間距）
                 for ((index, tone) in TONE_SYMBOLS.withIndex()) {
-                    val lp = LinearLayout.LayoutParams(dp(56), dp(28))
-                    lp.topMargin = if (index == 0) dp(12) else dp(6) // 確認鍵間距12dp，聲調間距6dp
+                    val lp = LinearLayout.LayoutParams(dp(56), dp(24))
+                    lp.topMargin = if (index == 0) dp(8) else dp(4) // 確認鍵間距8dp，聲調間距4dp
                     addView(createToneKey(tone), lp)
                 }
             }
@@ -384,7 +384,7 @@ class T9InputContainer
         private fun createToneKey(tone: String): TextView {
             return TextView(context).apply {
                 text = tone
-                textSize = 30f
+                textSize = 26f
                 setTextColor(Color.WHITE)
                 setTypeface(null, Typeface.BOLD)
                 gravity = Gravity.CENTER
