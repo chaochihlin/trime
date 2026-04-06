@@ -80,6 +80,9 @@ object T9ZhuyinMapper {
 
     private val MEDIALS = setOf("ㄧ", "ㄨ", "ㄩ") // 介音
 
+    // 翹舌音/平舌音—可獨立構成音節（知吃是日資次思）
+    private val STANDALONE_CONSONANTS = setOf("ㄓ", "ㄔ", "ㄕ", "ㄖ", "ㄗ", "ㄘ", "ㄙ")
+
     private val FINALS =
         setOf(
             "ㄚ",
@@ -196,6 +199,7 @@ object T9ZhuyinMapper {
      * 4. 單獨介音 (如 ㄧ、ㄨ、ㄩ)
      * 5. 單獨韻母 (如 ㄚ、ㄛ)
      * 6. 介音 + 韻母 (如 ㄧㄚ)
+     * 7. 單獨聲母 — 限翹舌音/平舌音（ㄓㄔㄕㄖㄗㄘㄙ 可獨立成音節，如「知吃是日資次思」）
      */
     private fun isValidZhuyinCombination(combination: String): Boolean {
         if (combination.isEmpty()) return false
@@ -241,8 +245,10 @@ object T9ZhuyinMapper {
             return false
         }
 
-        // 有效組合：必須有介音或韻母（聲母可選）
-        if (!hasMedial && !hasFinal) return false
+        // 有效組合：必須有介音或韻母，或為可獨立成音節的聲母
+        if (!hasMedial && !hasFinal && (!hasConsonant || consonant !in STANDALONE_CONSONANTS)) {
+            return false
+        }
 
         // 聲母-介音搭配規則檢查（漢語音韻學互補分佈）
         if (consonant != null && medial != null) {
@@ -283,6 +289,7 @@ object T9ZhuyinMapper {
             hasConsonant && hasMedial && hasFinal -> score += 3.0 // 聲母+介音+韻母
             hasConsonant && hasFinal -> score += 2.0 // 聲母+韻母
             hasConsonant && hasMedial -> score += 2.0
+            hasConsonant -> score += 1.5 // 獨立聲母
             hasFinal -> score += 1.0 // 僅韻母
         }
 
