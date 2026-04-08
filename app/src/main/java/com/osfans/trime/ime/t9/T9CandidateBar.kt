@@ -36,6 +36,7 @@ class T9CandidateBar
             const val CANDIDATE_HEIGHT_DP = 32
             const val CANDIDATE_PADDING_DP = 8
             const val MAX_VISIBLE_CANDIDATES = 7
+
             // 圓形螢幕頂部（y≈28dp）右弧線內縮約 82dp，需足夠 padding 避免最後候選字被裁切
             const val RIGHT_PADDING_DP = 96
         }

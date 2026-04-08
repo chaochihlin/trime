@@ -6,8 +6,8 @@ package com.osfans.trime.ime.t9
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.MotionEvent
@@ -16,21 +16,18 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.recyclerview.widget.RecyclerView
 import androidx.core.graphics.toColorInt
+import androidx.recyclerview.widget.RecyclerView
 import com.osfans.trime.daemon.RimeSession
 import com.osfans.trime.data.theme.Theme
 import com.osfans.trime.ime.core.TrimeInputMethodService
 import com.osfans.trime.ime.keyboard.InputFeedbackManager
 import splitties.dimensions.dp
 import splitties.views.dsl.constraintlayout.bottomOfParent
-import splitties.views.dsl.constraintlayout.centerHorizontally
-import splitties.views.dsl.constraintlayout.centerVertically
 import splitties.views.dsl.constraintlayout.endOfParent
 import splitties.views.dsl.constraintlayout.endToStartOf
 import splitties.views.dsl.constraintlayout.lParams
 import splitties.views.dsl.constraintlayout.startOfParent
-import splitties.views.dsl.constraintlayout.startToEndOf
 import splitties.views.dsl.constraintlayout.topOfParent
 import splitties.views.dsl.constraintlayout.topToBottomOf
 import splitties.views.dsl.core.add
@@ -70,7 +67,7 @@ class T9InputContainer
 
         // 聲調鍵 TextView（key = 聲調符號，value = TextView）
         private val toneKeys = mutableMapOf<String, TextView>()
-        private val TONE_SYMBOLS = listOf(T9ZhuyinMapper.FIRST_TONE_SYMBOL, "ˊ", "ˇ", "ˋ", "˙")
+        private val toneSymbols = listOf(T9ZhuyinMapper.FIRST_TONE_SYMBOL, "ˊ", "ˇ", "ˋ", "˙")
 
         // 配置參數
         private lateinit var theme: Theme
@@ -361,8 +358,8 @@ class T9InputContainer
         /**
          * 建立右側面板：確認鍵（✓）在最上方 + 動態聲調鍵
          */
-        private fun createRightPanel(): LinearLayout {
-            return LinearLayout(context).apply {
+        private fun createRightPanel(): LinearLayout =
+            LinearLayout(context).apply {
                 id = generateViewId()
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
@@ -370,19 +367,18 @@ class T9InputContainer
                 // 確認鍵（固定在最上方，加大觸控區域）
                 addView(confirmButton, LinearLayout.LayoutParams(dp(56), dp(48)))
                 // 聲調鍵（根據候選字動態顯示/隱藏，與確認鍵保持間距）
-                for ((index, tone) in TONE_SYMBOLS.withIndex()) {
+                for ((index, tone) in toneSymbols.withIndex()) {
                     val lp = LinearLayout.LayoutParams(dp(56), dp(24))
                     lp.topMargin = if (index == 0) dp(8) else dp(4) // 確認鍵間距8dp，聲調間距4dp
                     addView(createToneKey(tone), lp)
                 }
             }
-        }
 
         /**
          * 建立單個聲調鍵 TextView
          */
-        private fun createToneKey(tone: String): TextView {
-            return TextView(context).apply {
+        private fun createToneKey(tone: String): TextView =
+            TextView(context).apply {
                 text = tone
                 textSize = 26f
                 setTextColor(Color.WHITE)
@@ -394,7 +390,6 @@ class T9InputContainer
                 // 儲存到 map 以便後續更新高亮
                 toneKeys[tone] = this
             }
-        }
 
         /**
          * 更新聲調鍵高亮狀態

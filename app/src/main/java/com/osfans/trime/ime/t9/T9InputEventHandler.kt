@@ -423,7 +423,8 @@ class T9InputEventHandler(
                             multiKeyCombinations = T9ZhuyinMapper.mapToZhuyinCombinations(digitSequence.toString(), digitHalves)
                             val allowedSymbols = collectAllowedSymbols()
                             val originalCount = candidateItems.size
-                            candidateItems = T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations, allowedSymbols)
+                            candidateItems =
+                                T9ZhuyinMapper.prioritizedMultiKeyCandidates(candidateItems, multiKeyCombinations, allowedSymbols)
                             Timber.d("$TAG: 多鍵優先排序，RIME $originalCount 個 → 合併後 ${candidateItems.size} 個")
                         }
 
@@ -677,14 +678,6 @@ class T9InputEventHandler(
         onToneFilterChanged?.invoke(tone)
     }
 
-    /**
-     * 套用所有過濾條件（注音 + 聲調）到候選詞
-     *
-     * 過濾策略：嚴格 AND 邏輯，注音過濾 → 聲調過濾。
-     * 當過濾結果為空時，仍然顯示空結果（不回退到未過濾狀態），
-     * 確保用戶選擇的過濾條件得到忠實執行。
-     */
-
     /** 顯示注音組合並追蹤，用於退格時判斷是否直接清空 */
     private fun showAndTrackCombinations(combinations: List<String>) {
         lastShownCombinations = combinations
@@ -702,6 +695,13 @@ class T9InputEventHandler(
         return symbols
     }
 
+    /**
+     * 套用所有過濾條件（注音 + 聲調）到候選詞
+     *
+     * 過濾策略：嚴格 AND 邏輯，注音過濾 → 聲調過濾。
+     * 當過濾結果為空時，仍然顯示空結果（不回退到未過濾狀態），
+     * 確保用戶選擇的過濾條件得到忠實執行。
+     */
     private fun applyFilters() {
         var filtered = cachedCandidates
 
@@ -772,8 +772,9 @@ class T9InputEventHandler(
         try {
             if (digitSequence.isNotEmpty()) {
                 // 若注音組合清單全是單一注音（已是最基本狀態），直接清空全部
-                val allSingleSymbol = lastShownCombinations.isNotEmpty() &&
-                    lastShownCombinations.all { it.length <= 1 }
+                val allSingleSymbol =
+                    lastShownCombinations.isNotEmpty() &&
+                        lastShownCombinations.all { it.length <= 1 }
                 if (allSingleSymbol) {
                     Timber.d("$TAG: 注音清單全為單一符號，直接清空全部")
                     clearInputStateAndRime()
@@ -794,11 +795,12 @@ class T9InputEventHandler(
                     // 還有剩餘數字，送 BackSpace 給 RIME（避免 clear+resend 造成閃爍）
                     Timber.d("$TAG: 送 BackSpace 到 RIME，剩餘序列: '$digitSequence'")
                     resendJob?.cancel()
-                    resendJob = coroutineScope.launch {
-                        rimeSession.runOnReady {
-                            processKey(0xff08, 0u) // XK_BackSpace
+                    resendJob =
+                        coroutineScope.launch {
+                            rimeSession.runOnReady {
+                                processKey(0xff08, 0u) // XK_BackSpace
+                            }
                         }
-                    }
                 }
             } else if (textInputArea.hasContent()) {
                 // 情境 2：刪除游標前一個字

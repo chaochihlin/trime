@@ -173,15 +173,15 @@ class T9KeyboardView
             set.clone(this)
 
             // --- 垂直輔助線（Row1 key3 跨 col3+col4） ---
-            val vG4_1 = View.generateViewId()
-            val vG4_2 = View.generateViewId()
-            val vG4_3 = View.generateViewId()
-            set.create(vG4_1, ConstraintSet.VERTICAL_GUIDELINE)
-            set.create(vG4_2, ConstraintSet.VERTICAL_GUIDELINE)
-            set.create(vG4_3, ConstraintSet.VERTICAL_GUIDELINE)
-            set.setGuidelinePercent(vG4_1, COL_WIDE)
-            set.setGuidelinePercent(vG4_2, COL_WIDE * 2)
-            set.setGuidelinePercent(vG4_3, COL_WIDE * 2 + COL_NARROW)
+            val vGuide1 = View.generateViewId()
+            val vGuide2 = View.generateViewId()
+            val vGuide3 = View.generateViewId()
+            set.create(vGuide1, ConstraintSet.VERTICAL_GUIDELINE)
+            set.create(vGuide2, ConstraintSet.VERTICAL_GUIDELINE)
+            set.create(vGuide3, ConstraintSet.VERTICAL_GUIDELINE)
+            set.setGuidelinePercent(vGuide1, COL_WIDE)
+            set.setGuidelinePercent(vGuide2, COL_WIDE * 2)
+            set.setGuidelinePercent(vGuide3, COL_WIDE * 2 + COL_NARROW)
 
             // --- 水平輔助線（6行：4行注音 + 1行數字 + 1行底部） ---
             // 比例：19% × 4 + 12% + 12% = 100%
@@ -192,7 +192,7 @@ class T9KeyboardView
                 set.setGuidelinePercent(hLines[i], hPercents[i])
             }
 
-            val colGuides = arrayOf(ConstraintSet.PARENT_ID, vG4_1, vG4_2, vG4_3, ConstraintSet.PARENT_ID)
+            val colGuides = arrayOf(ConstraintSet.PARENT_ID, vGuide1, vGuide2, vGuide3, ConstraintSet.PARENT_ID)
 
             // --- Row 1-4: 注音鍵 ---
             for (row in 0..3) {

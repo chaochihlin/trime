@@ -169,10 +169,11 @@ object T9ZhuyinMapper {
         val half = halves.firstOrNull() ?: 0
 
         val firstZhuyinOptions = getZhuyinForDigitHalf(firstKey, half)
-        val remainingCombinations = generateAllCombinations(
-            digitSequence.drop(1),
-            if (halves.isNotEmpty()) halves.drop(1) else halves,
-        )
+        val remainingCombinations =
+            generateAllCombinations(
+                digitSequence.drop(1),
+                if (halves.isNotEmpty()) halves.drop(1) else halves,
+            )
 
         val combinations = mutableListOf<String>()
 
@@ -206,7 +207,7 @@ object T9ZhuyinMapper {
 
         var consonant: String? = null
         var medial: String? = null
-        var final_: String? = null
+        var finalSym: String? = null
         var hasConsonant = false
         var hasMedial = false
         var hasFinal = false
@@ -234,7 +235,7 @@ object T9ZhuyinMapper {
                 charStr in FINALS -> {
                     finalCount++
                     hasFinal = true
-                    final_ = charStr
+                    finalSym = charStr
                 }
                 else -> return false // 未知符號
             }
@@ -259,9 +260,9 @@ object T9ZhuyinMapper {
         }
 
         // 介音-韻母搭配規則檢查
-        if (medial != null && final_ != null) {
+        if (medial != null && finalSym != null) {
             val allowedFinals = MEDIAL_FINAL_RULES[medial]
-            if (allowedFinals != null && final_ !in allowedFinals) {
+            if (allowedFinals != null && finalSym !in allowedFinals) {
                 return false
             }
         }
@@ -306,12 +307,42 @@ object T9ZhuyinMapper {
      */
     private val COMMON_COMBINATIONS =
         setOf(
-            "ㄅㄚ", "ㄉㄚ", "ㄍㄚ", "ㄇㄚ", "ㄋㄚ", "ㄌㄚ",
-            "ㄓㄚ", "ㄔㄚ", "ㄕㄚ", "ㄗㄚ", "ㄘㄚ", "ㄙㄚ",
-            "ㄧ", "ㄨ", "ㄩ",
-            "ㄚ", "ㄛ", "ㄜ", "ㄞ", "ㄟ", "ㄠ", "ㄡ", "ㄢ", "ㄣ", "ㄤ", "ㄥ", "ㄦ",
-            "ㄅㄧㄢ", "ㄉㄧㄢ", "ㄐㄧㄢ", "ㄏㄠ", "ㄇㄠ", "ㄋㄠ",
-            "ㄍㄨㄛ", "ㄏㄨㄛ", "ㄓㄨㄛ",
+            "ㄅㄚ",
+            "ㄉㄚ",
+            "ㄍㄚ",
+            "ㄇㄚ",
+            "ㄋㄚ",
+            "ㄌㄚ",
+            "ㄓㄚ",
+            "ㄔㄚ",
+            "ㄕㄚ",
+            "ㄗㄚ",
+            "ㄘㄚ",
+            "ㄙㄚ",
+            "ㄧ",
+            "ㄨ",
+            "ㄩ",
+            "ㄚ",
+            "ㄛ",
+            "ㄜ",
+            "ㄞ",
+            "ㄟ",
+            "ㄠ",
+            "ㄡ",
+            "ㄢ",
+            "ㄣ",
+            "ㄤ",
+            "ㄥ",
+            "ㄦ",
+            "ㄅㄧㄢ",
+            "ㄉㄧㄢ",
+            "ㄐㄧㄢ",
+            "ㄏㄠ",
+            "ㄇㄠ",
+            "ㄋㄠ",
+            "ㄍㄨㄛ",
+            "ㄏㄨㄛ",
+            "ㄓㄨㄛ",
         )
 
     private fun isCommonCombination(combination: String): Boolean = combination in COMMON_COMBINATIONS
@@ -626,12 +657,11 @@ object T9ZhuyinMapper {
         candidates: List<CandidateItem>,
         tone: String,
         toneMap: Map<String, Set<String?>> = emptyMap(),
-    ): List<CandidateItem> {
-        return candidates.filter { candidate ->
+    ): List<CandidateItem> =
+        candidates.filter { candidate ->
             val tones = resolveTones(candidate, toneMap)
             if (tone == FIRST_TONE_SYMBOL) null in tones else tone in tones
         }
-    }
 
     /**
      * 檢查指定注音是否有對應的單韻母/單介音字

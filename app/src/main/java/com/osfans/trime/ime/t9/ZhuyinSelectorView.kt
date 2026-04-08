@@ -29,6 +29,7 @@ class ZhuyinSelectorView
         companion object {
             private const val TAG = "ZhuyinSelectorView"
             private const val HORIZONTAL_PADDING_DP = 4
+
             // 圓形螢幕右下角弧線內縮，底部需足夠 padding 讓最後的注音組合可滾動到可觸控區域
             private const val BOTTOM_PADDING_DP = 72
         }
