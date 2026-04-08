@@ -214,18 +214,14 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
     }
 
     private fun handleRimeMessage(it: RimeMessage<*>) {
-        Timber.d("【除錯】handleRimeMessage: 收到訊息類型: ${it::class.simpleName}")
         when (it) {
             is RimeMessage.ResponseMessage ->
                 it.data.let event@{
                     val (commit, ctx) = it
-                    Timber.d("【除錯】ResponseMessage: commit.text='${commit.text}', ctx.composition.preedit='${ctx.composition.preedit}'")
                     if (commit.text?.isNotEmpty() == true) {
-                        Timber.d("【除錯】提交文字: '${commit.text}'")
                         commitText(commit.text)
                         InputFeedbackManager.textCommitSpeak(commit.text)
                     }
-                    Timber.d("【除錯】更新編輯文字前: composition='${ctx.composition.preedit}', input='${ctx.input}'")
                     updateComposingText(ctx)
                     KeyboardSwitcher.currentKeyboardView?.invalidateAllKeys()
                 }
@@ -1051,34 +1047,15 @@ open class TrimeInputMethodService : LifecycleInputMethodService() {
 
     private fun updateComposingText(ctx: RimeProto.Context) {
         val ic = currentInputConnection ?: return
-        Timber.d("【除錯】updateComposingText: composingTextMode=$composingTextMode")
         val text =
             when (composingTextMode) {
-                ComposingTextMode.DISABLE -> {
-                    Timber.d("【除錯】ComposingTextMode.DISABLE")
-                    ""
-                }
-                ComposingTextMode.PREEDIT -> {
-                    val preedit = ctx.composition.preedit ?: ""
-                    Timber.d("【除錯】ComposingTextMode.PREEDIT: preedit='$preedit'")
-                    preedit
-                }
-                ComposingTextMode.COMMIT_TEXT_PREVIEW -> {
-                    val preview = ctx.composition.commitTextPreview ?: ""
-                    Timber.d("【除錯】ComposingTextMode.COMMIT_TEXT_PREVIEW: preview='$preview'")
-                    preview
-                }
-                ComposingTextMode.RAW_INPUT -> {
-                    Timber.d("【除錯】ComposingTextMode.RAW_INPUT: input='${ctx.input}'")
-                    ctx.input
-                }
+                ComposingTextMode.DISABLE -> ""
+                ComposingTextMode.PREEDIT -> ctx.composition.preedit ?: ""
+                ComposingTextMode.COMMIT_TEXT_PREVIEW -> ctx.composition.commitTextPreview ?: ""
+                ComposingTextMode.RAW_INPUT -> ctx.input
             }
-        Timber.d("【除錯】最終設定的編輯文字: '$text'")
         if (ic.getSelectedText(0).isNullOrEmpty() || text.isNotEmpty()) {
-            Timber.d("【除錯】呼叫 setComposingText: '$text'")
             ic.setComposingText(text, 1)
-        } else {
-            Timber.d("【除錯】跳過 setComposingText: selectedText不為空且text為空")
         }
     }
 

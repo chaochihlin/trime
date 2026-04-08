@@ -97,14 +97,9 @@ class PreeditModule(
      */
     override fun onInputContextUpdate(ctx: RimeProto.Context) {
         // TODO: 临时修复状态栏与悬浮窗同时显示，后续需优化：考虑分离数据或寻找更好的实现方式
-        timber.log.Timber.d(
-            "【除錯】PreeditModule.onInputContextUpdate: composition.preedit='${ctx.composition.preedit}', length=${ctx.composition.length}",
-        )
-
         if (candidatesMode == PopupCandidatesMode.ALWAYS_SHOW) return
 
         ui.update(ctx.composition)
-        timber.log.Timber.d("【除錯】PreeditModule: ui.visible=${ui.visible}, 設定visibility=${if (ui.visible) "VISIBLE" else "INVISIBLE"}")
         ui.root.visibility = if (ui.visible) View.VISIBLE else View.INVISIBLE
         if (ctx.composition.length > 0) {
             touchEventReceiverWindow.show()
