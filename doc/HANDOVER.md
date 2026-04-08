@@ -293,6 +293,38 @@ adb -s <serial> shell pm clear com.osfans.trime.debug
 | `generate_bopomofo_dict_v2.py` | 第二版字典產生器（較新，建議使用） |
 | `t9_tone_filter_test.sh` | 聲調過濾功能測試 |
 | `terra_pinyin_reference.dict.yaml` | 上游 rime-terra-pinyin 參考檔 |
+| `t9_test_runner.sh` | **T9 端對端測試主機端執行器**（見下） |
+| `t9_test.sh` | **T9 端對端測試裝置端腳本**（配合上者使用） |
+
+### 4.5 T9 端對端自動化測試
+
+`t9_test_runner.sh` + `t9_test.sh` 構成一套可重複執行的 T9 實機測試工具，用來驗證修改字典或 T9 邏輯後，實際輸入行為是否正確。
+
+**架構**：
+- **主機端** (`t9_test_runner.sh`)：負責 build / install / push device script / 收集結果
+- **裝置端** (`t9_test.sh`)：用 `input tap` 與 `usleep` 模擬按鍵操作，座標已針對 456×456 圓形螢幕校準（見檔案開頭 `KEY1_X/Y` … `KEY0_X/Y` 常數區塊）
+
+**使用範例**：
+
+```bash
+# 連線手錶後（可用 `adb devices` 查序號）
+adb devices
+
+# 完整流程：build + install + 執行測試
+bash scripts/t9_test_runner.sh -s <serial> -b
+
+# 若已經安裝過，跳過安裝步驟
+bash scripts/t9_test_runner.sh -s <serial> --no-install
+
+# 查看所有參數
+bash scripts/t9_test_runner.sh --help
+```
+
+**注意事項**：
+- 裝置需先在系統設定啟用 Trime 為預設輸入法
+- 測試前建議先 `adb shell svc power stayon usb`，否則手錶 15 秒會自動關螢幕導致 `input tap` 無效
+- 若修改了 T9 鍵盤佈局，需同步更新 `t9_test.sh` 裡的座標常數
+- 詳細按鍵映射與座標對應見 `t9_test.sh` 第 10–40 行的配置區塊
 
 ---
 
